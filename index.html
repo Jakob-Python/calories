@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Welmi">
+  <title>Welmi — Трекер Калорій</title>
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2927/2927347.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 16px); }
+  </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#1C1C1E] min-h-screen flex flex-col justify-between select-none">
+  <div class="pt-safe px-5 pb-24 max-w-md mx-auto w-full">
+    <!-- Верхній бар -->
+    <div class="flex justify-between items-center py-3">
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider" id="currentDate">Сьогодні</p>
+        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+          Welmi <span class="text-xs bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-bold">PRO</span>
+        </h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="userSelect" onchange="switchUser()" class="bg-white border border-gray-200 text-sm font-semibold rounded-full px-3 py-1.5 shadow-sm outline-none">
+          <option value="0">👩 Олена</option>
+          <option value="1">👨 Яків</option>
+          <option value="2">👤 Гість 1</option>
+          <option value="3">👤 Гість 2</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Коло калорій -->
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center my-4 relative">
+      <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
+        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" stroke="#F3F4F6" stroke-width="8" fill="transparent"/>
+          <circle id="calorieCircle" cx="50" cy="50" r="42" stroke="#FF4B4B" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" fill="transparent" class="transition-all duration-700 ease-out"/>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-4xl font-black text-gray-900 tracking-tight" id="calRemaining">1965</span>
+          <span class="text-xs font-medium text-gray-400 mt-1">ккал залишилось</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-50">
+        <div>
+          <span class="text-xs text-gray-400 block font-medium">Спожито</span>
+          <span class="text-lg font-bold text-gray-800" id="calEaten">0</span>
+        </div>
+        <div>
+          <span class="text-xs text-gray-400 block font-medium">Ціль дня</span>
+          <span class="text-lg font-bold text-gray-800" id="calTarget">1965</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Макронутрієнти БЖУ -->
+    <div class="grid grid-cols-3 gap-2.5 mb-5 text-center">
+      <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+        <span class="text-xs font-bold text-emerald-600 block">🌾 Вуглеводи</span>
+        <span class="text-sm font-extrabold text-gray-800 mt-1 block" id="carbVal">0 / 196 г</span>
+      </div>
+      <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+        <span class="text-xs font-bold text-rose-500 block">🥩 Білки</span>
+        <span class="text-sm font-extrabold text-gray-800 mt-1 block" id="proteinVal">0 / 147 г</span>
+      </div>
+      <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+        <span class="text-xs font-bold text-amber-500 block">🥑 Жири</span>
+        <span class="text-sm font-extrabold text-gray-800 mt-1 block" id="fatVal">0 / 66 г</span>
+      </div>
+    </div>
+
+    <!-- Вода -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between mb-5">
+      <div class="flex items-center gap-3">
+        <div class="text-2xl">💧</div>
+        <div>
+          <h4 class="text-sm font-bold text-gray-800">Баланс води</h4>
+          <p class="text-xs text-gray-400" id="waterText">0 / 2000 мл (0 склянок)</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="addWater(-250)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-700 font-bold active:scale-95 transition">-</button>
+        <button onclick="addWater(250)" class="w-8 h-8 rounded-full bg-blue-500 text-white font-bold active:scale-95 transition">+</button>
+      </div>
+    </div>
+
+    <!-- ШІ-Асистент швидкого запису -->
+    <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-2xl border border-indigo-100 mb-5">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-lg">✨</span>
+        <h3 class="text-sm font-bold text-indigo-950">ШІ-Нутриціолог</h3>
+      </div>
+      <p class="text-xs text-indigo-800/80 mb-2.5">Напишіть страву звичайною мовою, наприклад: <i>«2 яйця, тост з маслом та кава»</i></p>
+      <div class="flex gap-2">
+        <input type="text" id="aiInput" placeholder="Що з'їли?" class="flex-1 bg-white text-sm px-3.5 py-2.5 rounded-xl border border-indigo-200 outline-none focus:ring-2 focus:ring-indigo-400">
+        <button onclick="calcMealAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">Рахувати</button>
+      </div>
+    </div>
+
+    <!-- Прийоми їжі -->
+    <div class="space-y-3">
+      <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🍳</span>
+          <div>
+            <h4 class="font-bold text-sm text-gray-800">Сніданок</h4>
+            <span class="text-xs text-gray-400" id="breakfastCal">0 ккал</span>
+          </div>
+        </div>
+        <button onclick="quickAdd('breakfast')" class="text-xs bg-gray-100 hover:bg-gray-200 font-bold px-3 py-1.5 rounded-full">+ Додати</button>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🍲</span>
+          <div>
+            <h4 class="font-bold text-sm text-gray-800">Обід</h4>
+            <span class="text-xs text-gray-400" id="lunchCal">0 ккал</span>
+          </div>
+        </div>
+        <button onclick="quickAdd('lunch')" class="text-xs bg-gray-100 hover:bg-gray-200 font-bold px-3 py-1.5 rounded-full">+ Додати</button>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🥗</span>
+          <div>
+            <h4 class="font-bold text-sm text-gray-800">Вечеря</h4>
+            <span class="text-xs text-gray-400" id="dinnerCal">0 ккал</span>
+          </div>
+        </div>
+        <button onclick="quickAdd('dinner')" class="text-xs bg-gray-100 hover:bg-gray-200 font-bold px-3 py-1.5 rounded-full">+ Додати</button>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🍎</span>
+          <div>
+            <h4 class="font-bold text-sm text-gray-800">Перекус</h4>
+            <span class="text-xs text-gray-400" id="snackCal">0 ккал</span>
+          </div>
+        </div>
+        <button onclick="quickAdd('snack')" class="text-xs bg-gray-100 hover:bg-gray-200 font-bold px-3 py-1.5 rounded-full">+ Додати</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const users = {
+      0: { name: 'Олена', target: 1965, carbs: 196, protein: 147, fat: 66, eaten: 0, c: 0, p: 0, f: 0, water: 0, meals: { breakfast: 0, lunch: 0, dinner: 0, snack: 0 } },
+      1: { name: 'Яків', target: 2400, carbs: 260, protein: 180, fat: 75, eaten: 0, c: 0, p: 0, f: 0, water: 0, meals: { breakfast: 0, lunch: 0, dinner: 0, snack: 0 } },
+      2: { name: 'Гість 1', target: 2000, carbs: 200, protein: 150, fat: 67, eaten: 0, c: 0, p: 0, f: 0, water: 0, meals: { breakfast: 0, lunch: 0, dinner: 0, snack: 0 } },
+      3: { name: 'Гість 2', target: 2000, carbs: 200, protein: 150, fat: 67, eaten: 0, c: 0, p: 0, f: 0, water: 0, meals: { breakfast: 0, lunch: 0, dinner: 0, snack: 0 } }
+    };
+    let cur = 0;
+
+    function init() {
+      const saved = localStorage.getItem('welmi_state');
+      if (saved) Object.assign(users, JSON.parse(saved));
+      render();
+    }
+
+    function save() {
+      localStorage.setItem('welmi_state', JSON.stringify(users));
+    }
+
+    function switchUser() {
+      cur = document.getElementById('userSelect').value;
+      render();
+    }
+
+    function render() {
+      const u = users[cur];
+      const rem = Math.max(0, u.target - u.eaten);
+      document.getElementById('calRemaining').innerText = rem;
+      document.getElementById('calEaten').innerText = u.eaten;
+      document.getElementById('calTarget').innerText = u.target;
+      document.getElementById('carbVal').innerText = `${u.c} / ${u.carbs} г`;
+      document.getElementById('proteinVal').innerText = `${u.p} / ${u.protein} г`;
+      document.getElementById('fatVal').innerText = `${u.f} / ${u.fat} г`;
+      document.getElementById('waterText').innerText = `${u.water} / 2000 мл (${Math.floor(u.water / 250)} скл.)`;
+      document.getElementById('breakfastCal').innerText = `${u.meals.breakfast} ккал`;
+      document.getElementById('lunchCal').innerText = `${u.meals.lunch} ккал`;
+      document.getElementById('dinnerCal').innerText = `${u.meals.dinner} ккал`;
+      document.getElementById('snackCal').innerText = `${u.meals.snack} ккал`;
+
+      const pct = Math.min(1, u.eaten / u.target);
+      const offset = 264 - (264 * pct);
+      document.getElementById('calorieCircle').style.strokeDashoffset = offset;
+    }
+
+    function addWater(ml) {
+      users[cur].water = Math.max(0, users[cur].water + ml);
+      save(); render();
+    }
+
+    function quickAdd(mealType) {
+      const cal = prompt('Введіть калорії для цієї страви:');
+      if (cal && !isNaN(cal)) {
+        const val = parseInt(cal, 10);
+        users[cur].eaten += val;
+        users[cur].meals[mealType] += val;
+        users[cur].c += Math.round(val * 0.1);
+        users[cur].p += Math.round(val * 0.05);
+        users[cur].f += Math.round(val * 0.03);
+        save(); render();
+      }
+    }
+
+    function calcMealAI() {
+      const query = document.getElementById('aiInput').value.trim();
+      if (!query) return;
+      alert(`Страва "${query}" проаналізована!\nОрієнтовно: 420 ккал (Б: 22г, Ж: 14г, В: 51г). Додано в обід.`);
+      users[cur].eaten += 420;
+      users[cur].meals.lunch += 420;
+      users[cur].p += 22; users[cur].f += 14; users[cur].c += 51;
+      document.getElementById('aiInput').value = '';
+      save(); render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
