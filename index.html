@@ -5,369 +5,601 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Calories для всіх">
-  <title>Calories для всіх PRO</title>
+  <meta name="apple-mobile-web-app-title" content="Калькулятор калорій">
+  <title>Калькулятор калорій PRO</title>
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2927/2927347.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Roboto, sans-serif; background-color: #FAFAFC; }
-    .pb-safe { padding-bottom: 90px; }
+    body {
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      background-color: #F8F9FD;
+      color: #0F172A;
+    }
+    .pb-nav { padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 84px); }
     .pt-safe { padding-top: max(env(safe-area-inset-top, 16px), 16px); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .touch-target { min-width: 44px; min-height: 44px; }
+    .smooth-bar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
 </head>
-<body class="text-slate-800 min-h-screen flex flex-col justify-between select-none">
+<body class="min-h-screen flex flex-col justify-between select-none">
 
-  <!-- ================= 1. ВКЛАДКА: ХАРЧУВАННЯ ================= -->
-  <main id="tab-nutrition" class="pt-safe px-4 pb-safe max-w-md mx-auto w-full">
-    <!-- Шапка -->
-    <div class="flex justify-between items-center py-2 mb-2">
+  <!-- ================= ГОЛОВНИЙ ЕКРАН ================= -->
+  <main id="tab-home" class="pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+    <!-- Шапка застосунку -->
+    <header class="flex justify-between items-center py-2 mb-2">
       <div>
-        <h1 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-          Calories для всіх <span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-extrabold uppercase">PRO</span>
+        <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+          Калькулятор калорій 
+          <span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black tracking-wider">PRO</span>
         </h1>
-        <p class="text-[11px] font-semibold text-slate-400 mt-0.5" id="headerDate">Сьогодні</p>
+        <p class="text-xs font-semibold text-slate-500 mt-0.5" id="headerDate">Неділя, 8 листопада</p>
       </div>
+
       <div class="flex items-center gap-2">
-        <button onclick="addWater(250)" class="flex items-center gap-1 bg-sky-50 text-sky-600 px-3 py-1.5 rounded-full text-xs font-bold border border-sky-100 shadow-sm active:scale-95 transition">
-          <span>💧</span> <span id="topWaterVal">0 мл</span>
-        </button>
-        <button onclick="goToTab('profiles')" class="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-full text-xs font-bold text-slate-700 shadow-sm active:scale-95 transition">
-          <span id="currentAvatar">👩</span>
-          <span id="currentName" class="max-w-[70px] truncate">Олена</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Календарний рядок -->
-    <div class="flex justify-between items-center bg-white py-2.5 px-3 rounded-2xl shadow-sm border border-slate-100 mb-4 text-center">
-      <div class="flex flex-col items-center"><span class="text-[10px] text-slate-400 font-semibold mb-1">Н</span><div class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold shadow-sm shadow-rose-200">8</div></div>
-      <div class="flex flex-col items-center"><span class="text-[10px] text-slate-400 font-semibold mb-1">П</span><div class="w-8 h-8 rounded-full text-slate-600 flex items-center justify-center text-xs font-medium">9</div></div>
-      <div class="flex flex-col items-center"><span class="text-[10px] text-slate-400 font-semibold mb-1">В</span><div class="w-8 h-8 rounded-full text-slate-600 flex items-center justify-center text-xs font-medium">10</div></div>
-      <div class="flex flex-col items-center"><span class="text-[10px] text-slate-400 font-semibold mb-1">С</span><div class="w-8 h-8 rounded-full text-slate-600 flex items-center justify-center text-xs font-medium">11</div></div>
-      <div class="flex flex-col items-center"><span class="text-[10px] text-slate-400 font-semibold mb-1">Ч</span><div class="w-8 h-8 rounded-full text-slate-600 flex items-center justify-center text-xs font-medium">12</div></div>
-      <div class="flex flex-col items-center"><span class="text-[10px] text-slate-400 font-semibold mb-1">П</span><div class="w-8 h-8 rounded-full text-slate-600 flex items-center justify-center text-xs font-medium">13</div></div>
-      <div class="flex flex-col items-center"><span class="text-[10px] text-slate-400 font-semibold mb-1">С</span><div class="w-8 h-8 rounded-full text-slate-600 flex items-center justify-center text-xs font-medium">14</div></div>
-    </div>
-
-    <!-- Круговий лічильник -->
-    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 text-center mb-4 relative">
-      <div class="flex items-center justify-between">
-        <div class="w-20 text-center">
-          <span class="text-xl font-black text-slate-800 block" id="dispEaten">0</span>
-          <span class="text-[11px] text-slate-400 font-medium">Спожито</span>
+        <!-- Серія днів (Замість 111) -->
+        <div class="flex items-center gap-1 bg-amber-50 border border-amber-200/60 px-2.5 py-1.5 rounded-full shadow-sm">
+          <span class="text-sm">🔥</span>
+          <span class="text-xs font-black text-amber-700" id="streakCounter">7</span>
+          <span class="text-[10px] font-bold text-amber-600/90 hidden sm:inline">днів поспіль</span>
         </div>
 
+        <!-- Поточний профіль -->
+        <button onclick="goToTab('profile')" class="touch-target flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1.5 rounded-full shadow-sm active:scale-95 transition" aria-label="Профіль">
+          <span id="currentAvatar" class="text-base">👩</span>
+          <span id="currentName" class="text-xs font-bold text-slate-700 max-w-[65px] truncate">Олена</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Календар тижня з індикаторами норми -->
+    <section class="bg-white py-3 px-2 rounded-2xl shadow-sm border border-slate-100 mb-3.5">
+      <div class="grid grid-cols-7 text-center items-center">
+        <!-- Пн - Нд з індикаторами-крапками -->
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[11px] text-slate-400 font-bold">Н</span>
+          <div class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-sm shadow-rose-200">8</div>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-0.5"></span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[11px] text-slate-400 font-bold">П</span>
+          <div class="w-8 h-8 rounded-full text-slate-700 flex items-center justify-center text-xs font-bold">9</div>
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mt-0.5"></span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[11px] text-slate-400 font-bold">В</span>
+          <div class="w-8 h-8 rounded-full text-slate-700 flex items-center justify-center text-xs font-bold">10</div>
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-200 mt-0.5"></span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[11px] text-slate-400 font-bold">С</span>
+          <div class="w-8 h-8 rounded-full text-slate-700 flex items-center justify-center text-xs font-bold">11</div>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-0.5"></span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[11px] text-slate-400 font-bold">Ч</span>
+          <div class="w-8 h-8 rounded-full text-slate-700 flex items-center justify-center text-xs font-bold">12</div>
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mt-0.5"></span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[11px] text-slate-400 font-bold">П</span>
+          <div class="w-8 h-8 rounded-full text-slate-700 flex items-center justify-center text-xs font-bold">13</div>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-0.5"></span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[11px] text-slate-400 font-bold">С</span>
+          <div class="w-8 h-8 rounded-full text-slate-700 flex items-center justify-center text-xs font-bold">14</div>
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-200 mt-0.5"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Головна картка: Кільце калорій (із перебором) -->
+    <section class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-3.5 relative">
+      <div class="flex items-center justify-between">
+        <!-- Спожито -->
+        <div class="w-20 text-center">
+          <span class="text-2xl font-black text-slate-900 block" id="dispEaten">0</span>
+          <span class="text-xs font-bold text-slate-500">Спожито</span>
+        </div>
+
+        <!-- Центральне кільце -->
         <div class="relative w-44 h-44 flex items-center justify-center">
           <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" stroke="#F1F3F5" stroke-width="7" fill="transparent"/>
-            <circle id="calorieRing" cx="50" cy="50" r="42" stroke="#FF4D4D" stroke-width="7" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" fill="transparent" class="transition-all duration-700 ease-out"/>
+            <circle cx="50" cy="50" r="42" stroke="#F1F5F9" stroke-width="7.5" fill="transparent"/>
+            <circle id="calorieRing" cx="50" cy="50" r="42" stroke="#FF4D4D" stroke-width="7.5" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" fill="transparent" class="transition-all duration-700 ease-out"/>
           </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-4xl font-black text-slate-900 tracking-tight" id="dispRemaining">1965</span>
-            <span class="text-[11px] text-slate-400 font-medium mt-0.5">ккал залишилось</span>
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
+            <span class="text-3xl font-black text-slate-900 tracking-tight" id="dispRemaining">1965</span>
+            <span class="text-[11px] font-bold text-slate-500 mt-0.5" id="dispRemainingLabel">ккал залишилось</span>
           </div>
         </div>
 
+        <!-- Спалено + Тренування -->
         <div class="w-20 text-center">
-          <span class="text-xl font-black text-slate-800 block" id="dispBurned">0</span>
-          <span class="text-[11px] text-slate-400 font-medium">Спалено</span>
+          <span class="text-2xl font-black text-slate-900 block" id="dispBurned">0</span>
+          <span class="text-xs font-bold text-slate-500 block mb-1">Спалено</span>
+          <button onclick="openWorkoutModal()" class="touch-target inline-flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold px-2 py-1 rounded-full border border-orange-200 active:scale-95 transition">
+            + Активність
+          </button>
         </div>
       </div>
 
-      <!-- Макроси БЖУ -->
-      <div class="grid grid-cols-3 gap-2 mt-6 pt-5 border-t border-slate-50 text-center">
-        <div>
-          <span class="text-xs font-bold text-rose-400 block">🌾 Вуглеводи</span>
-          <span class="text-xs font-extrabold text-slate-700 mt-1 block" id="dispCarbs">0 / 196 г</span>
+      <!-- Синхронізація зі смарт-годинником / Health -->
+      <div class="mt-3 pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+        <span>🔄 Apple Health / Google Fit</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="text-[10px] text-emerald-600 font-bold">Синхронізовано</span>
+      </div>
+
+      <!-- Макронутрієнти БЖВ зі смужками прогресу -->
+      <div class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 text-center">
+        <!-- Вуглеводи -->
+        <div class="bg-slate-50/70 p-2.5 rounded-2xl border border-slate-100">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <span>🌾 Вугл.</span>
+            <span class="text-emerald-600 text-[11px]" id="carbPct">0%</span>
+          </div>
+          <span class="text-xs font-black text-slate-800 block" id="dispCarbs">0 / 196 г</span>
+          <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1.5">
+            <div id="carbBar" class="bg-emerald-500 h-full rounded-full smooth-bar" style="width: 0%"></div>
+          </div>
         </div>
-        <div>
-          <span class="text-xs font-bold text-amber-500 block">🥩 Білки</span>
-          <span class="text-xs font-extrabold text-slate-700 mt-1 block" id="dispProtein">0 / 147 г</span>
+
+        <!-- Білки -->
+        <div class="bg-slate-50/70 p-2.5 rounded-2xl border border-slate-100">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <span>🥩 Білки</span>
+            <span class="text-rose-600 text-[11px]" id="proteinPct">0%</span>
+          </div>
+          <span class="text-xs font-black text-slate-800 block" id="dispProtein">0 / 147 г</span>
+          <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1.5">
+            <div id="proteinBar" class="bg-rose-500 h-full rounded-full smooth-bar" style="width: 0%"></div>
+          </div>
         </div>
-        <div>
-          <span class="text-xs font-bold text-sky-500 block">🥑 Жири</span>
-          <span class="text-xs font-extrabold text-slate-700 mt-1 block" id="dispFat">0 / 66 г</span>
+
+        <!-- Жири -->
+        <div class="bg-slate-50/70 p-2.5 rounded-2xl border border-slate-100">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <span>🥑 Жири</span>
+            <span class="text-amber-600 text-[11px]" id="fatPct">0%</span>
+          </div>
+          <span class="text-xs font-black text-slate-800 block" id="dispFat">0 / 66 г</span>
+          <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1.5">
+            <div id="fatBar" class="bg-amber-500 h-full rounded-full smooth-bar" style="width: 0%"></div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Швидка кнопка Фото-Сканера -->
-    <div onclick="goToTab('ai')" class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-3.5 mb-4 text-white flex items-center justify-between shadow-sm cursor-pointer active:scale-95 transition">
+    <!-- Трекер води з прогрес-баром і кнопками +250 / +500 -->
+    <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 mb-3.5">
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-base">💧</div>
+          <div>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Баланс води</h3>
+            <span class="text-sm font-black text-slate-900" id="dispWaterAmount">0 / 2000 мл</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-3 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">
+            +250 мл
+          </button>
+          <button onclick="addWater(500)" class="touch-target bg-sky-600 hover:bg-sky-700 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-sm active:scale-95 transition">
+            +500 мл
+          </button>
+        </div>
+      </div>
+      <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+        <div id="waterProgressBar" class="bg-sky-500 h-full rounded-full smooth-bar" style="width: 0%"></div>
+      </div>
+    </section>
+
+    <!-- Блок: Порада дня від ШІ -->
+    <section class="bg-gradient-to-r from-amber-50 via-rose-50 to-indigo-50 border border-amber-200/50 rounded-2xl p-3.5 mb-3.5 shadow-sm">
+      <div class="flex items-start gap-2.5">
+        <span class="text-lg">💡</span>
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Порада дня від ШІ</h4>
+          <p class="text-xs font-medium text-slate-700 mt-0.5 leading-relaxed" id="dailyTipText">
+            Вам не вистачає білка для балансу. Спробуйте додати до обіду або перекусу куряче філе, грецький йогурт чи 2 яйця.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Банер фото-сканера тарілки -->
+    <section onclick="openPhotoFlow()" class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between shadow-sm cursor-pointer active:scale-98 transition">
       <div class="flex items-center gap-3">
-        <span class="text-2xl">📸</span>
+        <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">📸</div>
         <div>
-          <h4 class="text-xs font-black uppercase tracking-wide">ШІ-Сканер Тарілки</h4>
-          <p class="text-[11px] text-indigo-100">Сфотографуйте їжу — калорії порахуються автоматично</p>
+          <h3 class="text-xs font-black uppercase tracking-wider">ШІ-Сканер Тарілки</h3>
+          <p class="text-[11px] text-indigo-100">Сфотографуйте їжу — калорії порахуються самі</p>
         </div>
       </div>
-      <span class="text-xs bg-white/20 px-2.5 py-1 rounded-full font-bold">Спробувати →</span>
-    </div>
+      <span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-xl font-bold shadow-sm">Спробувати →</span>
+    </section>
 
-    <!-- Прийоми їжі -->
-    <div class="mb-4">
-      <div class="flex justify-between items-center mb-3 px-1">
-        <h3 class="text-base font-bold text-slate-800">Прийоми їжі <span class="text-xs text-slate-400 font-semibold">• Щоденник</span></h3>
-        <button onclick="resetDayData()" class="text-xs text-rose-500 font-bold hover:underline">Очистити</button>
+    <!-- Рядок «Нещодавні» продукти для швидкого додавання -->
+    <section class="mb-3.5">
+      <div class="flex justify-between items-center mb-2 px-1">
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Нещодавні продукти</h4>
+        <span class="text-[11px] text-slate-400">Швидкий дотик</span>
+      </div>
+      <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <button onclick="quickAddRecent('Вівсянка з лохиною', 290, 48, 8, 6)" class="touch-target bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-2xl whitespace-nowrap shadow-sm hover:border-rose-300 active:scale-95 transition">
+          🥣 Вівсянка <span class="text-rose-500 font-extrabold">+290</span>
+        </button>
+        <button onclick="quickAddRecent('2 яйця з тостом', 260, 16, 14, 12)" class="touch-target bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-2xl whitespace-nowrap shadow-sm hover:border-rose-300 active:scale-95 transition">
+          🍳 Яйця з тостом <span class="text-rose-500 font-extrabold">+260</span>
+        </button>
+        <button onclick="quickAddRecent('Банан', 105, 27, 1, 0)" class="touch-target bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-2xl whitespace-nowrap shadow-sm hover:border-rose-300 active:scale-95 transition">
+          🍌 Банан <span class="text-rose-500 font-extrabold">+105</span>
+        </button>
+        <button onclick="quickAddRecent('Борщ домашній', 360, 40, 15, 12)" class="touch-target bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-2xl whitespace-nowrap shadow-sm hover:border-rose-300 active:scale-95 transition">
+          🍲 Борщ <span class="text-rose-500 font-extrabold">+360</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Прийоми їжі з рекомендаціями (наприклад ~500 ккал) -->
+    <section class="mb-4">
+      <div class="flex justify-between items-center mb-2 px-1">
+        <h3 class="text-sm font-bold text-slate-800">Прийоми їжі <span class="text-xs text-slate-400 font-semibold">• Щоденник</span></h3>
+        <button onclick="confirmResetDay()" class="text-xs text-rose-500 font-bold hover:underline touch-target flex items-center">
+          Очистити
+        </button>
       </div>
 
       <div class="grid grid-cols-4 gap-2">
-        <div onclick="openMealModal('breakfast')" class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition">
-          <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-2 font-bold text-lg">+</div>
-          <span class="text-xs font-bold text-slate-700">Сніданок</span>
-          <span class="text-[10px] text-slate-400 font-semibold" id="mealBreakfast">0 ккал</span>
+        <!-- Сніданок -->
+        <div onclick="openMealModal('breakfast')" class="touch-target bg-white p-2.5 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition text-center">
+          <div class="w-11 h-11 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-1.5 font-bold text-base">+</div>
+          <span class="text-xs font-bold text-slate-800">Сніданок</span>
+          <span class="text-[10px] font-bold text-slate-500" id="mealBreakfastVal">~500 ккал</span>
         </div>
 
-        <div onclick="openMealModal('lunch')" class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition">
-          <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-2 font-bold text-lg">+</div>
-          <span class="text-xs font-bold text-slate-700">Обід</span>
-          <span class="text-[10px] text-slate-400 font-semibold" id="mealLunch">0 ккал</span>
+        <!-- Обід -->
+        <div onclick="openMealModal('lunch')" class="touch-target bg-white p-2.5 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition text-center">
+          <div class="w-11 h-11 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-1.5 font-bold text-base">+</div>
+          <span class="text-xs font-bold text-slate-800">Обід</span>
+          <span class="text-[10px] font-bold text-slate-500" id="mealLunchVal">~650 ккал</span>
         </div>
 
-        <div onclick="openMealModal('dinner')" class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition">
-          <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-2 font-bold text-lg">+</div>
-          <span class="text-xs font-bold text-slate-700">Вечеря</span>
-          <span class="text-[10px] text-slate-400 font-semibold" id="mealDinner">0 ккал</span>
+        <!-- Вечеря -->
+        <div onclick="openMealModal('dinner')" class="touch-target bg-white p-2.5 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition text-center">
+          <div class="w-11 h-11 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-1.5 font-bold text-base">+</div>
+          <span class="text-xs font-bold text-slate-800">Вечеря</span>
+          <span class="text-[10px] font-bold text-slate-500" id="mealDinnerVal">~500 ккал</span>
         </div>
 
-        <div onclick="openMealModal('snack')" class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition">
-          <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-2 font-bold text-lg">+</div>
-          <span class="text-xs font-bold text-slate-700">Перекус</span>
-          <span class="text-[10px] text-slate-400 font-semibold" id="mealSnack">0 ккал</span>
+        <!-- Перекус -->
+        <div onclick="openMealModal('snack')" class="touch-target bg-white p-2.5 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center cursor-pointer active:scale-95 transition text-center">
+          <div class="w-11 h-11 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-1.5 font-bold text-base">+</div>
+          <span class="text-xs font-bold text-slate-800">Перекус</span>
+          <span class="text-[10px] font-bold text-slate-500" id="mealSnackVal">~250 ккал</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Оцінка харчування -->
-    <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-5">
+    <!-- Оцінка харчування та розширені мікроелементи -->
+    <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 mb-4">
       <div class="flex justify-between items-center mb-1">
-        <h4 class="text-sm font-bold text-slate-800">Оцінка Харчування ⓘ</h4>
-        <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Норма</span>
+        <div class="flex items-center gap-1.5">
+          <h4 class="text-sm font-bold text-slate-800">Оцінка Харчування</h4>
+          <button onclick="openNormInfoModal()" class="touch-target text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold" title="Що це означає?">ⓘ</button>
+        </div>
+        <span onclick="openNormInfoModal()" class="cursor-pointer text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+          ✓ Норма
+        </span>
       </div>
-      <p class="text-xs text-slate-400 mb-4">Баланс поживних мікроелементів</p>
+      <p class="text-xs font-semibold text-slate-400 mb-3">Баланс поживних мікроелементів на день</p>
 
-      <div class="space-y-3">
+      <div class="space-y-2.5">
         <div class="flex justify-between items-center text-xs">
-          <span class="text-slate-600 font-medium">🥦 Клітковина</span>
-          <span class="font-bold text-slate-800" id="dispFiber">0 / 25 г</span>
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5">🥦 Клітковина</span>
+          <span class="font-bold text-slate-900" id="dispFiber">0 / 25 г</span>
         </div>
         <div class="flex justify-between items-center text-xs">
-          <span class="text-slate-600 font-medium">🍬 Цукор</span>
-          <span class="font-bold text-slate-800" id="dispSugar">0 / 50 г</span>
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5">🍬 Цукор (макс.)</span>
+          <span class="font-bold text-slate-900" id="dispSugar">0 / 50 г</span>
         </div>
         <div class="flex justify-between items-center text-xs">
-          <span class="text-slate-600 font-medium">🧂 Натрій (сіль)</span>
-          <span class="font-bold text-slate-800" id="dispSodium">0 / 2300 мг</span>
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5">🧂 Натрій (сіль)</span>
+          <span class="font-bold text-slate-900" id="dispSodium">0 / 2300 мг</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5">🧈 Насичені жири</span>
+          <span class="font-bold text-slate-900" id="dispSatFat">0 / 20 г</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5">🍌 Калій</span>
+          <span class="font-bold text-slate-900" id="dispPotassium">0 / 3500 мг</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5">🥛 Кальцій</span>
+          <span class="font-bold text-slate-900" id="dispCalcium">0 / 1000 мг</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5">🍏 Залізо</span>
+          <span class="font-bold text-slate-900" id="dispIron">0 / 18 мг</span>
         </div>
       </div>
-    </div>
+    </section>
   </main>
 
-  <!-- ================= 2. ВКЛАДКА: ШІ НУТРИЦІОЛОГ + ФОТО ================= -->
-  <main id="tab-ai" class="hidden pt-safe px-4 pb-safe max-w-md mx-auto w-full">
-    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 rounded-3xl shadow-sm mb-4">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="text-2xl">📸</span>
-        <h2 class="text-lg font-extrabold">ШІ-Зір & Нутриціолог</h2>
-      </div>
-      <p class="text-xs text-indigo-100">Сфотографуйте вашу тарілку або опишіть страву словами — система визначить вагу і калорійність.</p>
-    </div>
-
-    <!-- Завантаження фото -->
-    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm mb-4 text-center">
-      <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="handlePhoto(event)">
-      
-      <div id="photoPlaceholder" onclick="document.getElementById('photoInput').click()" class="border-2 border-dashed border-indigo-200 bg-indigo-50/40 rounded-2xl p-6 cursor-pointer hover:bg-indigo-50 transition active:scale-98">
-        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold">📷</div>
-        <span class="text-xs font-bold text-indigo-900 block mb-1">Сфотографувати або вибрати тарілку</span>
-        <span class="text-[10px] text-slate-400">Натисніть для відкриття камери чи галереї</span>
-      </div>
-
-      <!-- Прев'ю фотографії -->
-      <div id="photoPreviewContainer" class="hidden relative">
-        <img id="photoPreview" class="w-full h-48 object-cover rounded-2xl mb-3 shadow-inner">
-        <button onclick="clearPhoto()" class="absolute top-2 right-2 bg-black/60 text-white w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center">✕</button>
-      </div>
-
-      <!-- Текстове поле або коментар -->
-      <div class="mt-4 text-left">
-        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Або введіть страву текстом:</label>
-        <input type="text" id="aiPromptText" placeholder="Наприклад: гречка з котлетою та салат з капусти" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400">
-      </div>
-
-      <div class="flex gap-2 mt-4">
-        <select id="aiMealTypeSelect" class="bg-slate-100 text-xs font-bold rounded-xl px-3 py-2.5 border border-slate-200 outline-none">
-          <option value="breakfast">🍳 Сніданок</option>
-          <option value="lunch" selected>🍲 Обід</option>
-          <option value="dinner">🥗 Вечеря</option>
-          <option value="snack">🍎 Перекус</option>
-        </select>
-        <button onclick="analyzeFood()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95 transition shadow-sm">
-          🔍 Розпізнати та порахувати
-        </button>
-      </div>
-    </div>
-
-    <!-- Картка результатів аналізу -->
-    <div id="aiResultCard" class="hidden bg-white p-5 rounded-3xl border border-indigo-100 shadow-md">
-      <div class="flex justify-between items-center mb-3">
-        <div>
-          <h3 class="font-extrabold text-slate-800 text-sm" id="resTitle">Страва розпізнана</h3>
-          <span class="text-[11px] text-emerald-600 font-bold">✓ Аналіз завершено успішно</span>
-        </div>
-        <span class="text-base font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full" id="resKcal">450 ккал</span>
-      </div>
-      <div class="grid grid-cols-3 gap-2 text-center mb-4">
-        <div class="bg-slate-50 p-2 rounded-xl"><span class="text-[10px] text-slate-400 block">Білки</span><span class="text-xs font-bold" id="resP">25 г</span></div>
-        <div class="bg-slate-50 p-2 rounded-xl"><span class="text-[10px] text-slate-400 block">Жири</span><span class="text-xs font-bold" id="resF">15 г</span></div>
-        <div class="bg-slate-50 p-2 rounded-xl"><span class="text-[10px] text-slate-400 block">Вуглеводи</span><span class="text-xs font-bold" id="resC">48 г</span></div>
-      </div>
-      <button onclick="commitAIResult()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-2xl text-xs shadow-sm active:scale-95 transition">
-        ✓ Додати цей прийом їжі у щоденник
-      </button>
-    </div>
-  </main>
-
-  <!-- ================= 3. ВКЛАДКА: ПРОГРЕС ================= -->
-  <main id="tab-progress" class="hidden pt-safe px-4 pb-safe max-w-md mx-auto w-full">
+  <!-- ================= 2. ВКЛАДКА: ПРОГРЕС ================= -->
+  <main id="tab-progress" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full">
     <h2 class="text-xl font-black text-slate-900 mb-1">Ваш Прогрес</h2>
-    <p class="text-xs text-slate-400 mb-4">Динаміка досягнення щоденних цілей</p>
+    <p class="text-xs text-slate-500 mb-4">Історія виконання норми калорій за тиждень</p>
+    
     <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm mb-4">
       <div class="flex justify-between items-center mb-4">
-        <span class="text-xs font-bold text-slate-500">Виконання за тиждень</span>
-        <span class="text-xs font-bold text-emerald-600">86%</span>
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Тижневий графік</span>
+        <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">88% виконання</span>
       </div>
-      <div class="h-32 flex items-end justify-between gap-2 pt-4">
-        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-200 rounded-t-lg" style="height: 60%"></div><span class="text-[10px] text-slate-400 mt-2">Пн</span></div>
-        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-300 rounded-t-lg" style="height: 85%"></div><span class="text-[10px] text-slate-400 mt-2">Вт</span></div>
-        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-400 rounded-t-lg" style="height: 95%"></div><span class="text-[10px] text-slate-400 mt-2">Ср</span></div>
-        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-300 rounded-t-lg" style="height: 70%"></div><span class="text-[10px] text-slate-400 mt-2">Чт</span></div>
-        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-400 rounded-t-lg" style="height: 90%"></div><span class="text-[10px] text-slate-400 mt-2">Пт</span></div>
-        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-500 rounded-t-lg" style="height: 100%"></div><span class="text-[10px] text-slate-400 mt-2">Сб</span></div>
-        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-500 rounded-t-lg" style="height: 80%"></div><span class="text-[10px] text-slate-800 font-bold mt-2">Нд</span></div>
+      <div class="h-36 flex items-end justify-between gap-2 pt-4 border-b border-slate-100 pb-2">
+        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-200 rounded-t-lg" style="height: 65%"></div><span class="text-[10px] text-slate-400 mt-2 font-bold">Пн</span></div>
+        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-300 rounded-t-lg" style="height: 80%"></div><span class="text-[10px] text-slate-400 mt-2 font-bold">Вт</span></div>
+        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-400 rounded-t-lg" style="height: 95%"></div><span class="text-[10px] text-slate-400 mt-2 font-bold">Ср</span></div>
+        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-300 rounded-t-lg" style="height: 70%"></div><span class="text-[10px] text-slate-400 mt-2 font-bold">Чт</span></div>
+        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-400 rounded-t-lg" style="height: 90%"></div><span class="text-[10px] text-slate-400 mt-2 font-bold">Пт</span></div>
+        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-500 rounded-t-lg" style="height: 100%"></div><span class="text-[10px] text-slate-400 mt-2 font-bold">Сб</span></div>
+        <div class="flex-1 flex flex-col items-center"><div class="w-full bg-rose-500 rounded-t-lg" style="height: 75%"></div><span class="text-[10px] text-slate-900 font-extrabold mt-2">Нд</span></div>
       </div>
     </div>
   </main>
 
-  <!-- ================= 4. ВКЛАДКА: ПРОФІЛІ (ДО 10 КОРИСТУВАЧІВ З PIN) ================= -->
-  <main id="tab-profiles" class="hidden pt-safe px-4 pb-safe max-w-md mx-auto w-full">
-    <div class="flex justify-between items-center mb-4">
+  <!-- ================= 3. ВКЛАДКА: ПРОФІЛЬ ТА АДМІНКА ================= -->
+  <main id="tab-profile" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full">
+    <div class="flex justify-between items-center mb-3">
       <div>
         <h2 class="text-xl font-black text-slate-900">Профілі сім'ї</h2>
-        <p class="text-xs text-slate-400">До 10 користувачів з персональними PIN</p>
+        <p class="text-xs text-slate-500">Вибір активного акаунта</p>
       </div>
-      <button onclick="openNewProfileModal()" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-sm active:scale-95 transition">
-        + Новий профіль
+
+      <!-- Кнопка розблокування Адмінки -->
+      <button onclick="toggleAdminPrompt()" id="adminToggleBtn" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-2xl text-xs font-bold border border-slate-200 flex items-center gap-1.5 active:scale-95 transition">
+        <span id="adminLockIcon">🔒</span>
+        <span id="adminLockText">Адмінка</span>
       </button>
     </div>
 
-    <div id="profileContainer" class="space-y-3 mb-6"></div>
+    <!-- Список профілів -->
+    <div id="profileContainer" class="space-y-2.5 mb-5"></div>
+
+    <!-- Панель створення нового користувача (Доступна після входу в Адмінку) -->
+    <div id="adminPanelSection" class="hidden bg-white p-4 rounded-3xl border-2 border-indigo-200 shadow-sm mb-4">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-xs font-black uppercase text-indigo-700">👑 Панель Адміністратора</h3>
+        <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Режим активний</span>
+      </div>
+      <p class="text-xs text-slate-600 mb-3">Тільки адміністратор має право створювати та безповоротно видаляти профілі.</p>
+      
+      <button onclick="openNewProfileModal()" class="touch-target w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm mb-2 active:scale-95 transition">
+        + Створити новий профіль
+      </button>
+      <button onclick="changeAdminPassPrompt()" class="w-full text-slate-500 hover:text-slate-800 text-xs font-bold py-1.5 text-center">
+        Змінити пароль адміністратора
+      </button>
+    </div>
   </main>
 
-  <!-- ================= НИЖНЯ ПАНЕЛЬ НАВІГАЦІЇ ================= -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 py-2 px-6 flex justify-around items-center z-40 max-w-md mx-auto">
-    <button onclick="goToTab('nutrition')" id="btn-nutrition" class="flex flex-col items-center text-rose-500">
-      <span class="text-xl">🍎</span>
-      <span class="text-[10px] font-bold mt-0.5">Харчування</span>
-    </button>
-    <button onclick="goToTab('progress')" id="btn-progress" class="flex flex-col items-center text-slate-400">
-      <span class="text-xl">📊</span>
-      <span class="text-[10px] font-bold mt-0.5">Прогрес</span>
-    </button>
-    <button onclick="goToTab('ai')" id="btn-ai" class="flex flex-col items-center text-slate-400">
-      <span class="text-xl">📸</span>
-      <span class="text-[10px] font-bold mt-0.5">ШІ Сканер</span>
-    </button>
-    <button onclick="goToTab('profiles')" id="btn-profiles" class="flex flex-col items-center text-slate-400">
-      <span class="text-xl">👥</span>
-      <span class="text-[10px] font-bold mt-0.5">Профілі</span>
-    </button>
-  </nav>
+  <!-- ================= НИЖНЯ НАВІГАЦІЯ З ЦЕНТРАЛЬНОЮ КНОПКОЮ «+» ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 py-2 px-4 z-40 max-w-[390px] mx-auto">
+    <div class="flex justify-between items-center">
+      <!-- Головна -->
+      <button onclick="goToTab('home')" id="btn-home" class="touch-target flex flex-col items-center justify-center flex-1 text-rose-500">
+        <span class="text-xl">🍎</span>
+        <span class="text-[10px] font-bold mt-0.5">Головна</span>
+      </button>
 
-  <!-- ================= ВІКНО ДОДАВАННЯ СТРАВИ КНОПКОЮ "+" ================= -->
-  <div id="mealModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-      <h3 class="text-base font-extrabold text-slate-800 mb-1" id="modalMealTitle">Додати прийом їжі</h3>
-      <p class="text-xs text-slate-400 mb-4">Введіть калорії або виберіть готову страву</p>
-      
-      <!-- Швидкий вибір популярних страв -->
-      <div class="flex gap-1.5 overflow-x-auto pb-2 mb-3 no-scrollbar">
-        <button onclick="fillQuickMeal('Вівсянка з ягодами', 280, 42, 8, 6)" class="text-[11px] bg-slate-100 px-2.5 py-1.5 rounded-xl whitespace-nowrap font-medium">🥣 Вівсянка (280)</button>
-        <button onclick="fillQuickMeal('2 яйця + тост', 260, 15, 14, 11)" class="text-[11px] bg-slate-100 px-2.5 py-1.5 rounded-xl whitespace-nowrap font-medium">🍳 Яйця з тостом (260)</button>
-        <button onclick="fillQuickMeal('Борщ з хлібом', 380, 45, 14, 12)" class="text-[11px] bg-slate-100 px-2.5 py-1.5 rounded-xl whitespace-nowrap font-medium">🍲 Борщ (380)</button>
-        <button onclick="fillQuickMeal('Куряче філе + рис', 450, 50, 38, 8)" class="text-[11px] bg-slate-100 px-2.5 py-1.5 rounded-xl whitespace-nowrap font-medium">🍗 Курка з рисом (450)</button>
+      <!-- Прогрес -->
+      <button onclick="goToTab('progress')" id="btn-progress" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+        <span class="text-xl">📊</span>
+        <span class="text-[10px] font-bold mt-0.5">Прогрес</span>
+      </button>
+
+      <!-- Велика центральна кнопка «+» -->
+      <div class="flex-1 flex justify-center -mt-6">
+        <button onclick="openAddActionSheet()" class="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 text-white text-2xl font-black shadow-lg shadow-rose-500/30 flex items-center justify-center active:scale-90 transition border-4 border-[#F8F9FD]" aria-label="Додати їжу">
+          +
+        </button>
       </div>
 
-      <div class="space-y-3 mb-5">
+      <!-- ШІ Сканер -->
+      <button onclick="openPhotoFlow()" id="btn-scan" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+        <span class="text-xl">📸</span>
+        <span class="text-[10px] font-bold mt-0.5">Сканер</span>
+      </button>
+
+      <!-- Профіль -->
+      <button onclick="goToTab('profile')" id="btn-profile" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+        <span class="text-xl">👤</span>
+        <span class="text-[10px] font-bold mt-0.5">Профіль</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ================= МОДАЛЬНІ ВІКНА ТА ДІАЛОГИ ================= -->
+
+  <!-- 1. Модальне вікно Action Sheet вибору додавання (від кнопки «+») -->
+  <div id="actionSheetModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
+      <h3 class="text-sm font-black text-slate-900 mb-3 text-center uppercase tracking-wider">Як додати страву?</h3>
+      <div class="space-y-2 mb-3">
+        <button onclick="closeActionSheet(); openPhotoFlow();" class="touch-target w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold p-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-sm">
+          <span>📸</span> Сфотографувати тарілку (ШІ)
+        </button>
+        <button onclick="closeActionSheet(); openMealModal('lunch');" class="touch-target w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold p-3 rounded-2xl text-xs flex items-center justify-center gap-2">
+          <span>✍️</span> Ввести калорії вручну
+        </button>
+      </div>
+      <button onclick="closeActionSheet()" class="touch-target w-full text-slate-400 font-bold py-2 text-xs">Скасувати</button>
+    </div>
+  </div>
+
+  <!-- 2. Вікно додавання страви вручну -->
+  <div id="mealModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-sm font-black text-slate-900" id="modalMealTitle">Додати прийом їжі</h3>
+        <select id="modalMealSelect" class="bg-slate-100 text-xs font-bold rounded-xl px-2 py-1 border border-slate-200 outline-none">
+          <option value="breakfast">Сніданок</option>
+          <option value="lunch">Обід</option>
+          <option value="dinner">Вечеря</option>
+          <option value="snack">Перекус</option>
+        </select>
+      </div>
+
+      <div class="space-y-2.5 mb-4">
         <div>
-          <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Калорії (ккал)*</label>
-          <input type="number" id="inKcal" placeholder="Наприклад: 350" class="w-full text-base font-bold bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-rose-400">
+          <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Калорійність (ккал)*</label>
+          <input type="number" id="inKcal" placeholder="Наприклад: 420" class="w-full text-base font-bold bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-rose-400">
         </div>
         <div class="grid grid-cols-3 gap-2">
           <div>
-            <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Вуглев. (г)</label>
-            <input type="number" id="inCarb" placeholder="30" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+            <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Вугл. (г)</label>
+            <input type="number" id="inCarb" placeholder="45" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
           </div>
           <div>
             <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Білки (г)</label>
-            <input type="number" id="inProt" placeholder="20" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+            <input type="number" id="inProt" placeholder="25" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
           </div>
           <div>
             <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Жири (г)</label>
-            <input type="number" id="inFat" placeholder="10" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+            <input type="number" id="inFat" placeholder="12" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
           </div>
         </div>
       </div>
 
       <div class="flex gap-2">
-        <button onclick="closeMealModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl text-xs">Скасувати</button>
-        <button onclick="commitManualMeal()" class="flex-1 bg-rose-500 text-white font-bold py-3 rounded-2xl text-xs shadow-md">Зберегти</button>
+        <button onclick="closeMealModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-2xl text-xs">Скасувати</button>
+        <button onclick="saveManualMeal()" class="touch-target flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 rounded-2xl text-xs shadow-md">Зберегти</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= ВІКНО СТВОРЕННЯ ПРОФІЛЮ ================= -->
-  <div id="newProfileModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-      <h3 class="text-base font-extrabold text-slate-800 mb-1">Новий профіль</h3>
-      <p class="text-xs text-slate-400 mb-4">Налаштування цілей та PIN-коду</p>
+  <!-- 3. Вікно ШІ-сканера з фото -->
+  <div id="photoModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-sm font-black text-slate-900">ШІ-Сканер тарілки</h3>
+        <button onclick="closePhotoModal()" class="text-slate-400 font-bold text-sm">✕</button>
+      </div>
 
-      <div class="space-y-3 mb-5">
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="processPhotoUpload(event)">
+      
+      <div onclick="document.getElementById('cameraInput').click()" id="uploadZone" class="border-2 border-dashed border-indigo-200 bg-indigo-50/40 rounded-2xl p-6 text-center cursor-pointer mb-3">
+        <div class="text-3xl mb-1">📷</div>
+        <span class="text-xs font-bold text-indigo-900 block">Натисніть, щоб зробити фото</span>
+        <span class="text-[10px] text-slate-500">або вибрати з фотогалереї</span>
+      </div>
+
+      <div id="previewZone" class="hidden mb-3">
+        <img id="photoPreviewImg" class="w-full h-40 object-cover rounded-2xl shadow-inner mb-2">
+        <div class="bg-indigo-50 p-3 rounded-xl text-center">
+          <span class="text-xs font-black text-indigo-900 block" id="aiDishName">Розпізнано: Салат з куркою</span>
+          <span class="text-sm font-black text-rose-500" id="aiDishKcal">380 ккал</span>
+          <span class="text-[10px] text-slate-600 block mt-0.5">Б: 28г • Ж: 14г • В: 22г</span>
+        </div>
+      </div>
+
+      <button id="aiConfirmBtn" onclick="commitAIPlate()" class="touch-target hidden w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">
+        ✓ Записати цей прийом у щоденник
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Вікно швидкого тренування (Спалено) -->
+  <div id="workoutModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
+      <h3 class="text-sm font-black text-slate-900 mb-1">Додати активність</h3>
+      <p class="text-xs text-slate-500 mb-3">Скільки калорій було спалено?</p>
+      
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <button onclick="commitWorkout(150, 'Швидка ходьба')" class="touch-target p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-left">
+          <span class="text-xs font-bold text-slate-800 block">🚶‍♂️ Ходьба 30хв</span>
+          <span class="text-[11px] font-black text-orange-600">+150 ккал</span>
+        </button>
+        <button onclick="commitWorkout(300, 'Біг')" class="touch-target p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-left">
+          <span class="text-xs font-bold text-slate-800 block">🏃 Біг 30хв</span>
+          <span class="text-[11px] font-black text-orange-600">+300 ккал</span>
+        </button>
+        <button onclick="commitWorkout(220, 'Силове тренування')" class="touch-target p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-left">
+          <span class="text-xs font-bold text-slate-800 block">🏋️ Зал / Вправи</span>
+          <span class="text-[11px] font-black text-orange-600">+220 ккал</span>
+        </button>
+        <button onclick="commitWorkout(200, 'Велосипед')" class="touch-target p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-left">
+          <span class="text-xs font-bold text-slate-800 block">🚴 Велосипед</span>
+          <span class="text-[11px] font-black text-orange-600">+200 ккал</span>
+        </button>
+      </div>
+
+      <button onclick="closeWorkoutModal()" class="touch-target w-full bg-slate-100 text-slate-600 font-bold py-2 rounded-xl text-xs">Закрити</button>
+    </div>
+  </div>
+
+  <!-- 5. Вікно «Що означає Норма?» -->
+  <div id="normInfoModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-lg">ℹ️</span>
+        <h3 class="text-sm font-black text-slate-900">Що означає бейдж «Норма»?</h3>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed mb-4">
+        Бейдж показує ступінь збалансованості щоденного раціону за рекомендаціями ВООЗ (Всесвітньої організації охорони здоров'я).<br><br>
+        Враховуються: достатня кількість клітковини (≥ 25г), обмеження цукру (до 50г) та контроль натрію, калію й заліза.
+      </p>
+      <button onclick="closeNormInfoModal()" class="touch-target w-full bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs">Зрозуміло</button>
+    </div>
+  </div>
+
+  <!-- 6. Модальне вікно створення профілю в адмінці -->
+  <div id="newProfileModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
+      <h3 class="text-sm font-black text-slate-900 mb-1">Створити профіль</h3>
+      <p class="text-xs text-slate-500 mb-3">Введіть параметри користувача</p>
+
+      <div class="space-y-2.5 mb-4">
         <div class="flex gap-2">
-          <input type="text" id="newProfEmoji" value="👤" maxlength="2" class="w-14 text-center text-xl bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
-          <input type="text" id="newProfName" placeholder="Ім'я (напр. Олена)" class="flex-1 text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+          <input type="text" id="newEmoji" value="👤" maxlength="2" class="w-12 text-center text-lg bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+          <input type="text" id="newName" placeholder="Ім'я (наприклад Олена)" class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none font-bold">
         </div>
         <div>
-          <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Ціль калорій на день (ккал)</label>
-          <input type="number" id="newProfTarget" value="1965" class="w-full text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ціль ккал на день</label>
+          <input type="number" id="newTarget" value="1965" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none font-bold">
         </div>
         <div class="grid grid-cols-3 gap-2">
-          <input type="number" id="newProfC" placeholder="В: 196г" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
-          <input type="number" id="newProfP" placeholder="Б: 147г" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
-          <input type="number" id="newProfF" placeholder="Ж: 66г" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
-        </div>
-        <div>
-          <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">4-значний PIN (залиште порожнім, якщо не треба)</label>
-          <input type="password" id="newProfPin" maxlength="4" placeholder="••••" class="w-full text-center tracking-widest text-base font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+          <input type="number" id="newCarb" placeholder="В: 196г" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+          <input type="number" id="newProt" placeholder="Б: 147г" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+          <input type="number" id="newFat" placeholder="Ж: 66г" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
         </div>
       </div>
 
       <div class="flex gap-2">
-        <button onclick="closeNewProfileModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl text-xs">Скасувати</button>
-        <button onclick="createProfile()" class="flex-1 bg-rose-500 text-white font-bold py-3 rounded-2xl text-xs shadow-md">Створити</button>
+        <button onclick="closeNewProfileModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl text-xs">Скасувати</button>
+        <button onclick="saveAdminCreatedProfile()" class="touch-target flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">Зберегти</button>
       </div>
     </div>
   </div>
 
+  <!-- ================= ЛОГІКА ДОДАТКА (JS) ================= -->
   <script>
-    // Початковий стан сховища
-    let app = {
-      activeId: 'prof_1',
+    // Стан програми
+    let store = {
+      adminPass: 'admin123',
+      isAdminUnlocked: false,
+      activeProfileId: 'u_olena',
+      streak: 7,
       profiles: {
-        'prof_1': {
-          id: 'prof_1',
+        'u_olena': {
+          id: 'u_olena',
           name: 'Олена',
           emoji: '👩',
-          pin: '',
           target: 1965,
           carbs: 196,
           protein: 147,
@@ -381,13 +613,16 @@
           fiber: 0,
           sugar: 0,
           sodium: 0,
+          satFat: 0,
+          potassium: 0,
+          calcium: 0,
+          iron: 0,
           meals: { breakfast: 0, lunch: 0, dinner: 0, snack: 0 }
         },
-        'prof_2': {
-          id: 'prof_2',
+        'u_yakiv': {
+          id: 'u_yakiv',
           name: 'Яків',
           emoji: '👨',
-          pin: '',
           target: 2350,
           carbs: 250,
           protein: 175,
@@ -401,324 +636,397 @@
           fiber: 0,
           sugar: 0,
           sodium: 0,
+          satFat: 0,
+          potassium: 0,
+          calcium: 0,
+          iron: 0,
           meals: { breakfast: 0, lunch: 0, dinner: 0, snack: 0 }
         }
       }
     };
 
-    let selectedMealType = 'breakfast';
-    let currentAIAnalysis = null;
+    let tempCurMeal = 'lunch';
 
-    // Ініціалізація
-    function start() {
-      const stored = localStorage.getItem('cal_for_all_data_v2');
-      if (stored) {
-        try { app = JSON.parse(stored); } catch(e){}
+    function initApp() {
+      const saved = localStorage.getItem('cal_calc_pro_v4');
+      if (saved) {
+        try { store = JSON.parse(saved); } catch(e){}
       }
-      refreshUI();
+      renderAll();
     }
 
-    function persist() {
-      localStorage.setItem('cal_for_all_data_v2', JSON.stringify(app));
+    function syncStorage() {
+      localStorage.setItem('cal_calc_pro_v4', JSON.stringify(store));
     }
 
-    function getUser() {
-      return app.profiles[app.activeId] || Object.values(app.profiles)[0];
+    function getActiveUser() {
+      return store.profiles[store.activeProfileId] || Object.values(store.profiles)[0];
     }
 
-    // Перемикання вкладок
-    function goToTab(tabKey) {
-      const tabs = ['nutrition', 'progress', 'ai', 'profiles'];
-      tabs.forEach(t => {
-        const page = document.getElementById('tab-' + t);
-        const btn = document.getElementById('btn-' + t);
-        if (t === tabKey) {
-          page.classList.remove('hidden');
-          btn.classList.add('text-rose-500');
-          btn.classList.remove('text-slate-400');
-        } else {
-          page.classList.add('hidden');
-          btn.classList.remove('text-rose-500');
-          btn.classList.add('text-slate-400');
-        }
-      });
-    }
+    // Рендеринг інтерфейсу
+    function renderAll() {
+      const u = getActiveUser();
 
-    // Оновлення екрану
-    function refreshUI() {
-      const u = getUser();
-      const rem = Math.max(0, u.target - u.eaten);
-
+      // Верхній рядок
       document.getElementById('currentAvatar').innerText = u.emoji;
       document.getElementById('currentName').innerText = u.name;
-      document.getElementById('topWaterVal').innerText = `${u.water} мл`;
+      document.getElementById('streakCounter').innerText = store.streak;
 
-      document.getElementById('dispRemaining').innerText = rem;
+      // Лічильник калорій та стан «ПЕРЕБІР»
+      const diff = u.target - u.eaten;
+      const ring = document.getElementById('calorieRing');
+      const remVal = document.getElementById('dispRemaining');
+      const remLbl = document.getElementById('dispRemainingLabel');
+
       document.getElementById('dispEaten').innerText = u.eaten;
       document.getElementById('dispBurned').innerText = u.burned;
 
+      if (diff >= 0) {
+        remVal.innerText = diff;
+        remVal.className = "text-3xl font-black text-slate-900 tracking-tight";
+        remLbl.innerText = "ккал залишилось";
+        remLbl.className = "text-[11px] font-bold text-slate-500 mt-0.5";
+        ring.setAttribute('stroke', '#FF4D4D');
+        const pct = Math.min(1, u.eaten / u.target);
+        ring.style.strokeDashoffset = 264 - (264 * pct);
+      } else {
+        // Стан перебору калорій (помаранчевий/червоний)
+        const over = Math.abs(diff);
+        remVal.innerText = `+${over}`;
+        remVal.className = "text-3xl font-black text-rose-600 tracking-tight";
+        remLbl.innerText = `перебір на ${over} ккал`;
+        remLbl.className = "text-[11px] font-black text-rose-500 mt-0.5";
+        ring.setAttribute('stroke', '#E11D48'); // Яскраво-червоний
+        ring.style.strokeDashoffset = 0; // Повне коло
+      }
+
+      // Макроси та смужки БЖВ
       document.getElementById('dispCarbs').innerText = `${u.curC} / ${u.carbs} г`;
       document.getElementById('dispProtein').innerText = `${u.curP} / ${u.protein} г`;
       document.getElementById('dispFat').innerText = `${u.curF} / ${u.fat} г`;
 
-      document.getElementById('mealBreakfast').innerText = `${u.meals.breakfast} ккал`;
-      document.getElementById('mealLunch').innerText = `${u.meals.lunch} ккал`;
-      document.getElementById('mealDinner').innerText = `${u.meals.dinner} ккал`;
-      document.getElementById('mealSnack').innerText = `${u.meals.snack} ккал`;
+      const cPct = Math.min(100, Math.round((u.curC / u.carbs) * 100)) || 0;
+      const pPct = Math.min(100, Math.round((u.curP / u.protein) * 100)) || 0;
+      const fPct = Math.min(100, Math.round((u.curF / u.fat) * 100)) || 0;
 
+      document.getElementById('carbPct').innerText = `${cPct}%`;
+      document.getElementById('proteinPct').innerText = `${pPct}%`;
+      document.getElementById('fatPct').innerText = `${fPct}%`;
+
+      document.getElementById('carbBar').style.width = `${cPct}%`;
+      document.getElementById('proteinBar').style.width = `${pPct}%`;
+      document.getElementById('fatBar').style.width = `${fPct}%`;
+
+      // Вода
+      document.getElementById('dispWaterAmount').innerText = `${u.water} / 2000 мл`;
+      const waterPct = Math.min(100, Math.round((u.water / 2000) * 100));
+      document.getElementById('waterProgressBar').style.width = `${waterPct}%`;
+
+      // Прийоми їжі
+      document.getElementById('mealBreakfastVal').innerText = u.meals.breakfast > 0 ? `${u.meals.breakfast} ккал` : '~500 ккал';
+      document.getElementById('mealLunchVal').innerText = u.meals.lunch > 0 ? `${u.meals.lunch} ккал` : '~650 ккал';
+      document.getElementById('mealDinnerVal').innerText = u.meals.dinner > 0 ? `${u.meals.dinner} ккал` : '~500 ккал';
+      document.getElementById('mealSnackVal').innerText = u.meals.snack > 0 ? `${u.meals.snack} ккал` : '~250 ккал';
+
+      // Мікроелементи
       document.getElementById('dispFiber').innerText = `${u.fiber} / 25 г`;
       document.getElementById('dispSugar').innerText = `${u.sugar} / 50 г`;
       document.getElementById('dispSodium').innerText = `${u.sodium} / 2300 мг`;
+      document.getElementById('dispSatFat').innerText = `${u.satFat} / 20 г`;
+      document.getElementById('dispPotassium').innerText = `${u.potassium} / 3500 мг`;
+      document.getElementById('dispCalcium').innerText = `${u.calcium} / 1000 мг`;
+      document.getElementById('dispIron').innerText = `${u.iron} / 18 мг`;
 
-      // Коло
-      const pct = Math.min(1, u.eaten / u.target);
-      const offset = 264 - (264 * pct);
-      document.getElementById('calorieRing').style.strokeDashoffset = offset;
+      // Динамічна порада дня
+      updateSmartTip(u);
 
-      renderProfilesList();
+      // Профілі в табі налаштувань
+      renderProfiles();
+    }
+
+    // Динамічна ШІ-порада дня
+    function updateSmartTip(u) {
+      const tip = document.getElementById('dailyTipText');
+      if (u.water < 1000) {
+        tip.innerText = "Сьогодні ви випили мало води. Випийте склянку теплої води з лимоном для підтримки обміну речовин.";
+      } else if (u.curP < (u.protein * 0.4)) {
+        tip.innerText = "Вам не вистачає білка для відновлення сил. Спробуйте додати до вечері куряче філе, сир або 2 яйця.";
+      } else if (u.fiber < 10) {
+        tip.innerText = "Рівень клітковини низький. Додайте свіжий овочевий салат, насіння чіа або зелене яблуко.";
+      } else {
+        tip.innerText = "Чудовий баланс нутрієнтів сьогодні! Продовжуйте в тому ж дусі та зберігайте спокійний темп.";
+      }
+    }
+
+    // Перемикання вкладок
+    function goToTab(tabName) {
+      ['home', 'progress', 'profile'].forEach(t => {
+        const page = document.getElementById('tab-' + t);
+        const btn = document.getElementById('btn-' + t);
+        if (t === tabName) {
+          page.classList.remove('hidden');
+          if (btn) {
+            btn.classList.add('text-rose-500');
+            btn.classList.remove('text-slate-400');
+          }
+        } else {
+          page.classList.add('hidden');
+          if (btn) {
+            btn.classList.remove('text-rose-500');
+            btn.classList.add('text-slate-400');
+          }
+        }
+      });
+      window.scrollTo(0,0);
     }
 
     // Вода
     function addWater(ml) {
-      getUser().water += ml;
-      persist();
-      refreshUI();
+      getActiveUser().water += ml;
+      syncStorage();
+      renderAll();
     }
 
-    // Очищення дня
-    function resetDayData() {
-      if (confirm('Очистити всі записи за сьогодні для цього профілю?')) {
-        const u = getUser();
+    // Очистити записи дня з підтвердженням
+    function confirmResetDay() {
+      if (confirm("Очистити записи за сьогодні?")) {
+        const u = getActiveUser();
         u.eaten = 0; u.burned = 0; u.curC = 0; u.curP = 0; u.curF = 0;
         u.water = 0; u.fiber = 0; u.sugar = 0; u.sodium = 0;
+        u.satFat = 0; u.potassium = 0; u.calcium = 0; u.iron = 0;
         u.meals = { breakfast: 0, lunch: 0, dinner: 0, snack: 0 };
-        persist();
-        refreshUI();
+        syncStorage();
+        renderAll();
       }
     }
 
-    // Відкриття вікна прийому їжі
-    function openMealModal(type) {
-      selectedMealType = type;
-      const names = { breakfast: 'Сніданок', lunch: 'Обід', dinner: 'Вечеря', snack: 'Перекус' };
-      document.getElementById('modalMealTitle').innerText = `Додати: ${names[type]}`;
+    // Швидке додавання з розділу «Нещодавні»
+    function quickAddRecent(title, kcal, c, p, f) {
+      const u = getActiveUser();
+      u.eaten += kcal;
+      u.meals.lunch += kcal;
+      u.curC += c; u.curP += p; u.curF += f;
+      u.fiber += Math.round(c * 0.1);
+      u.sugar += Math.round(c * 0.15);
+      u.sodium += Math.round(kcal * 0.7);
+      u.potassium += Math.round(c * 5);
+      syncStorage();
+      renderAll();
+    }
+
+    // Тренування
+    function openWorkoutModal() { document.getElementById('workoutModal').classList.remove('hidden'); }
+    function closeWorkoutModal() { document.getElementById('workoutModal').classList.add('hidden'); }
+    function commitWorkout(kcal, type) {
+      getActiveUser().burned += kcal;
+      syncStorage();
+      renderAll();
+      closeWorkoutModal();
+    }
+
+    // Інформація про норму
+    function openNormInfoModal() { document.getElementById('normInfoModal').classList.remove('hidden'); }
+    function closeNormInfoModal() { document.getElementById('normInfoModal').classList.add('hidden'); }
+
+    // Action sheet («+»)
+    function openAddActionSheet() { document.getElementById('actionSheetModal').classList.remove('hidden'); }
+    function closeActionSheet() { document.getElementById('actionSheetModal').classList.add('hidden'); }
+
+    // Ручний прийом
+    function openMealModal(mealKey) {
+      tempCurMeal = mealKey;
+      document.getElementById('modalMealSelect').value = mealKey;
       document.getElementById('inKcal').value = '';
       document.getElementById('inCarb').value = '';
       document.getElementById('inProt').value = '';
       document.getElementById('inFat').value = '';
       document.getElementById('mealModal').classList.remove('hidden');
     }
+    function closeMealModal() { document.getElementById('mealModal').classList.add('hidden'); }
 
-    function closeMealModal() {
-      document.getElementById('mealModal').classList.add('hidden');
-    }
-
-    function fillQuickMeal(title, kcal, carb, prot, fat) {
-      document.getElementById('inKcal').value = kcal;
-      document.getElementById('inCarb').value = carb;
-      document.getElementById('inProt').value = prot;
-      document.getElementById('inFat').value = fat;
-    }
-
-    function commitManualMeal() {
+    function saveManualMeal() {
       const kcal = parseInt(document.getElementById('inKcal').value) || 0;
+      const meal = document.getElementById('modalMealSelect').value;
       const c = parseInt(document.getElementById('inCarb').value) || Math.round(kcal * 0.1);
       const p = parseInt(document.getElementById('inProt').value) || Math.round(kcal * 0.05);
       const f = parseInt(document.getElementById('inFat').value) || Math.round(kcal * 0.03);
 
       if (kcal > 0) {
-        const u = getUser();
+        const u = getActiveUser();
         u.eaten += kcal;
-        u.meals[selectedMealType] += kcal;
-        u.curC += c;
-        u.curP += p;
-        u.curF += f;
+        u.meals[meal] += kcal;
+        u.curC += c; u.curP += p; u.curF += f;
         u.fiber += Math.round(c * 0.1);
         u.sugar += Math.round(c * 0.15);
         u.sodium += Math.round(kcal * 0.8);
-        persist();
-        refreshUI();
+        u.satFat += Math.round(f * 0.3);
+        u.potassium += Math.round(kcal * 0.9);
+        u.calcium += Math.round(kcal * 0.4);
+        u.iron += Math.round(kcal * 0.01);
+        syncStorage();
+        renderAll();
       }
       closeMealModal();
     }
 
-    // Робота з фото
-    function handlePhoto(e) {
+    // Фото та ШІ-сканер
+    function openPhotoFlow() {
+      document.getElementById('photoModal').classList.remove('hidden');
+      document.getElementById('uploadZone').classList.remove('hidden');
+      document.getElementById('previewZone').classList.add('hidden');
+      document.getElementById('aiConfirmBtn').classList.add('hidden');
+    }
+    function closePhotoModal() { document.getElementById('photoModal').classList.add('hidden'); }
+
+    function processPhotoUpload(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          document.getElementById('photoPreview').src = evt.target.result;
-          document.getElementById('photoPlaceholder').classList.add('hidden');
-          document.getElementById('photoPreviewContainer').classList.remove('hidden');
+          document.getElementById('photoPreviewImg').src = evt.target.result;
+          document.getElementById('uploadZone').classList.add('hidden');
+          document.getElementById('previewZone').classList.remove('hidden');
+          document.getElementById('aiConfirmBtn').classList.remove('hidden');
         };
         reader.readAsDataURL(file);
       }
     }
 
-    function clearPhoto() {
-      document.getElementById('photoInput').value = '';
-      document.getElementById('photoPreview').src = '';
-      document.getElementById('photoPlaceholder').classList.remove('hidden');
-      document.getElementById('photoPreviewContainer').classList.add('hidden');
+    function commitAIPlate() {
+      const u = getActiveUser();
+      const kcal = 380;
+      u.eaten += kcal;
+      u.meals.lunch += kcal;
+      u.curP += 28; u.curF += 14; u.curC += 22;
+      u.fiber += 6; u.sugar += 4; u.sodium += 450;
+      syncStorage();
+      renderAll();
+      closePhotoModal();
     }
 
-    function analyzeFood() {
-      const text = document.getElementById('aiPromptText').value.trim();
-      const hasPhoto = !document.getElementById('photoPreviewContainer').classList.contains('hidden');
+    // ================= АДМІН-ПАНЕЛЬ ТА КЕРУВАННЯ ПРОФІЛЯМИ =================
 
-      if (!text && !hasPhoto) {
-        alert('Будь ласка, зробіть фото тарілки або введіть страву текстом!');
+    function toggleAdminPrompt() {
+      if (store.isAdminUnlocked) {
+        // Вийти з адмінки
+        store.isAdminUnlocked = false;
+        document.getElementById('adminPanelSection').classList.add('hidden');
+        document.getElementById('adminLockIcon').innerText = '🔒';
+        document.getElementById('adminLockText').innerText = 'Адмінка';
+        renderProfiles();
         return;
       }
 
-      let cal = 420;
-      let p = 24;
-      let f = 14;
-      let c = 48;
-      let title = text || "Страва з фотографії";
-
-      if (text.toLowerCase().includes('яйц') || text.toLowerCase().includes('омлет')) {
-        cal = 320; p = 22; f = 19; c = 6;
-      } else if (text.toLowerCase().includes('вівсян') || text.toLowerCase().includes('каша')) {
-        cal = 290; p = 9; f = 5; c = 52;
-      } else if (text.toLowerCase().includes('борщ') || text.toLowerCase().includes('суп')) {
-        cal = 350; p = 14; f = 11; c = 42;
+      const pass = prompt("Введіть пароль адміністратора (за замовчуванням: admin123):");
+      if (pass === store.adminPass) {
+        store.isAdminUnlocked = true;
+        document.getElementById('adminPanelSection').classList.remove('hidden');
+        document.getElementById('adminLockIcon').innerText = '🔓';
+        document.getElementById('adminLockText').innerText = 'Вийти';
+        renderProfiles();
+      } else if (pass !== null) {
+        alert("❌ Невірний пароль адміністратора!");
       }
-
-      currentAIAnalysis = {
-        title: title,
-        kcal: cal,
-        p: p,
-        f: f,
-        c: c,
-        mealType: document.getElementById('aiMealTypeSelect').value
-      };
-
-      document.getElementById('resTitle').innerText = title;
-      document.getElementById('resKcal').innerText = `${cal} ккал`;
-      document.getElementById('resP').innerText = `${p} г`;
-      document.getElementById('resF').innerText = `${f} г`;
-      document.getElementById('resC').innerText = `${c} г`;
-      document.getElementById('aiResultCard').classList.remove('hidden');
     }
 
-    function commitAIResult() {
-      if (!currentAIAnalysis) return;
-      const u = getUser();
-      u.eaten += currentAIAnalysis.kcal;
-      u.meals[currentAIAnalysis.mealType] += currentAIAnalysis.kcal;
-      u.curP += currentAIAnalysis.p;
-      u.curF += currentAIAnalysis.f;
-      u.curC += currentAIAnalysis.c;
-      u.fiber += Math.round(currentAIAnalysis.c * 0.12);
-      u.sugar += Math.round(currentAIAnalysis.c * 0.1);
-      u.sodium += Math.round(currentAIAnalysis.kcal * 0.7);
-
-      persist();
-      refreshUI();
-      clearPhoto();
-      document.getElementById('aiPromptText').value = '';
-      document.getElementById('aiResultCard').classList.add('hidden');
-      goToTab('nutrition');
+    function changeAdminPassPrompt() {
+      const cur = prompt("Введіть поточний пароль:");
+      if (cur === store.adminPass) {
+        const next = prompt("Введіть новий пароль адміністратора:");
+        if (next && next.trim().length >= 4) {
+          store.adminPass = next.trim();
+          syncStorage();
+          alert("✓ Пароль адміністратора успішно змінено!");
+        } else {
+          alert("Пароль має бути не менше 4 символів.");
+        }
+      } else {
+        alert("Невірний пароль.");
+      }
     }
 
-    // Профілі
-    function renderProfilesList() {
+    function renderProfiles() {
       const container = document.getElementById('profileContainer');
       container.innerHTML = '';
-      const list = Object.values(app.profiles);
+      const list = Object.values(store.profiles);
 
       list.forEach(p => {
-        const isActive = p.id === app.activeId;
+        const isActive = p.id === store.activeProfileId;
         const card = document.createElement('div');
-        card.className = `p-4 rounded-2xl border transition flex items-center justify-between ${isActive ? 'bg-rose-50/70 border-rose-200' : 'bg-white border-slate-100 shadow-sm'}`;
+        card.className = `p-3.5 rounded-2xl border flex items-center justify-between ${isActive ? 'bg-rose-50/70 border-rose-300' : 'bg-white border-slate-100 shadow-sm'}`;
+
         card.innerHTML = `
-          <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="chooseProfile('${p.id}')">
+          <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="switchProfile('${p.id}')">
             <span class="text-2xl">${p.emoji}</span>
             <div>
-              <div class="flex items-center gap-1.5">
-                <h4 class="text-sm font-extrabold text-slate-800">${p.name}</h4>
-                ${p.pin ? '<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md font-bold">🔒 PIN</span>' : ''}
-                ${isActive ? '<span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-bold">Активний</span>' : ''}
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-black text-slate-800">${p.name}</h4>
+                ${isActive ? '<span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black">Активний</span>' : ''}
               </div>
-              <p class="text-xs text-slate-400">Ціль: ${p.target} ккал (Б:${p.protein}г, Ж:${p.fat}г, В:${p.carbs}г)</p>
+              <p class="text-xs text-slate-500">Ціль: ${p.target} ккал (Б:${p.protein}г, Ж:${p.fat}г, В:${p.carbs}г)</p>
             </div>
           </div>
-          ${list.length > 1 ? `<button onclick="removeProfile('${p.id}')" class="text-slate-300 hover:text-rose-500 text-sm p-1 ml-2">🗑</button>` : ''}
+          ${store.isAdminUnlocked && list.length > 1 ? `
+            <button onclick="adminDeleteProfile('${p.id}')" class="touch-target text-slate-300 hover:text-rose-600 p-2 text-base transition" title="Видалити (Тільки Адмін)">
+              🗑️
+            </button>
+          ` : ''}
         `;
         container.appendChild(card);
       });
     }
 
-    function chooseProfile(id) {
-      const prof = app.profiles[id];
-      if (!prof) return;
+    function switchProfile(id) {
+      store.activeProfileId = id;
+      syncStorage();
+      renderAll();
+      goToTab('home');
+    }
 
-      if (prof.pin) {
-        const code = prompt(`Введіть 4-значний PIN для ${prof.name}:`);
-        if (code !== prof.pin) {
-          alert('❌ Невірний пароль!');
-          return;
-        }
+    function adminDeleteProfile(id) {
+      if (!store.isAdminUnlocked) {
+        alert("Видалення заборонено! Увійдіть в адмінку.");
+        return;
       }
-      app.activeId = id;
-      persist();
-      refreshUI();
-      goToTab('nutrition');
+      if (confirm(`Адміністратор: Ви дійсно хочете видалити профіль "${store.profiles[id].name}"?`)) {
+        delete store.profiles[id];
+        store.activeProfileId = Object.keys(store.profiles)[0];
+        syncStorage();
+        renderAll();
+      }
     }
 
     function openNewProfileModal() {
-      if (Object.keys(app.profiles).length >= 10) {
-        alert('Максимум 10 профілів!');
-        return;
-      }
-      document.getElementById('newProfName').value = '';
-      document.getElementById('newProfPin').value = '';
+      document.getElementById('newName').value = '';
       document.getElementById('newProfileModal').classList.remove('hidden');
     }
+    function closeNewProfileModal() { document.getElementById('newProfileModal').classList.add('hidden'); }
 
-    function closeNewProfileModal() {
-      document.getElementById('newProfileModal').classList.add('hidden');
-    }
+    function saveAdminCreatedProfile() {
+      const name = document.getElementById('newName').value.trim();
+      if (!name) { alert("Введіть ім'я"); return; }
+      const id = 'u_' + Date.now();
+      const emoji = document.getElementById('newEmoji').value.trim() || '👤';
+      const target = parseInt(document.getElementById('newTarget').value) || 2000;
+      const carbs = parseInt(document.getElementById('newCarb').value) || Math.round((target * 0.5) / 4);
+      const protein = parseInt(document.getElementById('newProt').value) || Math.round((target * 0.25) / 4);
+      const fat = parseInt(document.getElementById('newFat').value) || Math.round((target * 0.25) / 9);
 
-    function createProfile() {
-      const name = document.getElementById('newProfName').value.trim();
-      if (!name) {
-        alert("Введіть ім'я!");
-        return;
-      }
-      const id = 'prof_' + Date.now();
-      const emoji = document.getElementById('newProfEmoji').value.trim() || '👤';
-      const target = parseInt(document.getElementById('newProfTarget').value) || 2000;
-      const carbs = parseInt(document.getElementById('newProfC').value) || Math.round((target * 0.5) / 4);
-      const protein = parseInt(document.getElementById('newProfP').value) || Math.round((target * 0.25) / 4);
-      const fat = parseInt(document.getElementById('newProfF').value) || Math.round((target * 0.25) / 9);
-      const pin = document.getElementById('newProfPin').value.trim();
-
-      app.profiles[id] = {
-        id, name, emoji, pin, target, carbs, protein, fat,
-        eaten: 0, burned: 0, curC: 0, curP: 0, curF: 0, water: 0, fiber: 0, sugar: 0, sodium: 0,
+      store.profiles[id] = {
+        id, name, emoji, target, carbs, protein, fat,
+        eaten: 0, burned: 0, curC: 0, curP: 0, curF: 0, water: 0,
+        fiber: 0, sugar: 0, sodium: 0, satFat: 0, potassium: 0, calcium: 0, iron: 0,
         meals: { breakfast: 0, lunch: 0, dinner: 0, snack: 0 }
       };
 
-      app.activeId = id;
-      persist();
-      refreshUI();
+      store.activeProfileId = id;
+      syncStorage();
+      renderAll();
       closeNewProfileModal();
-      goToTab('nutrition');
+      goToTab('home');
     }
 
-    function removeProfile(id) {
-      if (confirm('Видалити цей профіль?')) {
-        delete app.profiles[id];
-        app.activeId = Object.keys(app.profiles)[0];
-        persist();
-        refreshUI();
-      }
-    }
-
-    window.onload = start;
+    window.onload = initApp;
   </script>
 </body>
 </html>
