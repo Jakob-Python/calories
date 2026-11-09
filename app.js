@@ -1,4 +1,96 @@
-// app.js — Повна бізнес-логіка Calories PRO & SaaS Admin Center 2.0
+// app.js — Calories PRO & SaaS Admin Center 2.0 (Security, I18N, Flash 3.8/3.5)
+
+// Вбудоване хешування Web Crypto API (SHA-256)
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Ваш персональний захищений хеш адміністратора
+const DEFAULT_ADMIN_HASH = '1752604b17d00efbebacc10984f5c764adc539e0395ecc0ef65f23ee7cfe1075';
+
+// Словник перекладів інтерфейсу (UA / EN / FR)
+const I18N = {
+  uk: {
+    btn_lang: '🇺🇦 UA',
+    today: 'Сьогодні',
+    eaten: 'Спожито',
+    remaining: 'ккал залишилось',
+    over: 'перебір на',
+    target: 'Ціль: ',
+    burned: 'Спалено',
+    add_activity: '+ Активність',
+    carbs: '🌾 Вугл.',
+    protein: '🥩 Білки',
+    fat: '🥑 Жири',
+    water: 'Вода',
+    nav_home: 'Головна',
+    nav_diary: 'Щоденник',
+    nav_weight: 'Вага',
+    nav_plan: 'План',
+    nav_more: 'Ще',
+    tip_title: 'Порада дня',
+    other_tip: '🎲 Інша порада',
+    toast_water_add: 'Додано води',
+    toast_water_undo: 'Скасовано воду',
+    toast_water_empty: 'Записів води за сьогодні немає'
+  },
+  en: {
+    btn_lang: '🇬🇧 EN',
+    today: 'Today',
+    eaten: 'Eaten',
+    remaining: 'kcal left',
+    over: 'over by',
+    target: 'Target: ',
+    burned: 'Burned',
+    add_activity: '+ Activity',
+    carbs: '🌾 Carbs',
+    protein: '🥩 Protein',
+    fat: '🥑 Fats',
+    water: 'Water',
+    nav_home: 'Home',
+    nav_diary: 'Diary',
+    nav_weight: 'Weight',
+    nav_plan: 'Plan',
+    nav_more: 'More',
+    tip_title: 'Daily Tip',
+    other_tip: '🎲 New Tip',
+    toast_water_add: 'Water added',
+    toast_water_undo: 'Water canceled',
+    toast_water_empty: 'No water logs for today'
+  },
+  fr: {
+    btn_lang: '🇫🇷 FR',
+    today: 'Aujourd\'hui',
+    eaten: 'Consommé',
+    remaining: 'kcal restantes',
+    over: 'dépassement de',
+    target: 'Cible: ',
+    burned: 'Brûlé',
+    add_activity: '+ Activité',
+    carbs: '🌾 Glucides',
+    protein: '🥩 Protéines',
+    fat: '🥑 Lipides',
+    water: 'Eau',
+    nav_home: 'Accueil',
+    nav_diary: 'Journal',
+    nav_weight: 'Poids',
+    nav_plan: 'Plan',
+    nav_more: 'Plus',
+    tip_title: 'Conseil du jour',
+    other_tip: '🎲 Autre conseil',
+    toast_water_add: 'Eau ajoutée',
+    toast_water_undo: 'Eau annulée',
+    toast_water_empty: 'Aucune consommation d\'eau aujourd\'hui'
+  }
+};
+
+function t(key) {
+  const curLang = app.lang || 'uk';
+  return (I18N[curLang] && I18N[curLang][key]) || I18N['uk'][key] || key;
+}
 
 function getLocalDateString(d = new Date()) {
   const year = d.getFullYear();
@@ -20,7 +112,7 @@ const DEFAULT_MEAL_SPLIT = { breakfast: 0.25, lunch: 0.33, dinner: 0.27, snack: 
 
 let app = {
   lang: 'uk',
-  adminPass: 'admin123',
+  adminPassHash: DEFAULT_ADMIN_HASH,
   geminiApiKey: '',
   geminiTested: false,
   activeModel: 'gemini-3.8-flash',
@@ -56,7 +148,7 @@ function showToast(msg, type = 'success') {
   if (!toast) return;
   const icon = document.getElementById('toastIcon');
   const text = document.getElementById('toastMsg');
-  icon.innerText = type === 'success' ? '✓' : '⚠️';
+  icon.innerText = type === 'success' ? '✓' : (type === 'warning' ? '⚠️' : '❌');
   text.innerText = msg;
   toast.classList.remove('-translate-y-12', 'opacity-0');
   toast.classList.add('translate-y-0', 'opacity-100');
@@ -92,9 +184,9 @@ function init() {
   }
 
   app.isAdminUnlocked = false;
-  if (!app.adminPass) app.adminPass = 'admin123';
+  if (!app.adminPassHash) app.adminPassHash = DEFAULT_ADMIN_HASH;
 
-  // Скидання застарілих моделей з пам'яті на актуальну 3.8
+  // Очищення старих моделей (1.5 / 2.0 / 2.5) з localStorage на актуальну 3.8 Flash
   if (!app.activeModel || app.activeModel.includes('1.5') || app.activeModel.includes('2.0') || app.activeModel.includes('2.5')) {
     app.activeModel = 'gemini-3.8-flash';
   }
@@ -171,14 +263,13 @@ async function requestGeminiAPI(payload) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  // Пул актуальних моделей із пріоритетом на 3.8 та 3.5 Flash
+  // Пул виключно актуальних моделей
   const modelsToTry = [
     app.activeModel || 'gemini-3.8-flash',
     'gemini-3.8-flash',
     'gemini-3.5-flash',
     'gemini-3.1-pro-preview'
   ];
-  
   const uniqueModels = [...new Set(modelsToTry)];
   let lastErrMsg = '';
 
@@ -216,7 +307,7 @@ async function testGeminiConnection() {
     statusEl.className = "text-xs font-bold text-rose-500";
     return;
   }
-  statusEl.innerText = "⏳ Тестування запиту до Gemini API...";
+  statusEl.innerText = "⏳ Тестування запиту до Gemini 3.8 Flash...";
   statusEl.className = "text-xs font-bold text-indigo-600";
 
   try {
@@ -224,7 +315,7 @@ async function testGeminiConnection() {
     statusEl.innerText = `✓ Успішне підключення! Активна модель: ${app.activeModel}`;
     statusEl.className = "text-xs font-bold text-emerald-600";
     logAudit('AI', `Успішний тест з’єднання (${app.activeModel})`);
-    showToast("✓ Gemini API активний!");
+    showToast(`✓ Gemini API активний (${app.activeModel})!`);
     refreshAdminData();
   } catch (err) {
     app.geminiTested = false;
@@ -244,10 +335,12 @@ async function callGeminiChat(userQuery) {
   });
 
   if (app.geminiApiKey) {
+    const langNames = { uk: 'українською', en: 'англійською', fr: 'французькою' };
+    const curLang = app.lang || 'uk';
     const systemPrompt = `
-      Ти персональний нутриціолог додатку Calories PRO.
-      Відповідай українською мовою, конкретно, лаконічно, доброзичливо.
-      Користувач: ${prof.name}, Ціль: ${prof.target} ккал (Б:${prof.protein}г, Ж:${prof.fat}г, В:${prof.carbs}г).
+      Ти експертний персональний нутриціолог додатку Calories PRO.
+      Відповідай ${langNames[curLang] || 'українською'} мовою, конкретно, лаконічно, доброзичливо.
+      Користувач: ${prof.name}, Денна ціль: ${prof.target} ккал (Б: ${prof.protein}г, Ж: ${prof.fat}г, В: ${prof.carbs}г).
       Сьогодні спожито: ${eaten} ккал. Залишок: ${Math.max(0, prof.target - eaten)} ккал.
       Питання: "${userQuery}".
     `;
@@ -280,9 +373,9 @@ async function analyzePhotoWithGemini(base64Uri) {
 
   const rawBase64 = base64Uri.split(',')[1];
   const promptText = app.aiPromptConfig || `
-    Analyze this plate of food as an expert nutritionist. Estimate portion weight, dish name in Ukrainian, calories, and macronutrients.
+    Analyze this plate of food as an expert nutritionist. Estimate portion weight, dish name, calories, and macronutrients.
     Return ONLY valid JSON without markdown:
-    { "name": "Назва страви", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }
+    { "name": "Dish Name", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }
   `;
 
   try {
@@ -451,6 +544,56 @@ function appendChatMessage(sender, html, id = null) {
   container.scrollTop = container.scrollHeight;
 }
 
+// ================= ВОДА: ДОДАВАННЯ ТА СКАСУВАННЯ (UNDO) =================
+function addWater(ml) {
+  curDayData().waterHistory.push({ id: 'w_' + Date.now(), amount: ml });
+  save();
+  renderAll();
+  showToast(t('toast_water_add') + ` +${ml} мл`);
+}
+
+function undoWater() {
+  const day = curDayData();
+  if (!day.waterHistory || day.waterHistory.length === 0) {
+    showToast(t('toast_water_empty'), 'warning');
+    return;
+  }
+  const removed = day.waterHistory.pop();
+  save();
+  renderAll();
+  showToast(t('toast_water_undo') + ` -${removed.amount} мл`);
+}
+
+// ================= МОВИ ТА ПЕРЕКЛАД =================
+function applyTranslations() {
+  const lang = app.lang || 'uk';
+  const dict = I18N[lang] || I18N.uk;
+
+  const langBtn = document.getElementById('langSwitchBtn');
+  if (langBtn) langBtn.innerText = dict.btn_lang;
+
+  const navHome = document.querySelector('#nav-btn-home span:last-child');
+  if (navHome) navHome.innerText = dict.nav_home;
+  const navDiary = document.querySelector('#nav-btn-diary span:last-child');
+  if (navDiary) navDiary.innerText = dict.nav_diary;
+  const navWeight = document.querySelector('#nav-btn-weight span:last-child');
+  if (navWeight) navWeight.innerText = dict.nav_weight;
+  const navPlan = document.querySelector('#nav-btn-plan span:last-child');
+  if (navPlan) navPlan.innerText = dict.nav_plan;
+  const navMore = document.querySelector('#nav-btn-more span:last-child');
+  if (navMore) navMore.innerText = dict.nav_more;
+}
+
+function toggleLanguage() {
+  const order = ['uk', 'en', 'fr'];
+  const curIdx = order.indexOf(app.lang || 'uk');
+  app.lang = order[(curIdx + 1) % order.length];
+  save();
+  applyTranslations();
+  renderAll();
+  showToast(`Мова: ${I18N[app.lang].btn_lang}`);
+}
+
 // ================= ГОЛОВНИЙ РЕНДЕР КЛІЄНТА =================
 function renderAll() {
   const prof = curProfile();
@@ -503,7 +646,7 @@ function renderAll() {
     const over = Math.abs(diff);
     remVal.innerText = `+${over}`;
     remVal.className = "text-3xl font-black text-rose-600 tracking-tight";
-    remLbl.innerText = `перебір на ${over} ккал`;
+    remLbl.innerText = `${t('over')} ${over} ккал`;
     remLbl.className = "text-[11px] font-black text-rose-500 mt-0.5";
     ring.setAttribute('stroke', '#E11D48');
     ring.style.strokeDashoffset = 0;
@@ -535,6 +678,7 @@ function renderAll() {
   renderShoppingChecklist();
   renderProfilesTab();
 }
+
 function calculateRealStreak(profId) {
   const pDays = app.days[profId] || {};
   let streak = 0;
@@ -985,7 +1129,7 @@ function commitSelectedFoodToMeal() {
   showToast(`✓ Додано: ${activeModalItem.name}`);
 }
 
-// ================= ADMIN CENTER 2.0 =================
+// ================= ADMIN CENTER 2.0 (ХЕШУВАННЯ ПАРОЛЯ) =================
 function openAdminPasswordModal() {
   document.getElementById('adminPasswordInputVal').value = '';
   const err = document.getElementById('adminLoginError');
@@ -997,11 +1141,15 @@ function closeAdminPasswordModal() {
   document.getElementById('adminPasswordModal').classList.add('hidden');
 }
 
-function verifyAdminPassword() {
+async function verifyAdminPassword() {
   const entered = document.getElementById('adminPasswordInputVal').value;
   const err = document.getElementById('adminLoginError');
 
-  if (entered === app.adminPass) {
+  // Хешуємо введений пароль через SHA-256
+  const enteredHash = await sha256(entered);
+  const targetHash = app.adminPassHash || DEFAULT_ADMIN_HASH;
+
+  if (enteredHash === targetHash) {
     app.isAdminUnlocked = true;
     closeAdminPasswordModal();
     logAudit('Вхід', 'Успішний вхід в Admin Control Center 2.0');
@@ -1072,7 +1220,7 @@ function refreshAdminData() {
   const aiStatusEl = document.getElementById('admStatAiStatusText');
   if (app.geminiApiKey) {
     if (app.geminiTested) {
-      aiStatusEl.innerText = "Gemini перевірено ✓";
+      aiStatusEl.innerText = `Gemini (${app.activeModel}) ✓`;
       aiStatusEl.className = "text-[10px] font-semibold text-emerald-600";
     } else {
       aiStatusEl.innerText = "Ключ збережено (не перевірено)";
@@ -1833,7 +1981,7 @@ function nextRandomTip() {
 }
 
 // ================= БЕЗПЕКА & ЖУРНАЛ АУДИТУ =================
-function commitAdminSecurityPassword() {
+async function commitAdminSecurityPassword() {
   const p1 = document.getElementById('admSecPass1').value;
   const p2 = document.getElementById('admSecPass2').value;
   if (!p1 || p1.length < 4) {
@@ -1844,11 +1992,12 @@ function commitAdminSecurityPassword() {
     alert("Паролі не збігаються");
     return;
   }
-  app.adminPass = p1;
+  // Зберігаємо виключно SHA-256 хеш
+  app.adminPassHash = await sha256(p1);
   save();
   document.getElementById('admSecPass1').value = '';
   document.getElementById('admSecPass2').value = '';
-  logAudit('Безпека', 'Змінено пароль адміністратора');
+  logAudit('Безпека', 'Змінено хеш пароля адміністратора');
   showToast("✓ Пароль адміністратора оновлено!");
 }
 
@@ -1895,7 +2044,7 @@ function saveAiPromptConfig() {
   logAudit('AI', 'Оновлено системний промпт сканера');
 }
 
-// ================= КАЛЕНДАР, ВОДА, АКТИВНІСТЬ, НАВІГАЦІЯ =================
+// ================= КАЛЕНДАР, АКТИВНІСТЬ, НАВІГАЦІЯ =================
 function renderCalendarRow() {
   const container = document.getElementById('calendarWeekRow');
   if (!container) return;
@@ -1934,27 +2083,8 @@ function renderCalendarRow() {
     `;
     container.appendChild(col);
   }
-  document.getElementById('homeDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? "Сьогодні" : selectedDateKey;
-  document.getElementById('diaryCurrentDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? "Сьогодні" : selectedDateKey;
-}
-
-function addWater(ml) {
-  curDayData().waterHistory.push({ id: 'w_' + Date.now(), amount: ml });
-  save();
-  renderAll();
-  showToast(t('toast_water_add') + ` +${ml}`);
-}
-
-function undoWater() {
-  const day = curDayData();
-  if (!day.waterHistory || day.waterHistory.length === 0) {
-    showToast(t('toast_water_empty'), 'warning');
-    return;
-  }
-  const removed = day.waterHistory.pop();
-  save();
-  renderAll();
-  showToast(t('toast_water_undo') + ` -${removed.amount} мл`);
+  document.getElementById('homeDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? t('today') : selectedDateKey;
+  document.getElementById('diaryCurrentDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? t('today') : selectedDateKey;
 }
 
 function openActivityModal() { document.getElementById('activityModal').classList.remove('hidden'); }
@@ -1975,120 +2105,6 @@ function addQuickBurn(k) {
   renderAll();
   closeActivityModal();
   showToast(`+${k} спалених ккал`);
-}
-
-// Словник перекладів інтерфейсу: UA, EN, FR
-const I18N = {
-  uk: {
-    btn_lang: '🇺🇦 UA',
-    today: 'Сьогодні',
-    eaten: 'Спожито',
-    remaining: 'ккал залишилось',
-    target: 'Ціль: ',
-    burned: 'Спалено',
-    add_activity: '+ Активність',
-    carbs: '🌾 Вугл.',
-    protein: '🥩 Білки',
-    fat: '🥑 Жири',
-    water: 'Вода',
-    nav_home: 'Головна',
-    nav_diary: 'Щоденник',
-    nav_weight: 'Вага',
-    nav_plan: 'План',
-    nav_more: 'Ще',
-    tip_title: 'Порада дня',
-    other_tip: '🎲 Інша порада',
-    toast_water_add: 'Додано води',
-    toast_water_undo: 'Скасовано воду',
-    toast_water_empty: 'Записів води за сьогодні немає'
-  },
-  en: {
-    btn_lang: '🇬🇧 EN',
-    today: 'Today',
-    eaten: 'Eaten',
-    remaining: 'kcal left',
-    target: 'Target: ',
-    burned: 'Burned',
-    add_activity: '+ Activity',
-    carbs: '🌾 Carbs',
-    protein: '🥩 Protein',
-    fat: '🥑 Fats',
-    water: 'Water',
-    nav_home: 'Home',
-    nav_diary: 'Diary',
-    nav_weight: 'Weight',
-    nav_plan: 'Plan',
-    nav_more: 'More',
-    tip_title: 'Daily Tip',
-    other_tip: '🎲 New Tip',
-    toast_water_add: 'Water added',
-    toast_water_undo: 'Water canceled',
-    toast_water_empty: 'No water logs for today'
-  },
-  fr: {
-    btn_lang: '🇫🇷 FR',
-    today: 'Aujourd\'hui',
-    eaten: 'Consommé',
-    remaining: 'kcal restantes',
-    target: 'Cible: ',
-    burned: 'Brûlé',
-    add_activity: '+ Activité',
-    carbs: '🌾 Glucides',
-    protein: '🥩 Protéines',
-    fat: '🥑 Lipides',
-    water: 'Eau',
-    nav_home: 'Accueil',
-    nav_diary: 'Journal',
-    nav_weight: 'Poids',
-    nav_plan: 'Plan',
-    nav_more: 'Plus',
-    tip_title: 'Conseil du jour',
-    other_tip: '🎲 Autre conseil',
-    toast_water_add: 'Eau ajoutée',
-    toast_water_undo: 'Eau annulée',
-    toast_water_empty: 'Aucune consommation d\'eau aujourd\'hui'
-  }
-};
-
-function t(key) {
-  const currentLang = app.lang || 'uk';
-  return (I18N[currentLang] && I18N[currentLang][key]) || I18N['uk'][key] || key;
-}
-
-function applyTranslations() {
-  const lang = app.lang || 'uk';
-  const dict = I18N[lang] || I18N.uk;
-
-  const langBtn = document.getElementById('langSwitchBtn');
-  if (langBtn) langBtn.innerText = dict.btn_lang;
-
-  // Оновлення тексту прийому та залишку калорій
-  const remLbl = document.getElementById('dispRemainingLabel');
-  if (remLbl && !remLbl.innerText.includes('перебір') && !remLbl.innerText.includes('over')) {
-    remLbl.innerText = dict.remaining;
-  }
-
-  // Навігація внизу екрана
-  const navHome = document.querySelector('#nav-btn-home span:last-child');
-  if (navHome) navHome.innerText = dict.nav_home;
-  const navDiary = document.querySelector('#nav-btn-diary span:last-child');
-  if (navDiary) navDiary.innerText = dict.nav_diary;
-  const navWeight = document.querySelector('#nav-btn-weight span:last-child');
-  if (navWeight) navWeight.innerText = dict.nav_weight;
-  const navPlan = document.querySelector('#nav-btn-plan span:last-child');
-  if (navPlan) navPlan.innerText = dict.nav_plan;
-  const navMore = document.querySelector('#nav-btn-more span:last-child');
-  if (navMore) navMore.innerText = dict.nav_more;
-}
-
-function toggleLanguage() {
-  const order = ['uk', 'en', 'fr'];
-  const curIdx = order.indexOf(app.lang || 'uk');
-  app.lang = order[(curIdx + 1) % order.length];
-  save();
-  applyTranslations();
-  renderAll();
-  showToast(`Мова: ${I18N[app.lang].btn_lang}`);
 }
 
 function exportDataJSON() {
@@ -2125,6 +2141,7 @@ function importDataJSON(e) {
 
         save();
         renderCalendarRow();
+        applyTranslations();
         renderAll();
         logAudit('Бекап', 'Відновлено дані з JSON файлу');
         showToast("✓ Дані успішно відновлено!");
