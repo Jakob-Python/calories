@@ -1,4 +1,4 @@
-// app.js — Calories PRO & SaaS Admin Center 2.0 (All Audits Fixed)
+// app.js — Calories PRO & SaaS Admin Center 2.0 (Gemini 3.8 / 3.5 / 3.1 Only)
 
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
@@ -122,7 +122,7 @@ let app = {
   adminPassHash: DEFAULT_ADMIN_HASH,
   geminiApiKey: '',
   geminiTested: false,
-  activeModel: 'gemini-2.5-flash',
+  activeModel: 'gemini-3.8-flash',
   isAdminUnlocked: false,
   activeProfileId: 'u_olena',
   streak: 0,
@@ -186,7 +186,6 @@ function save() {
   }
 }
 
-// Злиття нової бази продуктів (455 позицій) зі збереженими даними користувача
 function mergeSeedData() {
   if (typeof SEED_FOODS === 'undefined') return;
   const currentVersion = app.seedVersion || 1;
@@ -225,7 +224,13 @@ function init() {
 
   app.isAdminUnlocked = false;
   if (!app.adminPassHash) app.adminPassHash = DEFAULT_ADMIN_HASH;
-  if (!app.activeModel) app.activeModel = 'gemini-2.5-flash';
+
+  // Примусове скидання будь-яких старих моделей (1.5, 2.0, 2.5) на актуальну 3.8 Flash
+  const validModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview'];
+  if (!app.activeModel || !validModels.includes(app.activeModel)) {
+    app.activeModel = 'gemini-3.8-flash';
+  }
+
   if (!app.aiPromptConfig || app.aiPromptConfig.length < 30) {
     app.aiPromptConfig = DEFAULT_VISION_PROMPT;
   }
@@ -292,7 +297,7 @@ function curDayData() {
   return app.days[app.activeProfileId][selectedDateKey];
 }
 
-// ================= НАДШВИДКИЙ ТА ЗАХИЩЕНИЙ GEMINI API =================
+// ================= GEMINI API (ВИКЛЮЧНО 3.8 FLASH, 3.5 FLASH, 3.1 PRO) =================
 async function requestGeminiAPI(payload) {
   if (!app.geminiApiKey) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
@@ -300,10 +305,10 @@ async function requestGeminiAPI(payload) {
 
   const modelsToTry = [
     app.activeModel,
-    'gemini-2.5-flash',
-    'gemini-1.5-flash',
-    'gemini-3.8-flash'
-  ].filter(Boolean);
+    'gemini-3.8-flash',
+    'gemini-3.5-flash',
+    'gemini-3.1-pro-preview'
+  ].filter(m => m && !m.includes('1.5') && !m.includes('2.5') && !m.includes('2.0'));
 
   const uniqueModels = [...new Set(modelsToTry)];
   let lastErrMsg = '';
@@ -350,7 +355,7 @@ async function testGeminiConnection() {
     statusEl.className = "text-xs font-bold text-rose-500";
     return;
   }
-  statusEl.innerText = "⏳ Тестування швидкості з'єднання з Gemini...";
+  statusEl.innerText = "⏳ Тестування з'єднання з Gemini (3.8 / 3.5 Flash)...";
   statusEl.className = "text-xs font-bold text-indigo-600";
 
   try {
@@ -401,7 +406,6 @@ async function callGeminiChat(userQuery) {
   }
 }
 
-// Нормалізація сканування (підтримує як одиночний об'єкт, так і масив страв)
 function normalizeScan(raw) {
   if (Array.isArray(raw)) {
     if (raw.length === 0) return { name: "Не розпізнано їжу", grams: 0, kcal: 0, p: 0, f: 0, c: 0, fiber: 0 };
@@ -1300,7 +1304,7 @@ function switchAdminSection(secId) {
     products: 'Менеджер бази продуктів',
     categories: 'Керування категоріями їжі',
     recipes: 'Керування стравами та супами',
-    ai: 'AI Center (Gemini API & Vision)',
+    ai: 'AI Center (Gemini 3.8 / 3.5 Flash)',
     content: 'Керування контентом & Поради дня',
     security: 'Безпека та журнал операцій',
     backup: 'Резервне копіювання & База даних'
@@ -2234,7 +2238,6 @@ function addQuickBurn(k) {
   showToast(`+${k} спалених ккал`);
 }
 
-// Надійний експорт JSON через Blob
 function exportDataJSON() {
   const jsonStr = JSON.stringify(app, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
@@ -2256,6 +2259,10 @@ function importDataJSON(e) {
       const parsed = JSON.parse(evt.target.result);
       if (parsed.profiles) {
         app = Object.assign(app, parsed);
+        const validModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview'];
+        if (!app.activeModel || !validModels.includes(app.activeModel)) {
+          app.activeModel = 'gemini-3.8-flash';
+        }
         mergeSeedData();
         if (!app.tips || app.tips.length === 0) app.tips = (typeof SEED_TIPS !== 'undefined') ? [...SEED_TIPS] : [];
         if (!app.activityLog) app.activityLog = [];
