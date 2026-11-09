@@ -8,7 +8,7 @@ async function sha256(message) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Ваш персональний захищений хеш адміністратора
+// Захищений SHA-256 хеш пароля адміністратора
 const DEFAULT_ADMIN_HASH = '1752604b17d00efbebacc10984f5c764adc539e0395ecc0ef65f23ee7cfe1075';
 
 // Словник перекладів інтерфейсу (UA / EN / FR)
@@ -119,43 +119,7 @@ let app = {
   isAdminUnlocked: false,
   activeProfileId: 'u_olena',
   streak: 0,
-  aiPromptConfig: `You are an elite clinical nutritionist, culinary expert, and visual food-recognition specialist. Analyze the meal, plate, bowl, or beverage in the image with maximum forensic precision.
-
-### 1. VISUAL REFERENCE & 3D VOLUME ESTIMATION:
-- Detect visual scale: standard dinner plate (24-27 cm), side plate (18-20 cm), soup bowl (350-500 ml), fork length (~19 cm), spoon (~15-18 cm), or fingers/hand.
-- Assess portion depth/thickness, stacking, and food density (e.g., fluffy cooked rice vs dense cutlet, liquid broth vs thick stew).
-- Scale total dish mass realistically (single portion ranges typically between 200g and 550g).
-
-### 2. DECONSTRUCTION & HIDDEN CALORIES:
-- Identify every component: primary protein, garnish/carb base, vegetables, garnishes, seeds, and bread.
-- Account for preparation method: raw, boiled, steamed, baked, sautéed, deep-fried, grilled.
-- Detect cooking fats & glazes: surface gloss indicates cooking oil (butter, sunflower oil, olive oil: +5-15g fat).
-- Factor in hidden dressings: mayonnaise, sour cream (15-20%), sauces, gravies, marinades, breading/batter (adds +20-40% carbs/fats).
-- For traditional Ukrainian & Eastern European dishes (borscht, syrnyky, varenyky, holubtsi, kotlety, mlyntsi, salat olivier, grechka z maslom), base calculations on authentic homemade recipes rather than ultra-lean diet versions.
-
-### 3. MATHEMATICAL VALIDATION:
-- Maintain nutritional balance: kcal MUST mathematically align with macronutrients: kcal ≈ (4 * p) + (4 * c) + (9 * f) within a 5-8% margin.
-- Never output negative numbers or strings where numbers are expected.
-
-### 4. LANGUAGE & NAMING:
-- "name" MUST be concise, appetizing, and written in natural Ukrainian (e.g., "Гречка з курячою котлетою та салатом", "Борщ український зі сметаною").
-
-### 5. STRICT OUTPUT FORMAT:
-- Return ONLY pure, raw JSON.
-- DO NOT wrap in markdown code blocks.
-- DO NOT add conversational text, disclaimers, or preambles.
-- If the image contains NO food or beverages, return exactly:
-{"name": "Не їжа", "grams": 0, "kcal": 0, "p": 0, "f": 0, "c": 0}
-
-- If food IS present, return exactly this JSON structure:
-{
-  "name": "Назва страви українською",
-  "grams": 350,
-  "kcal": 485,
-  "p": 32.5,
-  "f": 18.2,
-  "c": 47.0
-}`,
+  aiPromptConfig: 'Analyze this plate of food as an expert nutritionist. Return valid JSON: { "name": "Назва", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }',
   aiScanCount: 0,
   activityLog: [],
   foods: [],
@@ -222,7 +186,7 @@ function init() {
   app.isAdminUnlocked = false;
   if (!app.adminPassHash) app.adminPassHash = DEFAULT_ADMIN_HASH;
 
-  // Очищення старих моделей (1.5 / 2.0 / 2.5) з localStorage на актуальну 3.8 Flash
+  // Очищення застарілих моделей із пам'яті браузера на актуальну Flash 3.8
   if (!app.activeModel || app.activeModel.includes('1.5') || app.activeModel.includes('2.0') || app.activeModel.includes('2.5')) {
     app.activeModel = 'gemini-3.8-flash';
   }
@@ -299,7 +263,6 @@ async function requestGeminiAPI(payload) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  // Пул виключно актуальних моделей
   const modelsToTry = [
     app.activeModel || 'gemini-3.8-flash',
     'gemini-3.8-flash',
@@ -374,7 +337,7 @@ async function callGeminiChat(userQuery) {
     const langNames = { uk: 'українською', en: 'англійською', fr: 'французькою' };
     const curLang = app.lang || 'uk';
     const systemPrompt = `
-      Ти експертний персональний нутриціолог додатку Calories PRO.
+      Ти персональний нутриціолог додатку Calories PRO.
       Відповідай ${langNames[curLang] || 'українською'} мовою, конкретно, лаконічно, доброзичливо.
       Користувач: ${prof.name}, Денна ціль: ${prof.target} ккал (Б: ${prof.protein}г, Ж: ${prof.fat}г, В: ${prof.carbs}г).
       Сьогодні спожито: ${eaten} ккал. Залишок: ${Math.max(0, prof.target - eaten)} ккал.
@@ -408,7 +371,7 @@ async function analyzePhotoWithGemini(base64Uri) {
   }
 
   const rawBase64 = base64Uri.split(',')[1];
-  const promptText = app.aiPromptConfig;
+  const promptText = app.aiPromptConfig || 'Analyze this plate of food as an expert nutritionist. Return ONLY valid JSON: { "name": "Назва", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }';
 
   try {
     const data = await requestGeminiAPI({
@@ -1177,7 +1140,6 @@ async function verifyAdminPassword() {
   const entered = document.getElementById('adminPasswordInputVal').value;
   const err = document.getElementById('adminLoginError');
 
-  // Хешуємо введений пароль через SHA-256
   const enteredHash = await sha256(entered);
   const targetHash = app.adminPassHash || DEFAULT_ADMIN_HASH;
 
@@ -2024,7 +1986,6 @@ async function commitAdminSecurityPassword() {
     alert("Паролі не збігаються");
     return;
   }
-  // Зберігаємо виключно SHA-256 хеш
   app.adminPassHash = await sha256(p1);
   save();
   document.getElementById('admSecPass1').value = '';
