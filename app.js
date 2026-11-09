@@ -23,7 +23,7 @@ let app = {
   adminPass: 'admin123',
   geminiApiKey: '',
   geminiTested: false,
-  activeModel: 'gemini-1.5-flash',
+  activeModel: 'gemini-2.5-flash',
   isAdminUnlocked: false,
   activeProfileId: 'u_olena',
   streak: 0,
@@ -94,6 +94,11 @@ function init() {
   app.isAdminUnlocked = false;
   if (!app.adminPass) app.adminPass = 'admin123';
 
+  // Якщо в localStorage записана стара неробоча версія моделі — скидаємо на актуальну
+  if (!app.activeModel || app.activeModel.includes('1.5') || app.activeModel.includes('2.0')) {
+    app.activeModel = 'gemini-2.5-flash';
+  }
+
   if (!app.foods || app.foods.length === 0) {
     app.foods = (typeof SEED_FOODS !== 'undefined') ? JSON.parse(JSON.stringify(SEED_FOODS)) : [];
   }
@@ -160,41 +165,42 @@ function curDayData() {
 }
 
 // ================= НАДІЙНИЙ GEMINI API =================
-// Автоматический опрос доступных моделей и выполнение запроса
 async function requestGeminiAPI(payload) {
   if (!app.geminiApiKey) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  // 1. Если активная модель еще не определена или сбоит — спрашиваем у Google список доступных моделей
-  if (!app.activeModel || app.activeModel === 'gemini-1.5-flash' || app.activeModel === 'gemini-2.0-flash') {
+  // 1. Спроба автовизначення робочої моделі через ListModels, якщо поточна дає збій
+  if (!app.geminiTested) {
     try {
       const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${app.geminiApiKey}`);
       if (listRes.ok) {
         const listData = await listRes.json();
-        // Находим первую доступную модель со словом 'flash' и поддержкой 'generateContent'
-        const availableModel = listData.models?.find(m => 
+        const available = listData.models?.find(m => 
           m.supportedGenerationMethods?.includes('generateContent') && 
-          m.name.includes('flash')
-        ) || listData.models?.find(m => m.supportedGenerationMethods?.includes('generateContent'));
-
-        if (availableModel) {
-          // Убираем префикс "models/", если он присутствует
-          app.activeModel = availableModel.name.replace(/^models\//, '');
+          (m.name.includes('flash') || m.name.includes('3.8') || m.name.includes('2.5'))
+        );
+        if (available) {
+          app.activeModel = available.name.replace(/^models\//, '');
           save();
         }
       }
     } catch (e) {
-      console.warn("Не удалось автоматически получить список моделей:", e);
+      console.warn("Помилка опитування моделей:", e);
     }
   }
 
-  // Резервный список на случай, если ListModels недоступен
-  const currentModel = app.activeModel || 'gemini-2.5-flash';
-  const modelsToTry = [currentModel, 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-flash-latest'];
+  // Пул актуальних версій: від 3.8 / 2.5 до fallback
+  const modelsToTry = [
+    app.activeModel || 'gemini-2.5-flash',
+    'gemini-3.8-flash',
+    'gemini-2.5-flash',
+    'gemini-2.5-pro'
+  ];
+  const uniqueModels = [...new Set(modelsToTry)];
   let lastErrMsg = '';
 
-  for (const model of [...new Set(modelsToTry)]) {
+  for (const model of uniqueModels) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${app.geminiApiKey}`, {
         method: 'POST',
@@ -217,8 +223,9 @@ async function requestGeminiAPI(payload) {
     }
   }
 
-  throw new Error(lastErrMsg || "Не вдалося підключитися до доступних моделей Gemini");
+  throw new Error(lastErrMsg || "Не вдалося отримати відповідь від Gemini API");
 }
+
 async function testGeminiConnection() {
   const statusEl = document.getElementById('admAiTestStatus');
   statusEl.classList.remove('hidden');
