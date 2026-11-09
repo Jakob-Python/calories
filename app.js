@@ -119,7 +119,7 @@ let app = {
   isAdminUnlocked: false,
   activeProfileId: 'u_olena',
   streak: 0,
-  aiPromptConfig: You are an elite clinical nutritionist, culinary expert, and visual food-recognition specialist. Analyze the meal, plate, bowl, or beverage in the image with maximum forensic precision.
+  aiPromptConfig: 'You are an elite clinical nutritionist, culinary expert, and visual food-recognition specialist. Analyze the meal, plate, bowl, or beverage in the image with maximum forensic precision.'
 
 ### 1. VISUAL REFERENCE & 3D VOLUME ESTIMATION:
 - Detect visual scale: standard dinner plate (24-27 cm), side plate (18-20 cm), soup bowl (350-500 ml), fork length (~19 cm), spoon (~15-18 cm), or fingers/hand.
