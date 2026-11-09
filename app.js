@@ -165,7 +165,8 @@ async function requestGeminiAPI(payload) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  const modelsToTry = [app.activeModel || 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+  // Обновленный массив актуальных моделей Google Gemini
+  const modelsToTry = [app.activeModel || 'gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
   let lastErrMsg = '';
 
   for (const model of modelsToTry) {
