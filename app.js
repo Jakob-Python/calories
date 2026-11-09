@@ -1,6 +1,5 @@
-// app.js — Calories PRO & SaaS Admin Center 2.0 (Security, I18N, Flash 3.8/3.5)
+// app.js — Calories PRO & SaaS Admin Center 2.0 (All Audits Fixed)
 
-// Вбудоване хешування Web Crypto API (SHA-256)
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -8,10 +7,8 @@ async function sha256(message) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Захищений SHA-256 хеш пароля адміністратора
 const DEFAULT_ADMIN_HASH = '1752604b17d00efbebacc10984f5c764adc539e0395ecc0ef65f23ee7cfe1075';
 
-// Словник перекладів інтерфейсу (UA / EN / FR)
 const I18N = {
   uk: {
     btn_lang: '🇺🇦 UA',
@@ -99,8 +96,7 @@ function getLocalDateString(d = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-const TODAY_KEY = getLocalDateString();
-let selectedDateKey = TODAY_KEY;
+let selectedDateKey = getLocalDateString();
 let targetCatalogMeal = 'breakfast';
 let activeCatalogCat = 'Усі';
 let activeModalItem = null;
@@ -110,16 +106,27 @@ let lastScannedResult = null;
 
 const DEFAULT_MEAL_SPLIT = { breakfast: 0.25, lunch: 0.33, dinner: 0.27, snack: 0.15 };
 
+const DEFAULT_VISION_PROMPT = [
+  "You are an elite clinical nutritionist and visual food-recognition specialist.",
+  "Analyze the meal, plate, bowl, or beverage in the image with forensic precision.",
+  "1. Identify every distinct food component, estimate weight in grams using plate/cutlery scale.",
+  "2. Account for cooking method and hidden fats (frying oil, butter, sour cream, mayo, sauces).",
+  "3. For Ukrainian/Eastern European dishes (borscht, varenyky, syrnyky, holubtsi, deruny, kotlety) use authentic homemade recipes.",
+  "4. Check consistency: kcal must be roughly equal to 4*p + 4*c + 9*f.",
+  "5. Return ONLY valid raw JSON (no markdown, no backticks) with keys: {\"name\": \"Назва українською\", \"grams\": 300, \"kcal\": 450, \"p\": 28.0, \"f\": 16.0, \"c\": 42.0}."
+].join(" ");
+
 let app = {
   lang: 'uk',
+  seedVersion: 1,
   adminPassHash: DEFAULT_ADMIN_HASH,
   geminiApiKey: '',
   geminiTested: false,
-  activeModel: 'gemini-3.8-flash',
+  activeModel: 'gemini-2.5-flash',
   isAdminUnlocked: false,
   activeProfileId: 'u_olena',
   streak: 0,
-  aiPromptConfig: 'Analyze this plate of food as an expert nutritionist. Return valid JSON: { "name": "Назва", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }',
+  aiPromptConfig: DEFAULT_VISION_PROMPT,
   aiScanCount: 0,
   activityLog: [],
   foods: [],
@@ -137,7 +144,7 @@ let app = {
 };
 
 function escapeHTML(str) {
-  if (!str) return '';
+  if (str === null || str === undefined) return '';
   return String(str).replace(/[&<>'"]/g, tag => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
   }[tag] || tag));
@@ -170,6 +177,39 @@ function logAudit(action, details) {
   if (app.activityLog.length > 60) app.activityLog.pop();
 }
 
+function save() {
+  try {
+    localStorage.setItem('cal_calc_pro_v8', JSON.stringify(app));
+  } catch (e) {
+    console.error('Помилка збереження у localStorage:', e);
+    showToast('Переповнено сховище браузера', 'error');
+  }
+}
+
+// Злиття нової бази продуктів (455 позицій) зі збереженими даними користувача
+function mergeSeedData() {
+  if (typeof SEED_FOODS === 'undefined') return;
+  const currentVersion = app.seedVersion || 1;
+  const targetVersion = (typeof SEED_VERSION !== 'undefined') ? SEED_VERSION : 2;
+
+  if (!app.foods || app.foods.length < 100 || currentVersion < targetVersion) {
+    const existingMap = new Map((app.foods || []).map(f => [f.id, f]));
+    SEED_FOODS.forEach(sf => {
+      if (!existingMap.has(sf.id)) {
+        existingMap.set(sf.id, JSON.parse(JSON.stringify(sf)));
+      }
+    });
+    app.foods = Array.from(existingMap.values());
+
+    if (typeof SEED_CATEGORIES !== 'undefined') {
+      const catSet = new Set([...SEED_CATEGORIES, ...(app.categories || [])]);
+      app.categories = Array.from(catSet);
+    }
+    app.seedVersion = targetVersion;
+    save();
+  }
+}
+
 function init() {
   const keys = ['cal_calc_pro_v8', 'cal_pro_assistant_v1', 'cal_calc_pro_v7'];
   for (const k of keys) {
@@ -185,15 +225,13 @@ function init() {
 
   app.isAdminUnlocked = false;
   if (!app.adminPassHash) app.adminPassHash = DEFAULT_ADMIN_HASH;
-
-  // Очищення застарілих моделей із пам'яті браузера на актуальну Flash 3.8
-  if (!app.activeModel || app.activeModel.includes('1.5') || app.activeModel.includes('2.0') || app.activeModel.includes('2.5')) {
-    app.activeModel = 'gemini-3.8-flash';
+  if (!app.activeModel) app.activeModel = 'gemini-2.5-flash';
+  if (!app.aiPromptConfig || app.aiPromptConfig.length < 30) {
+    app.aiPromptConfig = DEFAULT_VISION_PROMPT;
   }
 
-  if (!app.foods || app.foods.length === 0) {
-    app.foods = (typeof SEED_FOODS !== 'undefined') ? JSON.parse(JSON.stringify(SEED_FOODS)) : [];
-  }
+  mergeSeedData();
+
   if (!app.categories || app.categories.length === 0) {
     app.categories = (typeof SEED_CATEGORIES !== 'undefined') ? [...SEED_CATEGORIES] : ['Звичайне'];
   }
@@ -219,6 +257,7 @@ function init() {
     app.activeProfileId = pKeys.length > 0 ? pKeys[0] : null;
   }
 
+  selectedDateKey = getLocalDateString();
   if (app.activeProfileId) {
     ensureDayStructure(app.activeProfileId, selectedDateKey);
   }
@@ -227,10 +266,6 @@ function init() {
   applyTranslations();
   renderAll();
   displayCurrentTip();
-}
-
-function save() {
-  localStorage.setItem('cal_calc_pro_v8', JSON.stringify(app));
 }
 
 function curProfile() {
@@ -257,32 +292,35 @@ function curDayData() {
   return app.days[app.activeProfileId][selectedDateKey];
 }
 
-// ================= НАДІЙНИЙ GEMINI API З АВТОПЕРЕМИКАННЯМ ПРИ 503 =================
+// ================= НАДШВИДКИЙ ТА ЗАХИЩЕНИЙ GEMINI API =================
 async function requestGeminiAPI(payload) {
   if (!app.geminiApiKey) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  // Список моделей для черги
   const modelsToTry = [
-    'gemini-3.8-flash',
-    'gemini-3.5-flash',
-    'gemini-3.1-pro-preview'
-  ];
-
-  // Якщо поточна активна відрізняється, ставимо її першою
-  if (app.activeModel && !modelsToTry.includes(app.activeModel)) {
-    modelsToTry.unshift(app.activeModel);
-  }
+    app.activeModel,
+    'gemini-2.5-flash',
+    'gemini-1.5-flash',
+    'gemini-3.8-flash'
+  ].filter(Boolean);
 
   const uniqueModels = [...new Set(modelsToTry)];
   let lastErrMsg = '';
 
+  payload.generationConfig = Object.assign({
+    temperature: 0.4,
+    maxOutputTokens: 700
+  }, payload.generationConfig || {});
+
   for (const model of uniqueModels) {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${app.geminiApiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': app.geminiApiKey
+        },
         body: JSON.stringify(payload)
       });
 
@@ -294,8 +332,6 @@ async function requestGeminiAPI(payload) {
       } else {
         const errJson = await res.json().catch(() => ({}));
         lastErrMsg = errJson.error?.message || `HTTP ${res.status}`;
-        
-        // Зупиняємося тільки при недійсному ключі (400 або 403), при 503/404/429 йдемо до наступної моделі
         if (res.status === 400 || res.status === 403) break;
       }
     } catch (e) {
@@ -314,7 +350,7 @@ async function testGeminiConnection() {
     statusEl.className = "text-xs font-bold text-rose-500";
     return;
   }
-  statusEl.innerText = "⏳ Тестування запиту до Gemini 3.8 Flash...";
+  statusEl.innerText = "⏳ Тестування швидкості з'єднання з Gemini...";
   statusEl.className = "text-xs font-bold text-indigo-600";
 
   try {
@@ -334,6 +370,10 @@ async function testGeminiConnection() {
 }
 
 async function callGeminiChat(userQuery) {
+  if (!app.geminiApiKey) {
+    return "⚠️ Ключ Gemini API не налаштовано. Будь ласка, вкажіть його у розділі 'ADMIN 2.0' -> 'AI Center'.";
+  }
+
   const prof = curProfile() || { name: 'Користувач', target: 2000, protein: 150, fat: 67, carbs: 200 };
   const day = curDayData();
   let eaten = 0;
@@ -341,33 +381,49 @@ async function callGeminiChat(userQuery) {
     (day.meals[m] || []).forEach(it => eaten += it.kcal);
   });
 
-  if (app.geminiApiKey) {
-    const langNames = { uk: 'українською', en: 'англійською', fr: 'французькою' };
-    const curLang = app.lang || 'uk';
-    const systemPrompt = `
-      Ти персональний нутриціолог додатку Calories PRO.
-      Відповідай ${langNames[curLang] || 'українською'} мовою, конкретно, лаконічно, доброзичливо.
-      Користувач: ${prof.name}, Денна ціль: ${prof.target} ккал (Б: ${prof.protein}г, Ж: ${prof.fat}г, В: ${prof.carbs}г).
-      Сьогодні спожито: ${eaten} ккал. Залишок: ${Math.max(0, prof.target - eaten)} ккал.
-      Питання: "${userQuery}".
-    `;
+  const langNames = { uk: 'українською', en: 'англійською', fr: 'французькою' };
+  const curLang = app.lang || 'uk';
+  const systemPrompt = `Ти персональний нутриціолог додатку Calories PRO. Відповідай ${langNames[curLang] || 'українською'} мовою, конкретно, лаконічно, доброзичливо. Користувач: ${prof.name}, Денна ціль: ${prof.target} ккал (Б: ${prof.protein}г, Ж: ${prof.fat}г, В: ${prof.carbs}г). Сьогодні спожито: ${eaten} ккал. Залишок: ${Math.max(0, prof.target - eaten)} ккал. Питання: "${userQuery}".`;
 
-    try {
-      const data = await requestGeminiAPI({
-        contents: [{ parts: [{ text: systemPrompt }] }]
-      });
-      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (replyText) {
-        logAudit('AI Чат', `Запит: "${userQuery.slice(0, 30)}..."`);
-        return replyText;
-      }
-    } catch (err) {
-      console.warn("Помилка Gemini API:", err.message);
-      return `⚠️ Помилка виклику ШІ (${err.message}). Перевірте ключ в Admin Center 2.0 -> AI Center.`;
+  try {
+    const data = await requestGeminiAPI({
+      contents: [{ parts: [{ text: systemPrompt }] }]
+    });
+    const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (replyText) {
+      logAudit('AI Чат', `Запит: "${userQuery.slice(0, 30)}..."`);
+      return replyText;
     }
+    return "⚠️ Модель повернула порожню відповідь. Спробуйте переформулювати питання.";
+  } catch (err) {
+    console.warn("Помилка Gemini API:", err.message);
+    return `⚠️ Помилка виклику ШІ (${err.message}). Перевірте ключ в Admin Center 2.0 -> AI Center.`;
   }
+}
 
-  return "⚠️ Ключ Gemini API не налаштовано. Будь ласка, вкажіть його у розділі 'ADMIN 2.0' -> 'AI Center'.";
+// Нормалізація сканування (підтримує як одиночний об'єкт, так і масив страв)
+function normalizeScan(raw) {
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) return { name: "Не розпізнано їжу", grams: 0, kcal: 0, p: 0, f: 0, c: 0, fiber: 0 };
+    return raw.reduce((acc, cur) => ({
+      name: acc.name ? `${acc.name}, ${cur.name || 'Страва'}` : (cur.name || 'Страва'),
+      grams: acc.grams + (Number(cur.grams) || 0),
+      kcal: acc.kcal + (Number(cur.kcal) || 0),
+      p: Math.round((acc.p + (Number(cur.p) || 0)) * 10) / 10,
+      f: Math.round((acc.f + (Number(cur.f) || 0)) * 10) / 10,
+      c: Math.round((acc.c + (Number(cur.c) || 0)) * 10) / 10,
+      fiber: Math.round((acc.fiber + (Number(cur.fiber) || 0)) * 10) / 10
+    }), { name: "", grams: 0, kcal: 0, p: 0, f: 0, c: 0, fiber: 0 });
+  }
+  return {
+    name: raw.name || "Страва",
+    grams: Number(raw.grams) || 0,
+    kcal: Number(raw.kcal) || 0,
+    p: Math.round((Number(raw.p) || 0) * 10) / 10,
+    f: Math.round((Number(raw.f) || 0) * 10) / 10,
+    c: Math.round((Number(raw.c) || 0) * 10) / 10,
+    fiber: Math.round((Number(raw.fiber) || 0) * 10) / 10
+  };
 }
 
 async function analyzePhotoWithGemini(base64Uri) {
@@ -379,7 +435,7 @@ async function analyzePhotoWithGemini(base64Uri) {
   }
 
   const rawBase64 = base64Uri.split(',')[1];
-  const promptText = app.aiPromptConfig || 'Analyze this plate of food as an expert nutritionist. Return ONLY valid JSON: { "name": "Назва", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }';
+  const promptText = app.aiPromptConfig || DEFAULT_VISION_PROMPT;
 
   try {
     const data = await requestGeminiAPI({
@@ -392,9 +448,9 @@ async function analyzePhotoWithGemini(base64Uri) {
     });
 
     let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
-    const parsed = JSON.parse(rawText);
+    const parsed = normalizeScan(JSON.parse(rawText));
     app.aiScanCount = (app.aiScanCount || 0) + 1;
     save();
     logAudit('AI Сканер', `Розпізнано "${parsed.name}" (${parsed.kcal} ккал)`);
@@ -414,20 +470,24 @@ function showScanResult(parsed) {
 
   document.getElementById('aiLoadingZone').classList.add('hidden');
   document.getElementById('previewZone').classList.remove('hidden');
-  document.getElementById('aiConfirmBtn').classList.remove('hidden');
+  if (parsed.kcal > 0 || parsed.grams > 0) {
+    document.getElementById('aiConfirmBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('aiConfirmBtn').classList.add('hidden');
+  }
 }
 
 function commitAIScannedFood() {
   if (!lastScannedResult) return;
   curDayData().meals[targetCatalogMeal].push({
     id: 'food_ai_' + Date.now(),
-    name: lastScannedResult.name,
-    grams: lastScannedResult.grams || 150,
-    kcal: lastScannedResult.kcal || 300,
-    p: lastScannedResult.p || 15,
-    f: lastScannedResult.f || 10,
-    c: lastScannedResult.c || 25,
-    fiber: 2
+    name: lastScannedResult.name || 'Страва',
+    grams: Number(lastScannedResult.grams) || 100,
+    kcal: Number(lastScannedResult.kcal) || 0,
+    p: Number(lastScannedResult.p) || 0,
+    f: Number(lastScannedResult.f) || 0,
+    c: Number(lastScannedResult.c) || 0,
+    fiber: Number(lastScannedResult.fiber) || 0
   });
 
   save();
@@ -460,10 +520,22 @@ function processPhotoUpload(e) {
   const img = new Image();
   const reader = new FileReader();
 
+  reader.onerror = function() {
+    document.getElementById('aiLoadingZone').classList.add('hidden');
+    document.getElementById('uploadZone').classList.remove('hidden');
+    alert("Помилка читання файлу зображення.");
+  };
+
   reader.onload = function(evt) {
+    img.onerror = function() {
+      document.getElementById('aiLoadingZone').classList.add('hidden');
+      document.getElementById('uploadZone').classList.remove('hidden');
+      alert("Формат фото (наприклад, HEIC) не підтримується браузером напряму. Зробіть скріншот або оберіть JPEG/PNG.");
+    };
+
     img.onload = async function() {
       const canvas = document.getElementById('compressCanvas');
-      const maxDim = 800;
+      const maxDim = 640;
       let w = img.width;
       let h = img.height;
 
@@ -480,7 +552,7 @@ function processPhotoUpload(e) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
 
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
       document.getElementById('photoPreviewImg').src = compressedBase64;
 
       await analyzePhotoWithGemini(compressedBase64);
@@ -514,12 +586,15 @@ async function handleSendAiMessage(e) {
   input.value = '';
 
   const typingId = 'typing_' + Date.now();
-  appendChatMessage('ai', '<span class="italic text-slate-400">ШІ Нутриціолог думає...</span>', typingId);
+  appendChatMessage('ai', '<span class="italic text-slate-500">ШІ Нутриціолог думає...</span>', typingId);
 
   const reply = await callGeminiChat(text);
   const typingEl = document.getElementById(typingId);
   if (typingEl) {
-    typingEl.innerHTML = escapeHTML(reply).replace(/\n/g, '<br>');
+    const bubble = typingEl.querySelector('div:last-child');
+    if (bubble) {
+      bubble.innerHTML = escapeHTML(reply).replace(/\n/g, '<br>');
+    }
   }
 }
 
@@ -619,10 +694,10 @@ function renderAll() {
   ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
     let mealKcal = 0;
     (day.meals[m] || []).forEach(item => {
-      mealKcal += item.kcal;
-      totalC += item.c;
-      totalP += item.p;
-      totalF += item.f;
+      mealKcal += Number(item.kcal) || 0;
+      totalC += Number(item.c) || 0;
+      totalP += Number(item.p) || 0;
+      totalF += Number(item.f) || 0;
     });
     eatenKcal += mealKcal;
     renderMealSection(m, mealKcal, day.meals[m] || []);
@@ -633,20 +708,20 @@ function renderAll() {
   const remVal = document.getElementById('dispRemaining');
   const remLbl = document.getElementById('dispRemainingLabel');
 
-  document.getElementById('dispEaten').innerText = eatenKcal;
+  document.getElementById('dispEaten').innerText = Math.round(eatenKcal);
   document.getElementById('dispDailyTarget').innerText = `${t('target')}${prof.target}`;
   document.getElementById('dispBurned').innerText = day.burned || 0;
 
   if (diff >= 0) {
-    remVal.innerText = diff;
+    remVal.innerText = Math.round(diff);
     remVal.className = "text-3xl font-black text-slate-900 tracking-tight";
     remLbl.innerText = t('remaining');
     remLbl.className = "text-[11px] font-bold text-slate-500 mt-0.5";
     ring.setAttribute('stroke', '#FF4D4D');
-    const pct = Math.min(1, eatenKcal / prof.target);
+    const pct = Math.min(1, eatenKcal / (prof.target || 2000));
     ring.style.strokeDashoffset = 264 - (264 * pct);
   } else {
-    const over = Math.abs(diff);
+    const over = Math.round(Math.abs(diff));
     remVal.innerText = `+${over}`;
     remVal.className = "text-3xl font-black text-rose-600 tracking-tight";
     remLbl.innerText = `${t('over')} ${over} ккал`;
@@ -659,9 +734,9 @@ function renderAll() {
   document.getElementById('dispProtein').innerText = `${Math.round(totalP)} / ${prof.protein} г`;
   document.getElementById('dispFat').innerText = `${Math.round(totalF)} / ${prof.fat} г`;
 
-  const cPct = Math.min(100, Math.round((totalC / prof.carbs) * 100)) || 0;
-  const pPct = Math.min(100, Math.round((totalP / prof.protein) * 100)) || 0;
-  const fPct = Math.min(100, Math.round((totalF / prof.fat) * 100)) || 0;
+  const cPct = Math.min(100, Math.round((totalC / (prof.carbs || 1)) * 100)) || 0;
+  const pPct = Math.min(100, Math.round((totalP / (prof.protein || 1)) * 100)) || 0;
+  const fPct = Math.min(100, Math.round((totalF / (prof.fat || 1)) * 100)) || 0;
 
   document.getElementById('carbPct').innerText = `${cPct}%`;
   document.getElementById('proteinPct').innerText = `${pPct}%`;
@@ -671,7 +746,7 @@ function renderAll() {
   document.getElementById('proteinBar').style.width = `${pPct}%`;
   document.getElementById('fatBar').style.width = `${fPct}%`;
 
-  const waterTotal = (day.waterHistory || []).reduce((acc, cur) => acc + cur.amount, 0);
+  const waterTotal = (day.waterHistory || []).reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
   document.getElementById('dispWaterAmount').innerText = `${waterTotal} / ${prof.waterTarget || 2000} мл`;
   const wPct = Math.min(100, Math.round((waterTotal / (prof.waterTarget || 2000)) * 100));
   document.getElementById('waterProgressBar').style.width = `${wPct}%`;
@@ -703,9 +778,9 @@ function getDayCalories(dayObj) {
   if (!dayObj || !dayObj.meals) return 0;
   let sum = 0;
   ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
-    (dayObj.meals[m] || []).forEach(it => sum += it.kcal);
+    (dayObj.meals[m] || []).forEach(it => sum += (Number(it.kcal) || 0));
   });
-  return sum;
+  return Math.round(sum);
 }
 
 function renderMealSection(mealType, mealKcal, items) {
@@ -714,14 +789,14 @@ function renderMealSection(mealType, mealKcal, items) {
   const targetKcal = Math.round(prof.target * (ms[mealType] || 0.25));
 
   const diaryStatsEl = document.getElementById(`diary${mealType.charAt(0).toUpperCase() + mealType.slice(1)}Stats`);
-  if (diaryStatsEl) diaryStatsEl.innerText = `~${targetKcal} ккал • ${mealKcal} ккал`;
+  if (diaryStatsEl) diaryStatsEl.innerText = `~${targetKcal} ккал • ${Math.round(mealKcal)} ккал`;
 
   const listContainer = document.getElementById(`diary${mealType.charAt(0).toUpperCase() + mealType.slice(1)}List`);
   if (!listContainer) return;
 
   listContainer.innerHTML = '';
   if (items.length === 0) {
-    listContainer.innerHTML = `<p class="text-xs text-slate-400 py-1 italic">Поки немає продуктів</p>`;
+    listContainer.innerHTML = `<p class="text-xs text-slate-500 py-1 italic">Поки немає продуктів</p>`;
     return;
   }
 
@@ -731,11 +806,11 @@ function renderMealSection(mealType, mealKcal, items) {
     itemRow.innerHTML = `
       <div class="flex-1 pr-2">
         <span class="text-xs font-bold text-slate-800 block">${escapeHTML(it.name)}</span>
-        <span class="text-[11px] text-slate-500 font-semibold">${it.grams}г • <b class="text-slate-700">${it.kcal} ккал</b> (Б:${it.p} Ж:${it.f} В:${it.c})</span>
+        <span class="text-[11px] text-slate-500 font-semibold">${escapeHTML(it.grams)}г • <b class="text-slate-700">${escapeHTML(it.kcal)} ккал</b> (Б:${escapeHTML(it.p)} Ж:${escapeHTML(it.f)} В:${escapeHTML(it.c)})</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <button onclick="editMealItemGramsPrompt('${mealType}', ${idx})" class="touch-target text-slate-400 hover:text-slate-700 text-xs px-1.5">✏️</button>
-        <button onclick="deleteMealItem('${mealType}', ${idx})" class="touch-target text-slate-400 hover:text-rose-500 text-xs px-1.5">🗑️</button>
+        <button onclick="editMealItemGramsPrompt('${mealType}', ${idx})" aria-label="Редагувати вагу" class="touch-target text-slate-500 hover:text-slate-800 text-xs px-1.5">✏️</button>
+        <button onclick="deleteMealItem('${mealType}', ${idx})" aria-label="Видалити" class="touch-target text-slate-500 hover:text-rose-600 text-xs px-1.5">🗑️</button>
       </div>
     `;
     listContainer.appendChild(itemRow);
@@ -743,7 +818,7 @@ function renderMealSection(mealType, mealKcal, items) {
 }
 
 function copyMealFromYesterday(mealType) {
-  const parts = selectedDateKey.split('-');
+  const parts = selectedDateKey.split('-').map(Number);
   const d = new Date(parts[0], parts[1] - 1, parts[2]);
   d.setDate(d.getDate() - 1);
   const yKey = getLocalDateString(d);
@@ -767,10 +842,10 @@ function editMealItemGramsPrompt(mealType, idx) {
   if (!item) return;
   const gStr = prompt(`Введіть нову вагу для "${item.name}" (грами):`, item.grams);
   if (!gStr) return;
-  const newG = parseInt(gStr, 10);
+  const newG = parseFloat(gStr);
   if (newG > 0 && item.grams > 0) {
     const factor = newG / item.grams;
-    item.grams = newG;
+    item.grams = Math.round(newG);
     item.kcal = Math.round(item.kcal * factor);
     item.p = Math.round(item.p * factor * 10) / 10;
     item.f = Math.round(item.f * factor * 10) / 10;
@@ -797,7 +872,22 @@ function confirmClearCurrentDay() {
   }
 }
 
-// ================= ВАГА, ТАЛІЯ, ІМТ =================
+// ================= ВАГА, ТАЛІЯ, ІМТ ТА ДЕЛЬТИ =================
+function setWeightDeltas(entries) {
+  const fmt = v => (v === null || isNaN(v)) ? '—' : `${v > 0 ? '+' : ''}${v.toFixed(1)} кг`;
+  const delta = days => {
+    if (!entries || entries.length < 2) return null;
+    const [y, m, d] = entries[0].date.split('-').map(Number);
+    const cut = getLocalDateString(new Date(y, m - 1, d - days));
+    const ref = entries.find(e => e.date <= cut);
+    return ref ? (entries[0].weight - ref.weight) : null;
+  };
+  const d7 = document.getElementById('deltaWeekVal');
+  const d30 = document.getElementById('deltaMonthVal');
+  if (d7) d7.innerText = fmt(delta(7));
+  if (d30) d30.innerText = fmt(delta(30));
+}
+
 function renderWeightSection() {
   const prof = curProfile();
   if (!prof) return;
@@ -807,16 +897,15 @@ function renderWeightSection() {
 
   const pDays = app.days[app.activeProfileId] || {};
   const dates = Object.keys(pDays).sort().reverse();
-  let latestWeight = prof.startWeight || 65;
   let entries = [];
 
   dates.forEach(dk => {
     if (pDays[dk].weight) {
-      if (!latestWeight || latestWeight === prof.startWeight) latestWeight = pDays[dk].weight;
-      entries.push({ date: dk, weight: pDays[dk].weight, waist: pDays[dk].waist });
+      entries.push({ date: dk, weight: Number(pDays[dk].weight), waist: pDays[dk].waist });
     }
   });
 
+  const latestWeight = entries.length > 0 ? entries[0].weight : (prof.startWeight || 65);
   document.getElementById('weightCurrentVal').innerText = `${latestWeight} кг`;
 
   const heightM = (prof.height || 168) / 100;
@@ -842,18 +931,20 @@ function renderWeightSection() {
   const list = document.getElementById('weightHistoryList');
   list.innerHTML = '';
   if (entries.length === 0) {
-    list.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Немає записів ваги</p>';
+    list.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-4">Немає записів ваги</p>';
   } else {
     entries.slice(0, 10).forEach(e => {
       const row = document.createElement('div');
       row.className = "flex justify-between items-center py-1.5 border-b border-slate-50 text-xs";
       row.innerHTML = `
-        <span class="font-bold text-slate-600">${e.date}</span>
-        <span class="font-black text-slate-900">${e.weight} кг ${e.waist ? `• талія ${e.waist} см` : ''}</span>
+        <span class="font-bold text-slate-600">${escapeHTML(e.date)}</span>
+        <span class="font-black text-slate-900">${escapeHTML(e.weight)} кг ${e.waist ? `• талія ${escapeHTML(e.waist)} см` : ''}</span>
       `;
       list.appendChild(row);
     });
   }
+
+  setWeightDeltas(entries);
 }
 
 function openLogWeightModal() {
@@ -877,7 +968,7 @@ function saveWeightEntry() {
     closeLogWeightModal();
     showToast("✓ Вагу збережено!");
   } else {
-    alert("Введіть коректну вагу");
+    alert("Введіть коректну вагу (20–300 кг)");
   }
 }
 
@@ -902,6 +993,7 @@ function renderWeeklyPlan() {
   container.innerHTML = '';
   const daysNames = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
   const curr = new Date();
+  const todayStr = getLocalDateString(curr);
 
   for (let i = 0; i < 7; i++) {
     const d = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + i);
@@ -916,9 +1008,9 @@ function renderWeeklyPlan() {
       <div>
         <div class="flex items-center gap-1.5">
           <span class="text-xs font-black text-slate-900">${daysNames[d.getDay()]} (${dKey})</span>
-          ${dKey === TODAY_KEY ? '<span class="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-black">Сьогодні</span>' : ''}
+          ${dKey === todayStr ? '<span class="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-black">Сьогодні</span>' : ''}
         </div>
-        <span class="text-[11px] font-bold text-slate-400">Меню дня: <b class="text-slate-700">${cals} ккал</b></span>
+        <span class="text-[11px] font-bold text-slate-500">Меню дня: <b class="text-slate-700">${cals} ккал</b></span>
       </div>
       <button onclick="selectedDateKey='${dKey}'; renderCalendarRow(); renderAll(); goToTab('diary');" class="touch-target text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl">
         Скласти →
@@ -935,7 +1027,7 @@ function renderShoppingChecklist() {
   const items = app.shoppingList || [];
 
   if (items.length === 0) {
-    list.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Список покупок порожній</p>';
+    list.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-4">Список покупок порожній</p>';
     return;
   }
 
@@ -947,7 +1039,7 @@ function renderShoppingChecklist() {
         <input type="checkbox" ${it.checked ? 'checked' : ''} onchange="toggleShopItem(${idx})" class="w-4 h-4 rounded text-rose-500">
         <span class="text-xs font-bold ${it.checked ? 'line-through text-slate-400' : 'text-slate-800'}">${escapeHTML(it.text)}</span>
       </label>
-      <button onclick="deleteShopItem(${idx})" class="text-slate-300 hover:text-rose-500 text-sm px-1">✕</button>
+      <button onclick="deleteShopItem(${idx})" aria-label="Видалити зі списку" class="text-slate-400 hover:text-rose-500 text-sm px-1">✕</button>
     `;
     list.appendChild(row);
   });
@@ -994,7 +1086,7 @@ function generateShoppingListFromPlan() {
     if (day && day.meals) {
       ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
         (day.meals[m] || []).forEach(it => {
-          generated[it.name] = (generated[it.name] || 0) + it.grams;
+          generated[it.name] = (generated[it.name] || 0) + (Number(it.grams) || 0);
         });
       });
     }
@@ -1006,16 +1098,23 @@ function generateShoppingListFromPlan() {
   }
 
   if (!app.shoppingList) app.shoppingList = [];
+  const existingTexts = new Set(app.shoppingList.map(x => x.text));
+  let added = 0;
+
   Object.keys(generated).forEach(name => {
-    app.shoppingList.push({
-      id: 's_' + Date.now() + Math.random(),
-      text: `${name} (~${generated[name]} г)`,
-      checked: false
-    });
+    const itemText = `${name} (~${generated[name]} г)`;
+    if (!existingTexts.has(itemText)) {
+      app.shoppingList.push({
+        id: 's_' + Date.now() + Math.random(),
+        text: itemText,
+        checked: false
+      });
+      added++;
+    }
   });
   save();
   renderShoppingChecklist();
-  showToast(`✓ Додано ${Object.keys(generated).length} позицій у список!`);
+  showToast(`✓ Додано ${added} нових позицій у список!`);
 }
 
 // ================= КАТАЛОГ ТА ПОРЦІЇ =================
@@ -1058,20 +1157,20 @@ function renderCatalogItems() {
   if (q) items = items.filter(x => x.name.toLowerCase().includes(q));
 
   if (items.length === 0) {
-    container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-6">Нічого не знайдено</p>';
+    container.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-6">Нічого не знайдено</p>';
     return;
   }
 
   items.forEach(it => {
     const card = document.createElement('div');
-    card.className = "p-3 rounded-2xl bg-white border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-98";
+    card.className = "p-3 rounded-2xl bg-white border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-95 transition";
     card.onclick = () => openPortionModal(it);
     card.innerHTML = `
       <div class="flex items-center gap-3">
         <span class="text-2xl">${it.emoji || '🍽️'}</span>
         <div>
           <h4 class="text-xs font-black text-slate-800">${escapeHTML(it.name)}</h4>
-          <span class="text-[10px] text-slate-400 font-bold">${it.kcal} ккал/100г • Б:${it.p} Ж:${it.f} В:${it.c}</span>
+          <span class="text-[10px] text-slate-500 font-bold">${it.kcal} ккал/100г • Б:${it.p} Ж:${it.f} В:${it.c}</span>
         </div>
       </div>
       <button class="text-xs font-black bg-rose-50 text-rose-600 px-3 py-1 rounded-xl border border-rose-100">+</button>
@@ -1084,11 +1183,12 @@ function openPortionModal(item) {
   activeModalItem = item;
   document.getElementById('portItemEmoji').innerText = item.emoji || '🍽️';
   document.getElementById('portItemName').innerText = item.name;
+  document.getElementById('portItemSource').innerText = item.src || 'База продуктів';
   document.getElementById('baseKcal100').innerText = item.kcal;
   document.getElementById('baseC100').innerText = `${item.c}г`;
   document.getElementById('baseP100').innerText = `${item.p}г`;
   document.getElementById('baseF100').innerText = `${item.f}г`;
-  setPortionGrams(100);
+  setPortionGrams(item.serv || 100);
   document.getElementById('portionModal').classList.remove('hidden');
 }
 
@@ -1138,6 +1238,7 @@ function openAdminPasswordModal() {
   const err = document.getElementById('adminLoginError');
   if (err) err.classList.add('hidden');
   document.getElementById('adminPasswordModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('adminPasswordInputVal').focus(), 100);
 }
 
 function closeAdminPasswordModal() {
@@ -1198,7 +1299,7 @@ function switchAdminSection(secId) {
     users: 'Керування користувачами та профілями',
     products: 'Менеджер бази продуктів',
     categories: 'Керування категоріями їжі',
-    recipes: 'Керування стравами та рецептами',
+    recipes: 'Керування стравами та супами',
     ai: 'AI Center (Gemini API & Vision)',
     content: 'Керування контентом & Поради дня',
     security: 'Безпека та журнал операцій',
@@ -1269,7 +1370,7 @@ function renderAdminRealChart() {
       <div class="w-full max-w-[28px] bg-slate-100 rounded-t-lg h-32 flex items-end overflow-hidden">
         <div class="${eaten > target ? 'bg-rose-500' : 'bg-indigo-600'} w-full rounded-t-lg transition-all duration-500" style="height: ${Math.max(5, pct)}%"></div>
       </div>
-      <span class="text-[10px] text-slate-400 font-bold mt-1.5">${d.toLocaleDateString('uk-UA', { weekday: 'short' })}</span>
+      <span class="text-[10px] text-slate-500 font-bold mt-1.5">${d.toLocaleDateString('uk-UA', { weekday: 'short' })}</span>
     `;
     container.appendChild(barCol);
   }
@@ -1281,7 +1382,7 @@ function renderAdminRecentActivity() {
   list.innerHTML = '';
   const logs = app.activityLog || [];
   if (logs.length === 0) {
-    list.innerHTML = '<p class="text-xs text-slate-400 italic">Подій ще не зафіксовано</p>';
+    list.innerHTML = '<p class="text-xs text-slate-500 italic">Подій ще не зафіксовано</p>';
     return;
   }
   logs.slice(0, 5).forEach(l => {
@@ -1291,9 +1392,9 @@ function renderAdminRecentActivity() {
       <div class="flex items-center gap-2">
         <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
         <span class="font-black text-slate-800">${escapeHTML(l.action)}:</span>
-        <span class="text-slate-500">${escapeHTML(l.details)}</span>
+        <span class="text-slate-600">${escapeHTML(l.details)}</span>
       </div>
-      <span class="text-[10px] text-slate-400 font-mono">${l.time}</span>
+      <span class="text-[10px] text-slate-500 font-mono">${escapeHTML(l.time)}</span>
     `;
     list.appendChild(item);
   });
@@ -1420,23 +1521,23 @@ function commitProfileEditor() {
     errEl.classList.remove('hidden');
     return;
   }
-  if (isNaN(target) || target < 800 || target > 6000) {
-    errEl.innerText = "Ціль калорій має бути від 800 до 6000 ккал";
+  if (isNaN(target) || target < 500 || target > 6000) {
+    errEl.innerText = "Ціль калорій має бути від 500 до 6000 ккал";
     errEl.classList.remove('hidden');
     return;
   }
-  if (isNaN(protein) || protein < 20 || protein > 400) {
-    errEl.innerText = "Білки мають бути в межах 20–400 г";
+  if (isNaN(protein) || protein < 10 || protein > 400) {
+    errEl.innerText = "Білки мають бути в межах 10–400 г";
     errEl.classList.remove('hidden');
     return;
   }
-  if (isNaN(fat) || fat < 15 || fat > 300) {
-    errEl.innerText = "Жири мають бути в межах 15–300 г";
+  if (isNaN(fat) || fat < 10 || fat > 300) {
+    errEl.innerText = "Жири мають бути в межах 10–300 г";
     errEl.classList.remove('hidden');
     return;
   }
-  if (isNaN(carbs) || carbs < 20 || carbs > 800) {
-    errEl.innerText = "Вуглеводи мають бути в межах 20–800 г";
+  if (isNaN(carbs) || carbs < 10 || carbs > 800) {
+    errEl.innerText = "Вуглеводи мають бути в межах 10–800 г";
     errEl.classList.remove('hidden');
     return;
   }
@@ -1503,7 +1604,7 @@ function renderProfilesTab() {
       <div class="p-6 text-center bg-white rounded-3xl border border-slate-100 card-shadow">
         <span class="text-3xl block mb-2">👤</span>
         <h4 class="text-sm font-black text-slate-800">Немає профілів</h4>
-        <p class="text-xs text-slate-400 mt-1 mb-4">Створіть свій перший профіль</p>
+        <p class="text-xs text-slate-500 mt-1 mb-4">Створіть свій перший профіль</p>
         <button onclick="openProfileEditor(null)" class="touch-target bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md active:scale-95 transition">
           + Створити профіль
         </button>
@@ -1597,14 +1698,14 @@ function renderAdmUsersTable() {
           <span class="text-xl">${p.emoji || '🙂'}</span>
           <div>
             <span class="font-black text-slate-900 block">${escapeHTML(p.name)} ${isActive ? '<span class="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-black">Active</span>' : ''}</span>
-            <span class="text-[10px] text-slate-400">ID: ${p.id}</span>
+            <span class="text-[10px] text-slate-500">ID: ${escapeHTML(p.id)}</span>
           </div>
         </div>
       </td>
       <td class="p-3.5 font-black text-slate-800">${p.target} ккал</td>
       <td class="p-3.5 text-slate-500">Б:${p.protein} · Ж:${p.fat} · В:${p.carbs}</td>
       <td class="p-3.5 text-slate-500">${p.waterTarget || 2000} мл</td>
-      <td class="p-3.5">${p.pin ? '<span class="text-emerald-600 font-bold">🔒 PIN</span>' : '<span class="text-slate-300">Відкрито</span>'}</td>
+      <td class="p-3.5">${p.pin ? '<span class="text-emerald-600 font-bold">🔒 PIN</span>' : '<span class="text-slate-400">Відкрито</span>'}</td>
       <td class="p-3.5 text-right space-x-1.5">
         <button onclick="openProfileEditor('${p.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">
           Редагувати
@@ -1647,8 +1748,8 @@ function renderAdmProductsTable() {
       <td class="p-3 text-slate-600">${it.c} г</td>
       <td class="p-3 text-slate-600">${it.fiber || 0} г</td>
       <td class="p-3 text-right space-x-1">
-        <button onclick="openAdmEditProductModal('${it.id}')" class="text-slate-500 hover:text-slate-800 font-bold px-1.5">✏️</button>
-        <button onclick="admDeleteProduct('${it.id}')" class="text-rose-500 hover:text-rose-700 font-bold px-1.5">🗑️</button>
+        <button onclick="openAdmEditProductModal('${it.id}')" aria-label="Редагувати продукт" class="text-slate-500 hover:text-slate-800 font-bold px-1.5">✏️</button>
+        <button onclick="admDeleteProduct('${it.id}')" aria-label="Видалити продукт" class="text-rose-500 hover:text-rose-700 font-bold px-1.5">🗑️</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1700,9 +1801,9 @@ function openAdmEditProductModal(id) {
 
 function commitAdmProductSave() {
   const name = document.getElementById('admProdName').value.trim();
-  const kcal = parseInt(document.getElementById('admProdKcal').value) || 0;
-  if (!name || kcal <= 0) {
-    alert("Вкажіть назву та калорійність");
+  const kcalVal = parseFloat(document.getElementById('admProdKcal').value);
+  if (!name || isNaN(kcalVal) || kcalVal < 0) {
+    alert("Вкажіть назву та коректну калорійність (від 0 ккал)");
     return;
   }
   const editId = document.getElementById('admProdEditId').value;
@@ -1712,17 +1813,20 @@ function commitAdmProductSave() {
     app.categories.push(cat);
   }
 
+  const existing = editId ? app.foods.find(x => x.id === editId) : null;
+
   const productObj = {
     id: editId !== '' ? editId : 'f_c_' + Date.now(),
     name,
     cat,
-    kcal,
+    kcal: Math.round(kcalVal),
     emoji: document.getElementById('admProdEmoji').value.trim() || '🍽️',
     p: parseFloat(document.getElementById('admProdP').value) || 0,
     f: parseFloat(document.getElementById('admProdF').value) || 0,
     c: parseFloat(document.getElementById('admProdC').value) || 0,
     fiber: parseFloat(document.getElementById('admProdFiber').value) || 0,
-    src: 'Адміністратор'
+    serv: existing?.serv || 100,
+    src: existing?.src || 'Адміністратор'
   };
 
   if (editId !== '') {
@@ -1755,10 +1859,10 @@ function admDeleteProduct(id) {
 }
 
 function exportProductsCSV() {
-  let csv = "ID,Name,Category,Calories,Protein,Fat,Carbs,Fiber\n";
+  let csv = "\uFEFFID,Name,Category,Calories,Protein,Fat,Carbs,Fiber\n";
   app.foods.forEach(p => {
-    const escapedName = `"${p.name.replace(/"/g, '""')}"`;
-    const escapedCat = `"${p.cat.replace(/"/g, '""')}"`;
+    const escapedName = `"${String(p.name).replace(/"/g, '""')}"`;
+    const escapedCat = `"${String(p.cat).replace(/"/g, '""')}"`;
     csv += `${p.id},${escapedName},${escapedCat},${p.kcal},${p.p},${p.f},${p.c},${p.fiber || 0}\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1766,6 +1870,7 @@ function exportProductsCSV() {
   a.href = URL.createObjectURL(blob);
   a.download = `calories_products_${getLocalDateString()}.csv`;
   a.click();
+  URL.revokeObjectURL(a.href);
   logAudit('Експорт', 'Вивантажено базу продуктів у CSV');
 }
 
@@ -1798,16 +1903,18 @@ function importProductsCSV(e) {
   reader.onload = function(evt) {
     const lines = evt.target.result.split(/\r?\n/).filter(x => x.trim().length > 0);
     let imported = 0;
+    const existingNames = new Set(app.foods.map(f => f.name.toLowerCase()));
+
     for (let i = 1; i < lines.length; i++) {
       const row = parseCSVLine(lines[i]);
       if (row.length >= 7) {
         const name = row[1].trim();
         const kcal = parseInt(row[3]);
-        if (name && !isNaN(kcal)) {
+        if (name && !isNaN(kcal) && !existingNames.has(name.toLowerCase())) {
           const cat = row[2].trim() || 'Різне';
           if (!app.categories.includes(cat)) app.categories.push(cat);
           app.foods.unshift({
-            id: 'f_imp_' + Date.now() + i,
+            id: 'f_imp_' + Date.now() + '_' + i,
             name,
             cat,
             kcal,
@@ -1815,9 +1922,11 @@ function importProductsCSV(e) {
             f: parseFloat(row[5]) || 0,
             c: parseFloat(row[6]) || 0,
             fiber: parseFloat(row[7]) || 0,
+            serv: 100,
             emoji: '🍽️',
             src: 'CSV Import'
           });
+          existingNames.add(name.toLowerCase());
           imported++;
         }
       }
@@ -1825,13 +1934,13 @@ function importProductsCSV(e) {
     save();
     renderAdmProductsTable();
     renderAdmCategories();
-    logAudit('Імпорт', `Імпортовано ${imported} продуктів із CSV`);
+    logAudit('Імпорт', `Імпортовано ${imported} нових продуктів із CSV`);
     showToast(`✓ Успішно імпортовано ${imported} продуктів!`);
   };
   reader.readAsText(file);
 }
 
-// ================= КАТЕГОРІЇ ТА РЕЦЕПТИ =================
+// ================= КАТЕГОРІЇ (ЗАХИЩЕНО ВІД АПОСТРОФА) ТА РЕЦЕПТИ =================
 function renderAdmCategories() {
   const container = document.getElementById('admCategoriesGrid');
   if (!container) return;
@@ -1841,16 +1950,32 @@ function renderAdmCategories() {
     const count = app.foods.filter(x => x.cat === c).length;
     const card = document.createElement('div');
     card.className = "bg-white p-3.5 rounded-2xl border border-slate-100 admin-card-shadow flex justify-between items-center";
-    card.innerHTML = `
-      <div>
-        <h5 class="text-xs font-black text-slate-800">${escapeHTML(c)}</h5>
-        <span class="text-[10px] text-slate-400 font-bold">${count} продуктів</span>
-      </div>
-      <div class="space-x-1">
-        <button onclick="renameCategoryPrompt('${escapeHTML(c)}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold" title="Перейменувати">✏️</button>
-        <button onclick="deleteCategoryPrompt('${escapeHTML(c)}')" class="text-xs text-rose-500 hover:text-rose-700 font-bold" title="Видалити">🗑️</button>
-      </div>
+
+    const info = document.createElement('div');
+    info.innerHTML = `
+      <h5 class="text-xs font-black text-slate-800">${escapeHTML(c)}</h5>
+      <span class="text-[10px] text-slate-500 font-bold">${count} продуктів</span>
     `;
+
+    const actions = document.createElement('div');
+    actions.className = "space-x-1";
+
+    const editBtn = document.createElement('button');
+    editBtn.className = "text-xs text-indigo-600 hover:text-indigo-800 font-bold px-1";
+    editBtn.title = "Перейменувати";
+    editBtn.innerText = "✏️";
+    editBtn.onclick = () => renameCategoryPrompt(c);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = "text-xs text-rose-500 hover:text-rose-700 font-bold px-1";
+    delBtn.title = "Видалити";
+    delBtn.innerText = "🗑️";
+    delBtn.onclick = () => deleteCategoryPrompt(c);
+
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    card.appendChild(info);
+    card.appendChild(actions);
     container.appendChild(card);
   });
 }
@@ -1906,7 +2031,7 @@ function renderAdmRecipes() {
   const container = document.getElementById('admRecipesGrid');
   if (!container) return;
   container.innerHTML = '';
-  const dishes = app.foods.filter(x => x.cat === 'Страви');
+  const dishes = app.foods.filter(x => x.cat === 'Страви' || x.cat === 'Супи');
 
   dishes.forEach(d => {
     const card = document.createElement('div');
@@ -1916,7 +2041,7 @@ function renderAdmRecipes() {
         <span class="text-2xl">${d.emoji || '🍲'}</span>
         <div>
           <h4 class="text-xs font-black text-slate-900">${escapeHTML(d.name)}</h4>
-          <span class="text-[10px] text-slate-400 font-semibold">${escapeHTML(d.src || 'Рецепт')}</span>
+          <span class="text-[10px] text-slate-500 font-semibold">${escapeHTML(d.cat)} • ${escapeHTML(d.src || 'Рецепт')}</span>
         </div>
       </div>
       <div class="text-xs font-bold text-slate-600 flex justify-between border-t border-slate-50 pt-2">
@@ -1978,7 +2103,7 @@ function displayCurrentTip() {
 
 function nextRandomTip() {
   if (!app.tips || app.tips.length === 0) return;
-  curTipIdx = (curTipIdx + 1 + Math.floor(Math.random() * (app.tips.length - 1))) % app.tips.length;
+  curTipIdx = (curTipIdx + 1 + Math.floor(Math.random() * Math.max(1, app.tips.length - 1))) % app.tips.length;
   displayCurrentTip();
 }
 
@@ -2012,7 +2137,7 @@ function renderAdmAuditLog() {
     r.className = "flex items-center justify-between text-xs py-1 border-b border-slate-50 last:border-0";
     r.innerHTML = `
       <div><b class="text-slate-800">${escapeHTML(l.action)}:</b> <span class="text-slate-600">${escapeHTML(l.details)}</span></div>
-      <span class="text-[10px] text-slate-400 font-mono">${l.date} ${l.time}</span>
+      <span class="text-[10px] text-slate-500 font-mono">${escapeHTML(l.date)} ${escapeHTML(l.time)}</span>
     `;
     container.appendChild(r);
   });
@@ -2052,6 +2177,7 @@ function renderCalendarRow() {
   container.innerHTML = '';
   const daysShort = ['П', 'В', 'С', 'Ч', 'П', 'С', 'Н'];
   const curr = new Date();
+  const todayStr = getLocalDateString(curr);
   const dayOfWeek = (curr.getDay() + 6) % 7;
   const monday = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() - dayOfWeek);
 
@@ -2076,7 +2202,7 @@ function renderCalendarRow() {
     col.className = "flex flex-col items-center gap-1 cursor-pointer";
     col.onclick = () => { selectedDateKey = dKey; renderCalendarRow(); renderAll(); };
     col.innerHTML = `
-      <span class="text-[11px] text-slate-400 font-bold">${daysShort[i]}</span>
+      <span class="text-[11px] text-slate-500 font-bold">${daysShort[i]}</span>
       <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition ${isSelected ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}">
         ${d.getDate()}
       </div>
@@ -2084,8 +2210,8 @@ function renderCalendarRow() {
     `;
     container.appendChild(col);
   }
-  document.getElementById('homeDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? t('today') : selectedDateKey;
-  document.getElementById('diaryCurrentDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? t('today') : selectedDateKey;
+  document.getElementById('homeDateLabel').innerText = (selectedDateKey === todayStr) ? t('today') : selectedDateKey;
+  document.getElementById('diaryCurrentDateLabel').innerText = (selectedDateKey === todayStr) ? t('today') : selectedDateKey;
 }
 
 function openActivityModal() { document.getElementById('activityModal').classList.remove('hidden'); }
@@ -2108,12 +2234,15 @@ function addQuickBurn(k) {
   showToast(`+${k} спалених ккал`);
 }
 
+// Надійний експорт JSON через Blob
 function exportDataJSON() {
-  const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app, null, 2));
+  const jsonStr = JSON.stringify(app, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
   const a = document.createElement('a');
-  a.href = str;
+  a.href = URL.createObjectURL(blob);
   a.download = `calories_pro_full_backup_${getLocalDateString()}.json`;
   a.click();
+  URL.revokeObjectURL(a.href);
   logAudit('Бекап', 'Експортовано повний JSON бекап');
   showToast("✓ Резервну копію збережено!");
 }
@@ -2127,8 +2256,7 @@ function importDataJSON(e) {
       const parsed = JSON.parse(evt.target.result);
       if (parsed.profiles) {
         app = Object.assign(app, parsed);
-        if (!app.foods || app.foods.length === 0) app.foods = (typeof SEED_FOODS !== 'undefined') ? JSON.parse(JSON.stringify(SEED_FOODS)) : [];
-        if (!app.categories || app.categories.length === 0) app.categories = (typeof SEED_CATEGORIES !== 'undefined') ? [...SEED_CATEGORIES] : ['Звичайне'];
+        mergeSeedData();
         if (!app.tips || app.tips.length === 0) app.tips = (typeof SEED_TIPS !== 'undefined') ? [...SEED_TIPS] : [];
         if (!app.activityLog) app.activityLog = [];
         if (!app.shoppingList) app.shoppingList = [];
