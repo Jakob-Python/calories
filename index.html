@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Calories PRO">
-  <title>Калькулятор калорій PRO</title>
+  <title>Calories PRO — Контроль харчування</title>
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2927/2927347.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -23,481 +23,910 @@
     .touch-target { min-width: 44px; min-height: 44px; }
     .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .card-shadow { box-shadow: 0 2px 14px rgba(15, 23, 42, 0.04); }
+    .admin-card-shadow { box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05); }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between select-none">
 
-  <!-- ================= 1. ЕКРАН: ГОЛОВНА ================= -->
-  <main id="tab-home" class="pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
-    <header class="flex justify-between items-center py-2 mb-2">
-      <div>
-        <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-          Calories <span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black">PRO</span>
-        </h1>
-        <p class="text-xs font-semibold text-slate-500 mt-0.5" id="homeDateLabel">Сьогодні</p>
-      </div>
+  <!-- ================= СИСТЕМА СПОВІЩЕНЬ (TOAST) ================= -->
+  <div id="toastNotification" class="fixed top-5 right-5 z-50 transform -translate-y-12 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2">
+    <span id="toastIcon">✓</span>
+    <span id="toastMsg">Повідомлення</span>
+  </div>
 
-      <div class="flex items-center gap-2">
-        <button onclick="toggleLanguage()" class="touch-target px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-black text-slate-700 active:scale-95 transition" id="langSwitchBtn">
-          🇺🇦 UA
-        </button>
+  <!-- ============================================================== -->
+  <!-- 1. КОРИСТУВАЦЬКИЙ КЛІЄНТСЬКИЙ ДОДАТОК (MOBILE 390px)            -->
+  <!-- ============================================================== -->
+  <div id="client-app-root" class="w-full flex-1 flex flex-col">
 
-        <div class="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-2.5 py-1.5 rounded-full shadow-sm" title="Днів поспіль із записами">
-          <span class="text-sm">🔥</span>
-          <span class="text-xs font-black text-amber-700" id="realStreakDisplay">0</span>
+    <!-- 1.1 ГОЛОВНИЙ ЕКРАН ДАШБОРДУ -->
+    <main id="tab-home" class="pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+      <header class="flex justify-between items-center py-2 mb-2">
+        <div>
+          <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+            Calories <span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black">PRO</span>
+          </h1>
+          <p class="text-xs font-semibold text-slate-500 mt-0.5" id="homeDateLabel">Сьогодні</p>
         </div>
 
-        <button onclick="goToTab('more')" class="touch-target flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-full shadow-sm active:scale-95 transition">
-          <span id="headerAvatar" class="text-base">👩</span>
-          <span id="headerUserName" class="text-xs font-bold text-slate-700 max-w-[55px] truncate">Олена</span>
-        </button>
-      </div>
-    </header>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleLanguage()" class="touch-target px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-black text-slate-700 active:scale-95 transition" id="langSwitchBtn">
+            🇺🇦 UA
+          </button>
 
-    <!-- Календарний рядок тижня -->
-    <section class="bg-white py-2.5 px-2 rounded-2xl card-shadow border border-slate-100 mb-3">
-      <div class="grid grid-cols-7 text-center items-center" id="calendarWeekRow"></div>
-    </section>
+          <div class="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-2.5 py-1.5 rounded-full shadow-sm" title="Днів поспіль із записами">
+            <span class="text-sm">🔥</span>
+            <span class="text-xs font-black text-amber-700" id="realStreakDisplay">0</span>
+          </div>
 
-    <!-- Круговий блок калорій -->
-    <section class="bg-white rounded-3xl p-5 card-shadow border border-slate-100 mb-3.5 relative">
-      <div class="flex items-center justify-between">
-        <div class="w-20 text-center">
-          <span class="text-2xl font-black text-slate-900 block" id="dispEaten">0</span>
-          <span class="text-xs font-bold text-slate-500">Спожито</span>
+          <button onclick="goToTab('more')" class="touch-target flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-full shadow-sm active:scale-95 transition">
+            <span id="headerAvatar" class="text-base">👩</span>
+            <span id="headerUserName" class="text-xs font-bold text-slate-700 max-w-[55px] truncate">Олена</span>
+          </button>
         </div>
+      </header>
 
-        <div class="relative w-44 h-44 flex items-center justify-center">
-          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" stroke="#F1F5F9" stroke-width="8" fill="transparent"/>
-            <circle id="ringCircle" cx="50" cy="50" r="42" stroke="#FF4D4D" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" fill="transparent" class="smooth-transition"/>
-          </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
-            <span class="text-3xl font-black text-slate-900 tracking-tight" id="dispRemaining">1965</span>
-            <span class="text-[11px] font-bold text-slate-500 mt-0.5" id="dispRemainingLabel">ккал залишилось</span>
-            <span class="text-[10px] font-semibold text-slate-400 mt-0.5" id="dispDailyTarget">Ціль: 1965</span>
+      <!-- Календарний рядок тижня -->
+      <section class="bg-white py-2.5 px-2 rounded-2xl card-shadow border border-slate-100 mb-3">
+        <div class="grid grid-cols-7 text-center items-center" id="calendarWeekRow"></div>
+      </section>
+
+      <!-- Круговий блок калорій -->
+      <section class="bg-white rounded-3xl p-5 card-shadow border border-slate-100 mb-3.5 relative">
+        <div class="flex items-center justify-between">
+          <div class="w-20 text-center">
+            <span class="text-2xl font-black text-slate-900 block" id="dispEaten">0</span>
+            <span class="text-xs font-bold text-slate-500">Спожито</span>
+          </div>
+
+          <div class="relative w-44 h-44 flex items-center justify-center">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" stroke="#F1F5F9" stroke-width="8" fill="transparent"/>
+              <circle id="ringCircle" cx="50" cy="50" r="42" stroke="#FF4D4D" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" fill="transparent" class="smooth-transition"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
+              <span class="text-3xl font-black text-slate-900 tracking-tight" id="dispRemaining">1965</span>
+              <span class="text-[11px] font-bold text-slate-500 mt-0.5" id="dispRemainingLabel">ккал залишилось</span>
+              <span class="text-[10px] font-semibold text-slate-400 mt-0.5" id="dispDailyTarget">Ціль: 1965</span>
+            </div>
+          </div>
+
+          <div class="w-20 text-center">
+            <span class="text-2xl font-black text-slate-900 block" id="dispBurned">0</span>
+            <span class="text-xs font-bold text-slate-500 block mb-1">Спалено</span>
+            <button onclick="openActivityModal()" class="touch-target inline-flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold px-2 py-1 rounded-full border border-orange-200 active:scale-95 transition">
+              + Активність
+            </button>
           </div>
         </div>
 
-        <div class="w-20 text-center">
-          <span class="text-2xl font-black text-slate-900 block" id="dispBurned">0</span>
-          <span class="text-xs font-bold text-slate-500 block mb-1">Спалено</span>
-          <button onclick="openActivityModal()" class="touch-target inline-flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold px-2 py-1 rounded-full border border-orange-200 active:scale-95 transition">
-            + Активність
+        <div onclick="openActivityModal()" class="mt-3 pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 cursor-pointer hover:text-slate-600">
+          <span>🔄 Apple Health / Google Fit:</span>
+          <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Ручний імпорт кроків</span>
+        </div>
+      </section>
+
+      <!-- Смужки макросів БЖВ -->
+      <section class="grid grid-cols-3 gap-2.5 mb-3.5">
+        <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <span>🌾 Вугл.</span>
+            <span class="text-emerald-600 text-[11px] font-black" id="carbPct">0%</span>
+          </div>
+          <span class="text-xs font-black text-slate-800 block" id="dispCarbs">0 / 196 г</span>
+          <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+            <div id="carbBar" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <span>🥩 Білки</span>
+            <span class="text-rose-600 text-[11px] font-black" id="proteinPct">0%</span>
+          </div>
+          <span class="text-xs font-black text-slate-800 block" id="dispProtein">0 / 147 г</span>
+          <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+            <div id="proteinBar" class="bg-rose-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <span>🥑 Жири</span>
+            <span class="text-amber-600 text-[11px] font-black" id="fatPct">0%</span>
+          </div>
+          <span class="text-xs font-black text-slate-800 block" id="dispFat">0 / 66 г</span>
+          <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+            <div id="fatBar" class="bg-amber-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Водний баланс -->
+      <section class="bg-white rounded-3xl p-4 card-shadow border border-slate-100 mb-3.5">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-base">💧</div>
+            <div>
+              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Вода</h3>
+              <span class="text-sm font-black text-slate-900" id="dispWaterAmount">0 / 2000 мл</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
+            <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">+500</button>
+          </div>
+        </div>
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          <div id="waterProgressBar" class="bg-sky-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
+        </div>
+      </section>
+
+      <!-- ШІ-СКАНЕР ТАРІЛКИ -->
+      <section onclick="openPhotoFlow('lunch')" class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">📸</div>
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider">ШІ-Сканер Тарілки (Gemini)</h3>
+            <p class="text-[11px] text-indigo-100" id="scanBannerStatus">Сфотографуйте їжу — система визначить вагу і макроси</p>
+          </div>
+        </div>
+        <span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-xl font-bold shadow-sm">Спробувати →</span>
+      </section>
+
+      <!-- Щоденник перехід -->
+      <div onclick="goToTab('diary')" class="bg-white rounded-3xl p-4 mb-3.5 border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-98 transition">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">📖</span>
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Щоденник страв</h3>
+            <p class="text-[11px] text-slate-400">Сніданок, обід, вечеря, перекуси</p>
+          </div>
+        </div>
+        <span class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100">Відкрити →</span>
+      </div>
+
+      <!-- Рандомні поради з кубиком -->
+      <section class="bg-gradient-to-r from-amber-50 via-rose-50 to-indigo-50 border border-amber-200/60 rounded-3xl p-4 card-shadow relative">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start gap-2.5">
+            <span class="text-xl">💡</span>
+            <div>
+              <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Порада дня</h4>
+              <p class="text-xs font-medium text-slate-700 mt-1 leading-relaxed" id="homeSmartTip"></p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2.5 pt-2 border-t border-amber-200/40 flex justify-end">
+          <button onclick="nextRandomTip()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 active:scale-95 transition">
+            <span>🎲</span> <span>Інша порада</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- 1.2 ЩОДЕННИК -->
+    <main id="tab-diary" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h2 class="text-xl font-black text-slate-900">Щоденник страв</h2>
+          <p class="text-xs text-slate-500" id="diaryCurrentDateLabel">Сьогодні</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openPhotoFlow('lunch')" class="touch-target bg-indigo-50 text-indigo-600 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-indigo-100 active:scale-95 transition">
+            📸 Сканер
+          </button>
+          <button onclick="confirmClearCurrentDay()" class="touch-target text-xs text-rose-500 font-bold hover:underline">
+            Очистити
           </button>
         </div>
       </div>
 
-      <div onclick="openActivityModal()" class="mt-3 pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 cursor-pointer hover:text-slate-600">
-        <span>🔄 Apple Health / Google Fit:</span>
-        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Ручний імпорт кроків</span>
-      </div>
-    </section>
+      <div class="space-y-3" id="diaryMealsContainer">
+        <!-- Сніданок -->
+        <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🍳</span>
+              <div>
+                <h4 class="text-sm font-black text-slate-800">Сніданок</h4>
+                <span class="text-[11px] font-bold text-slate-400" id="diaryBreakfastStats">0 ккал</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="copyMealFromYesterday('breakfast')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition" title="Скопіювати з учора">
+                📋 З учора
+              </button>
+              <button onclick="openCatalogModal('breakfast')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+                + Їжа
+              </button>
+            </div>
+          </div>
+          <div id="diaryBreakfastList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
+        </div>
 
-    <!-- Смужки макросів БЖВ -->
-    <section class="grid grid-cols-3 gap-2.5 mb-3.5">
-      <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
-          <span>🌾 Вугл.</span>
-          <span class="text-emerald-600 text-[11px] font-black" id="carbPct">0%</span>
+        <!-- Обід -->
+        <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🍲</span>
+              <div>
+                <h4 class="text-sm font-black text-slate-800">Обід</h4>
+                <span class="text-[11px] font-bold text-slate-400" id="diaryLunchStats">0 ккал</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="copyMealFromYesterday('lunch')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
+                📋 З учора
+              </button>
+              <button onclick="openCatalogModal('lunch')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+                + Їжа
+              </button>
+            </div>
+          </div>
+          <div id="diaryLunchList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
         </div>
-        <span class="text-xs font-black text-slate-800 block" id="dispCarbs">0 / 196 г</span>
-        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-          <div id="carbBar" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
+
+        <!-- Вечеря -->
+        <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🥗</span>
+              <div>
+                <h4 class="text-sm font-black text-slate-800">Вечеря</h4>
+                <span class="text-[11px] font-bold text-slate-400" id="diaryDinnerStats">0 ккал</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="copyMealFromYesterday('dinner')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
+                📋 З учора
+              </button>
+              <button onclick="openCatalogModal('dinner')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+                + Їжа
+              </button>
+            </div>
+          </div>
+          <div id="diaryDinnerList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
+        </div>
+
+        <!-- Перекус -->
+        <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🍎</span>
+              <div>
+                <h4 class="text-sm font-black text-slate-800">Перекус</h4>
+                <span class="text-[11px] font-bold text-slate-400" id="diarySnackStats">0 ккал</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="copyMealFromYesterday('snack')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
+                📋 З учора
+              </button>
+              <button onclick="openCatalogModal('snack')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+                + Їжа
+              </button>
+            </div>
+          </div>
+          <div id="diarySnackList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
         </div>
       </div>
+    </main>
 
-      <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
-          <span>🥩 Білки</span>
-          <span class="text-rose-600 text-[11px] font-black" id="proteinPct">0%</span>
+    <!-- 1.3 ВАГА ТА ІМТ -->
+    <main id="tab-weight" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h2 class="text-xl font-black text-slate-900">Контроль ваги</h2>
+          <p class="text-xs text-slate-500">Динаміка та параметри тіла</p>
         </div>
-        <span class="text-xs font-black text-slate-800 block" id="dispProtein">0 / 147 г</span>
-        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-          <div id="proteinBar" class="bg-rose-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
-        </div>
+        <button onclick="openLogWeightModal()" class="touch-target bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-2xl shadow-sm active:scale-95 transition">
+          + Записати вагу
+        </button>
       </div>
 
-      <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
-          <span>🥑 Жири</span>
-          <span class="text-amber-600 text-[11px] font-black" id="fatPct">0%</span>
-        </div>
-        <span class="text-xs font-black text-slate-800 block" id="dispFat">0 / 66 г</span>
-        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-          <div id="fatBar" class="bg-amber-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Водний баланс -->
-    <section class="bg-white rounded-3xl p-4 card-shadow border border-slate-100 mb-3.5">
-      <div class="flex justify-between items-center mb-2">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-base">💧</div>
+      <section class="bg-white p-5 rounded-3xl border border-slate-100 card-shadow mb-3.5">
+        <div class="grid grid-cols-3 gap-2 text-center mb-4">
           <div>
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Вода</h3>
-            <span class="text-sm font-black text-slate-900" id="dispWaterAmount">0 / 2000 мл</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Старт</span>
+            <span class="text-base font-black text-slate-800" id="weightStartVal">65.0 кг</span>
           </div>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
-          <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">+500</button>
-        </div>
-      </div>
-      <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-        <div id="waterProgressBar" class="bg-sky-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
-      </div>
-    </section>
-
-    <!-- ШІ-СКАНЕР ТАРІЛКИ (ПОВЕРНУТО) -->
-    <section onclick="openPhotoFlow('lunch')" class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">📸</div>
-        <div>
-          <h3 class="text-xs font-black uppercase tracking-wider">ШІ-Сканер Тарілки (Gemini)</h3>
-          <p class="text-[11px] text-indigo-100" id="scanBannerStatus">Сфотографуйте їжу — калорії та БЖВ порахуються через ШІ</p>
-        </div>
-      </div>
-      <span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-xl font-bold shadow-sm">Спробувати →</span>
-    </section>
-
-    <!-- Швидкий перехід у Щоденник -->
-    <div onclick="goToTab('diary')" class="bg-white rounded-3xl p-4 mb-3.5 border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-98 transition">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">📖</span>
-        <div>
-          <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Щоденник харчування</h3>
-          <p class="text-[11px] text-slate-400">Сніданок, обід, вечеря, перекуси</p>
-        </div>
-      </div>
-      <span class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100">Відкрити →</span>
-    </div>
-
-    <!-- Рандомні поради з кубиком -->
-    <section class="bg-gradient-to-r from-amber-50 via-rose-50 to-indigo-50 border border-amber-200/60 rounded-3xl p-4 card-shadow relative">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex items-start gap-2.5">
-          <span class="text-xl">💡</span>
           <div>
-            <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Порада дня</h4>
-            <p class="text-xs font-medium text-slate-700 mt-1 leading-relaxed" id="homeSmartTip"></p>
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Поточна</span>
+            <span class="text-xl font-black text-rose-600" id="weightCurrentVal">62.5 кг</span>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Ціль</span>
+            <span class="text-base font-black text-slate-800" id="weightGoalVal">58.0 кг</span>
           </div>
         </div>
-      </div>
-      <div class="mt-2.5 pt-2 border-t border-amber-200/40 flex justify-end">
-        <button onclick="nextRandomTip()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 active:scale-95 transition">
-          <span>🎲</span> <span>Інша порада</span>
-        </button>
-      </div>
-    </section>
-  </main>
 
-  <!-- ================= 2. ЕКРАН: РОЗШИРЕНИЙ ЩОДЕННИК ================= -->
-  <main id="tab-diary" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
-    <div class="flex justify-between items-center mb-3">
-      <div>
-        <h2 class="text-xl font-black text-slate-900">Щоденник страв</h2>
-        <p class="text-xs text-slate-500" id="diaryCurrentDateLabel">Сьогодні</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button onclick="openPhotoFlow('lunch')" class="touch-target bg-indigo-50 text-indigo-600 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-indigo-100 active:scale-95 transition">
-          📸 Сканер
-        </button>
-        <button onclick="confirmClearCurrentDay()" class="touch-target text-xs text-rose-500 font-bold hover:underline">
-          Очистити
-        </button>
-      </div>
-    </div>
-
-    <div class="space-y-3" id="diaryMealsContainer">
-      <!-- Сніданок -->
-      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
-        <div class="flex justify-between items-center mb-2">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">🍳</span>
-            <div>
-              <h4 class="text-sm font-black text-slate-800">Сніданок</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="diaryBreakfastStats">0 ккал</span>
-            </div>
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center mb-3">
+          <div class="flex justify-between items-center text-xs font-bold mb-1">
+            <span class="text-slate-600">Індекс маси тіла (ІМТ):</span>
+            <span class="text-slate-900 font-black text-sm" id="bmiNumber">22.1</span>
           </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="copyMealFromYesterday('breakfast')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition" title="Скопіювати вчорашній сніданок">
-              📋 З учора
-            </button>
-            <button onclick="openCatalogModal('breakfast')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
-              + Їжа
-            </button>
+          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden mb-1">
+            <div id="bmiBar" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 50%"></div>
+          </div>
+          <span class="text-[11px] font-bold text-emerald-600" id="bmiStatusText">Нормальна вага</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-center text-xs">
+          <div class="bg-slate-50 p-2.5 rounded-xl">
+            <span class="text-[10px] text-slate-400 block font-bold">Зміна за 7 днів</span>
+            <span class="font-black text-slate-800" id="deltaWeekVal">-0.4 кг</span>
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl">
+            <span class="text-[10px] text-slate-400 block font-bold">Зміна за 30 днів</span>
+            <span class="font-black text-slate-800" id="deltaMonthVal">-1.8 кг</span>
           </div>
         </div>
-        <div id="diaryBreakfastList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
-      </div>
+      </section>
 
-      <!-- Обід -->
-      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
-        <div class="flex justify-between items-center mb-2">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">🍲</span>
-            <div>
-              <h4 class="text-sm font-black text-slate-800">Обід</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="diaryLunchStats">0 ккал</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="copyMealFromYesterday('lunch')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
-              📋 З учора
-            </button>
-            <button onclick="openCatalogModal('lunch')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
-              + Їжа
-            </button>
-          </div>
+      <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
+        <h3 class="text-xs font-black uppercase text-slate-800 mb-3">Історія замірів</h3>
+        <div class="space-y-2 max-h-56 overflow-y-auto no-scrollbar" id="weightHistoryList">
+          <p class="text-xs text-slate-400 italic text-center py-4">Немає записів ваги</p>
         </div>
-        <div id="diaryLunchList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
-      </div>
+      </section>
+    </main>
 
-      <!-- Вечеря -->
-      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
-        <div class="flex justify-between items-center mb-2">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">🥗</span>
-            <div>
-              <h4 class="text-sm font-black text-slate-800">Вечеря</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="diaryDinnerStats">0 ккал</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="copyMealFromYesterday('dinner')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
-              📋 З учора
-            </button>
-            <button onclick="openCatalogModal('dinner')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
-              + Їжа
-            </button>
-          </div>
-        </div>
-        <div id="diaryDinnerList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
-      </div>
-
-      <!-- Перекус -->
-      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
-        <div class="flex justify-between items-center mb-2">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">🍎</span>
-            <div>
-              <h4 class="text-sm font-black text-slate-800">Перекус</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="diarySnackStats">0 ккал</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="copyMealFromYesterday('snack')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
-              📋 З учора
-            </button>
-            <button onclick="openCatalogModal('snack')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
-              + Їжа
-            </button>
-          </div>
-        </div>
-        <div id="diarySnackList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- ================= 3. ЕКРАН: ВАГА ТА ПАРАМЕТРИ ТІЛА ================= -->
-  <main id="tab-weight" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
-    <div class="flex justify-between items-center mb-3">
-      <div>
-        <h2 class="text-xl font-black text-slate-900">Контроль ваги</h2>
-        <p class="text-xs text-slate-500">Динаміка та параметри тіла</p>
-      </div>
-      <button onclick="openLogWeightModal()" class="touch-target bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-2xl shadow-sm active:scale-95 transition">
-        + Записати вагу
-      </button>
-    </div>
-
-    <section class="bg-white p-5 rounded-3xl border border-slate-100 card-shadow mb-3.5">
-      <div class="grid grid-cols-3 gap-2 text-center mb-4">
+    <!-- 1.4 ПЛАН МЕНЮ ТА СПИСОК ПОКУПОК -->
+    <main id="tab-plan" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+      <div class="flex justify-between items-center mb-3">
         <div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase block">Старт</span>
-          <span class="text-base font-black text-slate-800" id="weightStartVal">65.0 кг</span>
+          <h2 class="text-xl font-black text-slate-900">План & Покупки</h2>
+          <p class="text-xs text-slate-500">Меню наперед та список продуктів</p>
         </div>
+        <div class="flex gap-1 bg-slate-100 p-1 rounded-2xl">
+          <button onclick="switchPlanSubTab('plan')" id="btnSubPlan" class="px-3 py-1.5 rounded-xl text-xs font-black bg-white shadow-sm text-slate-900">План</button>
+          <button onclick="switchPlanSubTab('shop')" id="btnSubShop" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500">Покупки</button>
+        </div>
+      </div>
+
+      <div id="subTabPlanContent">
+        <div class="bg-indigo-50/70 p-3.5 rounded-2xl border border-indigo-100 mb-3 text-xs text-indigo-900 leading-relaxed">
+          💡 <b>Плануйте заздалегідь:</b> оберіть будь-який день тижня і складіть меню. Калорії будуть підраховані завчасно!
+        </div>
+        <div class="space-y-2.5" id="weeklyPlanContainer"></div>
+      </div>
+
+      <div id="subTabShopContent" class="hidden">
+        <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-3.5">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="manualShopItemInput" placeholder="Вівсянка 500г, яйця..." class="flex-1 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+            <button onclick="addManualShopItem()" class="touch-target bg-indigo-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition">+ Додати</button>
+          </div>
+          <button onclick="generateShoppingListFromPlan()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 transition">
+            <span>⚡</span> Сформувати список із плану на 7 днів
+          </button>
+        </div>
+
+        <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-xs font-black uppercase text-slate-800">Список покупок</h3>
+            <button onclick="clearCheckedShopItems()" class="text-[11px] text-rose-500 font-bold hover:underline">Видалити куплене</button>
+          </div>
+          <div class="space-y-2 max-h-72 overflow-y-auto no-scrollbar" id="shoppingChecklist">
+            <p class="text-xs text-slate-400 italic text-center py-4">Список покупок порожній</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 1.5 НАЛАШТУВАННЯ ТА ВХІД В АДМІНКУ -->
+    <main id="tab-more" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+      <div class="flex justify-between items-center mb-3">
         <div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase block">Поточна</span>
-          <span class="text-xl font-black text-rose-600" id="weightCurrentVal">62.5 кг</span>
+          <h2 class="text-xl font-black text-slate-900">Профілі та панель</h2>
+          <p class="text-xs text-slate-500">Керування користувачами та застосунком</p>
         </div>
-        <div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase block">Ціль</span>
-          <span class="text-base font-black text-slate-800" id="weightGoalVal">58.0 кг</span>
-        </div>
+
+        <button onclick="openAdminPasswordModal()" class="touch-target bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 rounded-2xl text-xs font-black shadow-md flex items-center gap-1.5 active:scale-95 transition">
+          <span>👑</span>
+          <span>ADMIN 2.0</span>
+        </button>
       </div>
 
-      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center mb-3">
-        <div class="flex justify-between items-center text-xs font-bold mb-1">
-          <span class="text-slate-600">Індекс маси тіла (ІМТ):</span>
-          <span class="text-slate-900 font-black text-sm" id="bmiNumber">22.1</span>
+      <!-- Список локальних профілів клієнта -->
+      <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-4">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-xs font-black uppercase text-slate-800">Локальні профілі</h3>
+          <span class="text-[10px] text-slate-400">Тап для вибору</span>
         </div>
-        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden mb-1">
-          <div id="bmiBar" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 50%"></div>
-        </div>
-        <span class="text-[11px] font-bold text-emerald-600" id="bmiStatusText">Нормальна вага</span>
+        <div id="profileContainer" class="space-y-2"></div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 text-center text-xs">
-        <div class="bg-slate-50 p-2.5 rounded-xl">
-          <span class="text-[10px] text-slate-400 block font-bold">Зміна за 7 днів</span>
-          <span class="font-black text-slate-800" id="deltaWeekVal">-0.4 кг</span>
+      <!-- Резервне копіювання JSON клієнта -->
+      <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
+        <h3 class="text-xs font-black uppercase text-slate-800 mb-1">💾 Резервна копія</h3>
+        <p class="text-xs text-slate-500 mb-3">Збережіть усі записи щоденника або перенесіть на інший телефон.</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportDataJSON()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition">
+            ⬇️ Зберегти JSON
+          </button>
+          <button onclick="document.getElementById('importFileInput').click()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition">
+            ⬆️ Відновити JSON
+          </button>
+          <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
         </div>
-        <div class="bg-slate-50 p-2.5 rounded-xl">
-          <span class="text-[10px] text-slate-400 block font-bold">Зміна за 30 днів</span>
-          <span class="font-black text-slate-800" id="deltaMonthVal">-1.8 кг</span>
-        </div>
-      </div>
-    </section>
+      </section>
+    </main>
 
-    <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
-      <h3 class="text-xs font-black uppercase text-slate-800 mb-3">Історія замірів</h3>
-      <div class="space-y-2 max-h-56 overflow-y-auto no-scrollbar" id="weightHistoryList">
-        <p class="text-xs text-slate-400 italic text-center py-4">Немає записів ваги</p>
+    <!-- НИЖНЯ НАВІГАЦІЯ КЛІЄНТА -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 py-2 px-3 z-40 max-w-[390px] mx-auto">
+      <div class="flex justify-between items-center text-center">
+        <button onclick="goToTab('home')" id="nav-btn-home" class="touch-target flex flex-col items-center justify-center flex-1 text-rose-500">
+          <span class="text-lg">🏠</span>
+          <span class="text-[10px] font-bold mt-0.5">Головна</span>
+        </button>
+        <button onclick="goToTab('diary')" id="nav-btn-diary" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+          <span class="text-lg">📖</span>
+          <span class="text-[10px] font-bold mt-0.5">Щоденник</span>
+        </button>
+        <button onclick="goToTab('weight')" id="nav-btn-weight" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+          <span class="text-lg">⚖️</span>
+          <span class="text-[10px] font-bold mt-0.5">Вага</span>
+        </button>
+        <button onclick="goToTab('plan')" id="nav-btn-plan" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+          <span class="text-lg">📅</span>
+          <span class="text-[10px] font-bold mt-0.5">План</span>
+        </button>
+        <button onclick="goToTab('more')" id="nav-btn-more" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+          <span class="text-lg">⚙️</span>
+          <span class="text-[10px] font-bold mt-0.5">Ще</span>
+        </button>
       </div>
-    </section>
-  </main>
+    </nav>
+  </div>
 
-  <!-- ================= 4. ЕКРАН: ПЛАН & ПОКУПКИ ================= -->
-  <main id="tab-plan" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
-    <div class="flex justify-between items-center mb-3">
+
+  <!-- ============================================================== -->
+  <!-- 2. ADMIN CONTROL CENTER 2.0 (ПРОФЕСІЙНИЙ SAAS DASHBOARD)         -->
+  <!-- ============================================================== -->
+  <div id="admin-root" class="hidden min-h-screen w-full bg-[#F4F6F9] text-slate-800 flex flex-col lg:flex-row">
+
+    <!-- 2.1 БІЧНЕ МЕНЮ АДМІНІСТРАТОРА (SIDEBAR) -->
+    <aside class="w-full lg:w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col justify-between shadow-2xl">
       <div>
-        <h2 class="text-xl font-black text-slate-900">План & Покупки</h2>
-        <p class="text-xs text-slate-500">Меню наперед та список продуктів</p>
-      </div>
-      <div class="flex gap-1 bg-slate-100 p-1 rounded-2xl">
-        <button onclick="switchPlanSubTab('plan')" id="btnSubPlan" class="px-3 py-1.5 rounded-xl text-xs font-black bg-white shadow-sm text-slate-900">План</button>
-        <button onclick="switchPlanSubTab('shop')" id="btnSubShop" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500">Покупки</button>
-      </div>
-    </div>
-
-    <div id="subTabPlanContent">
-      <div class="bg-indigo-50/70 p-3.5 rounded-2xl border border-indigo-100 mb-3 text-xs text-indigo-900 leading-relaxed">
-        💡 <b>Плануйте заздалегідь:</b> оберіть будь-який день тижня і складіть меню. Калорії будуть підраховані завчасно!
-      </div>
-      <div class="space-y-2.5" id="weeklyPlanContainer"></div>
-    </div>
-
-    <div id="subTabShopContent" class="hidden">
-      <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-3.5">
-        <div class="flex gap-2 mb-3">
-          <input type="text" id="manualShopItemInput" placeholder="Вівсянка 500г, яйця..." class="flex-1 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
-          <button onclick="addManualShopItem()" class="touch-target bg-indigo-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition">+ Додати</button>
+        <!-- Логотип адмінки -->
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow-md">
+              C
+            </div>
+            <div>
+              <span class="text-sm font-black tracking-tight block">Calories PRO</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">Admin Center 2.0</span>
+            </div>
+          </div>
+          <!-- Кнопка швидкого виходу до мобільного додатка -->
+          <button onclick="exitAdminToClientApp()" class="lg:hidden text-slate-400 hover:text-white text-xs bg-slate-800 px-2.5 py-1 rounded-lg">
+            ✕ Закрити
+          </button>
         </div>
-        <button onclick="generateShoppingListFromPlan()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 transition">
-          <span>⚡</span> Сформувати список із плану на 7 днів
-        </button>
+
+        <!-- Навігаційні розділи -->
+        <nav class="p-3 space-y-1 text-xs font-bold overflow-x-auto lg:overflow-visible flex lg:flex-col no-scrollbar" id="adminSidebarNav">
+          <button onclick="switchAdminSection('overview')" id="asb-overview" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-600 text-white transition text-left whitespace-nowrap">
+            <span>📊</span> Огляд (Dashboard)
+          </button>
+          <button onclick="switchAdminSection('users')" id="asb-users" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>👥</span> Користувачі
+          </button>
+          <button onclick="switchAdminSection('products')" id="asb-products" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>🍎</span> База продуктів
+          </button>
+          <button onclick="switchAdminSection('categories')" id="asb-categories" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>📁</span> Категорії
+          </button>
+          <button onclick="switchAdminSection('recipes')" id="asb-recipes" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>🍲</span> Рецепти
+          </button>
+          <button onclick="switchAdminSection('ai')" id="asb-ai" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>✨</span> AI Center (Gemini)
+          </button>
+          <button onclick="switchAdminSection('content')" id="asb-content" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>💡</span> Контент & Поради
+          </button>
+          <button onclick="switchAdminSection('analytics')" id="asb-analytics" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>📈</span> Аналітика
+          </button>
+          <button onclick="switchAdminSection('security')" id="asb-security" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>🛡️</span> Безпека & Журнал
+          </button>
+          <button onclick="switchAdminSection('backup')" id="asb-backup" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap">
+            <span>☁️</span> Хмара & Резервні копії
+          </button>
+        </nav>
       </div>
 
-      <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
-        <div class="flex justify-between items-center mb-3">
-          <h3 class="text-xs font-black uppercase text-slate-800">Список покупок</h3>
-          <button onclick="clearCheckedShopItems()" class="text-[11px] text-rose-500 font-bold hover:underline">Видалити куплене</button>
+      <!-- Інфо статус та кнопка виходу -->
+      <div class="p-4 border-t border-slate-800 hidden lg:block">
+        <div class="flex items-center justify-between text-[11px] text-slate-400 mb-3">
+          <span>Сховище: Local (Storage)</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-500" title="Система активна"></span>
         </div>
-        <div class="space-y-2 max-h-72 overflow-y-auto no-scrollbar" id="shoppingChecklist">
-          <p class="text-xs text-slate-400 italic text-center py-4">Список покупок порожній</p>
+        <button onclick="exitAdminToClientApp()" class="w-full py-2 bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5">
+          <span>🚪</span> Повернутися до додатку
+        </button>
+      </div>
+    </aside>
+
+    <!-- 2.2 ГОЛОВНА ОБЛАСТЬ АДМІНІСТРУВАННЯ (MAIN CONTENT) -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+      <!-- Верхня панель (Topbar) -->
+      <header class="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <div class="flex items-center gap-3">
+          <h2 class="text-base font-black text-slate-900" id="adminTopHeaderTitle">Огляд системи</h2>
+          <span class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full border border-emerald-100">Система працездатна</span>
         </div>
-      </div>
-    </div>
-  </main>
 
-  <!-- ================= 5. ЕКРАН: «ЩЕ» (АДМІНКА, ПРОФІЛІ, БЕКАП) ================= -->
-  <main id="tab-more" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
-    <div class="flex justify-between items-center mb-3">
-      <div>
-        <h2 class="text-xl font-black text-slate-900">Профілі та налаштування</h2>
-        <p class="text-xs text-slate-500">Керування користувачами та параметри</p>
-      </div>
-
-      <button onclick="openAdminModal()" id="adminToggleBtn" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-2xl text-xs font-bold border border-slate-200 flex items-center gap-1.5 active:scale-95 transition">
-        <span id="adminLockIcon">🔒</span>
-        <span id="adminLockText">Адмінка</span>
-      </button>
-    </div>
-
-    <!-- Панель адміністратора (показується ТІЛЬКИ коли app.isAdminUnlocked = true) -->
-    <div id="adminPanel" class="hidden bg-white p-4 rounded-3xl border-2 border-indigo-200 card-shadow mb-4">
-      <div class="flex justify-between items-center mb-1.5">
-        <h3 class="text-xs font-black uppercase tracking-wider text-indigo-700">👑 Керування користувачами</h3>
-        <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Сесія активна</span>
-      </div>
-      <p class="text-[11px] font-semibold text-slate-500 mb-3" id="adminStatsLine">Профілів: 0 · Записаних днів: 0</p>
-
-      <!-- ВВЕДЕННЯ GEMINI API-КЛЮЧА (ПОВЕРНУТО) -->
-      <div class="mb-3 bg-indigo-50/60 p-3 rounded-2xl border border-indigo-100">
-        <label class="text-[11px] font-black uppercase text-indigo-950 block mb-1">🔑 Google Gemini API-ключ</label>
-        <p class="text-[10px] text-slate-600 mb-2">Для реального розпізнавання тарілок через ШІ.</p>
-        <div class="flex gap-2">
-          <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="flex-1 text-xs bg-white border border-indigo-200 rounded-xl p-2 outline-none font-mono">
-          <button onclick="saveApiKey()" class="touch-target bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition">Зберегти</button>
+        <div class="flex items-center gap-3">
+          <div class="text-right hidden sm:block">
+            <span class="text-xs font-black text-slate-800 block">Super Administrator</span>
+            <span class="text-[10px] text-slate-400">Локальний сесійний доступ</span>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-black text-xs flex items-center justify-center">
+            SA
+          </div>
+          <button onclick="exitAdminToClientApp()" class="sm:hidden text-xs bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded-lg">
+            Вийти
+          </button>
         </div>
-        <span id="apiKeySaveStatus" class="text-[10px] font-bold text-emerald-600 mt-1 block hidden">✓ Ключ збережено в пам'яті браузера</span>
-      </div>
-      
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="openProfileEditor(null)" class="touch-target bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-xl active:scale-95 transition flex items-center justify-center gap-1">
-          <span>+</span> Новий профіль
-        </button>
-        <button onclick="openChangeAdminPassModal()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl border border-slate-200 active:scale-95 transition">
-          Змінити пароль
-        </button>
+      </header>
+
+      <!-- Вміст розділів адмінки -->
+      <div class="p-4 sm:p-6 space-y-6">
+
+        <!-- РОЗДІЛ 1: ОГЛЯД (DASHBOARD) -->
+        <section id="admin-sec-overview" class="space-y-6">
+          <!-- Картки статистики -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+            <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
+              <span class="text-[11px] font-bold text-slate-400 uppercase block">Профілі</span>
+              <span class="text-2xl font-black text-slate-900 mt-1 block" id="admStatUsersCount">0</span>
+              <span class="text-[10px] font-semibold text-emerald-600">Активні локально</span>
+            </div>
+            <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
+              <span class="text-[11px] font-bold text-slate-400 uppercase block">База продуктів</span>
+              <span class="text-2xl font-black text-indigo-600 mt-1 block" id="admStatProductsCount">0</span>
+              <span class="text-[10px] font-semibold text-slate-500">CNF / Власні</span>
+            </div>
+            <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
+              <span class="text-[11px] font-bold text-slate-400 uppercase block">Записів у днях</span>
+              <span class="text-2xl font-black text-emerald-600 mt-1 block" id="admStatLogsCount">0</span>
+              <span class="text-[10px] font-semibold text-slate-500">Усього днів з їжею</span>
+            </div>
+            <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
+              <span class="text-[11px] font-bold text-slate-400 uppercase block">AI-сканування</span>
+              <span class="text-2xl font-black text-rose-600 mt-1 block" id="admStatAiScansCount">0</span>
+              <span class="text-[10px] font-semibold text-slate-500" id="admStatAiStatusText">Ключ не збережено</span>
+            </div>
+          </div>
+
+          <!-- Реальний графік активності за 7 днів -->
+          <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100">
+            <div class="flex justify-between items-center mb-3">
+              <div>
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Активність застосунку за останні 7 днів</h3>
+                <p class="text-xs text-slate-400">Фактичне споживання калорій активного користувача</p>
+              </div>
+              <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">Реальні дані</span>
+            </div>
+            <div class="h-44 flex items-end justify-between gap-2 pt-4 border-b border-slate-100 pb-2" id="admRealChartBars">
+              <!-- Смужки генеруються динамічно -->
+            </div>
+          </div>
+
+          <!-- Стрічка останніх дій (Activity Log) -->
+          <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-3">Останні системні події (Audit Log)</h3>
+            <div class="space-y-2 max-h-52 overflow-y-auto no-scrollbar" id="admRecentActivityList">
+              <!-- Генерується через JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- РОЗДІЛ 2: КОРИСТУВАЧІ -->
+        <section id="admin-sec-users" class="hidden space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Керування користувачами (профілями)</h3>
+              <p class="text-xs text-slate-500">Локальні профілі з персональними нормами та PIN-кодами</p>
+            </div>
+            <button onclick="openProfileEditor(null)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md active:scale-95 transition">
+              + Створити профіль
+            </button>
+          </div>
+
+          <!-- Таблиця користувачів -->
+          <div class="bg-white rounded-3xl admin-card-shadow border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase font-black text-[10px]">
+                  <tr>
+                    <th class="p-3.5">Користувач</th>
+                    <th class="p-3.5">Ціль ккал</th>
+                    <th class="p-3.5">Б/Ж/В</th>
+                    <th class="p-3.5">Вода</th>
+                    <th class="p-3.5">Захист</th>
+                    <th class="p-3.5 text-right">Дії</th>
+                  </tr>
+                </thead>
+                <tbody id="admUsersTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- РОЗДІЛ 3: БАЗА ПРОДУКТІВ -->
+        <section id="admin-sec-products" class="hidden space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Менеджер бази продуктів</h3>
+              <p class="text-xs text-slate-500">Canadian Nutrient File, власні продукти та імпорт</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="exportProductsCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition">
+                ⬇️ Експорт CSV
+              </button>
+              <button onclick="document.getElementById('admProductsCsvInput').click()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition">
+                ⬆️ Імпорт CSV
+              </button>
+              <input type="file" id="admProductsCsvInput" accept=".csv" class="hidden" onchange="importProductsCSV(event)">
+              <button onclick="openAdmCreateProductModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md transition">
+                + Додати продукт
+              </button>
+            </div>
+          </div>
+
+          <!-- Пошук та фільтр категорій -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-100 admin-card-shadow flex flex-col sm:flex-row gap-2.5">
+            <input type="text" id="admProductSearch" placeholder="Швидкий пошук за назвою..." class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold" oninput="renderAdmProductsTable()">
+            <select id="admProductCatFilter" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none font-bold" onchange="renderAdmProductsTable()">
+              <option value="Усі">Усі категорії</option>
+            </select>
+          </div>
+
+          <!-- Таблиця продуктів -->
+          <div class="bg-white rounded-3xl admin-card-shadow border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto max-h-[500px]">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase font-black text-[10px] sticky top-0">
+                  <tr>
+                    <th class="p-3">Назва</th>
+                    <th class="p-3">Категорія</th>
+                    <th class="p-3">Ккал/100г</th>
+                    <th class="p-3">Білки</th>
+                    <th class="p-3">Жири</th>
+                    <th class="p-3">Вуглеводи</th>
+                    <th class="p-3">Джерело</th>
+                    <th class="p-3 text-right">Дії</th>
+                  </tr>
+                </thead>
+                <tbody id="admProductsTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- РОЗДІЛ 4: КАТЕГОРІЇ -->
+        <section id="admin-sec-categories" class="hidden space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Категорії їжі</h3>
+              <p class="text-xs text-slate-500">Керування категоріями та відображенням у каталозі</p>
+            </div>
+            <button onclick="openAdmAddCategoryPrompt()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition">
+              + Додати категорію
+            </button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="admCategoriesGrid"></div>
+        </section>
+
+        <!-- РОЗДІЛ 5: РЕЦЕПТИ -->
+        <section id="admin-sec-recipes" class="hidden space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Каталог страв та рецептів</h3>
+              <p class="text-xs text-slate-500">Управління складними рецептами та поживністю на порцію</p>
+            </div>
+            <button onclick="openRecipeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition">
+              + Створити рецепт
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5" id="admRecipesGrid"></div>
+        </section>
+
+        <!-- РОЗДІЛ 6: AI CENTER -->
+        <section id="admin-sec-ai" class="hidden space-y-4">
+          <div>
+            <h3 class="text-base font-black text-slate-900">AI Center — Gemini Vision & Nutritionist</h3>
+            <p class="text-xs text-slate-500">Діагностика, ключі API, ліміти та налаштування системних промптів</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Ключ та стан з'єднання -->
+            <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100 space-y-3">
+              <h4 class="text-xs font-black uppercase text-indigo-700">Конфігурація Gemini API</h4>
+              <p class="text-xs text-slate-500">Введіть персональний ключ із Google AI Studio:</p>
+              <input type="password" id="admGeminiKeyInput" placeholder="AIzaSy..." class="w-full text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+              <div class="flex gap-2">
+                <button onclick="saveAdmGeminiKey()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                  Зберегти ключ
+                </button>
+                <button onclick="testGeminiConnection()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition">
+                  ⚡ Тест з'єднання
+                </button>
+              </div>
+              <p id="admAiTestStatus" class="text-xs font-bold hidden"></p>
+            </div>
+
+            <!-- Системний промпт -->
+            <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100 space-y-3">
+              <h4 class="text-xs font-black uppercase text-slate-800">Системний промпт для Vision Сканера</h4>
+              <p class="text-xs text-slate-500">Інструкція, яку отримує Gemini при фотографуванні тарілки:</p>
+              <textarea id="admAiSystemPrompt" rows="4" class="w-full text-[11px] font-mono bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none"></textarea>
+              <button onclick="saveAiPromptConfig()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition">
+                Зберегти промпт
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- РОЗДІЛ 7: КОНТЕНТ & ПОРАДИ -->
+        <section id="admin-sec-content" class="hidden space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-base font-black text-slate-900">Керування порадами дня</h3>
+              <p class="text-xs text-slate-500">Поради, які випадково показуються користувачам на кубику 🎲</p>
+            </div>
+            <button onclick="openAddTipModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md transition">
+              + Додати пораду
+            </button>
+          </div>
+          <div class="space-y-2" id="admTipsListContainer"></div>
+        </section>
+
+        <!-- РОЗДІЛ 8: АНАЛІТИКА -->
+        <section id="admin-sec-analytics" class="hidden space-y-4">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Аналітика додатку</h3>
+            <p class="text-xs text-slate-500">Агреговані показники використання на основі збережених даних</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Найпопулярніша категорія</span>
+              <h4 class="text-base font-black text-slate-900 mt-1" id="admTopCategory">Крупи та птиця</h4>
+            </div>
+            <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Середнє споживання води</span>
+              <h4 class="text-base font-black text-sky-600 mt-1" id="admAvgWater">1750 мл</h4>
+            </div>
+            <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Середній білок</span>
+              <h4 class="text-base font-black text-rose-600 mt-1" id="admAvgProt">115 г/день</h4>
+            </div>
+          </div>
+        </section>
+
+        <!-- РОЗДІЛ 9: БЕЗПЕКА & ЖУРНАЛ ДІЙ -->
+        <section id="admin-sec-security" class="hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100 space-y-3">
+              <h4 class="text-xs font-black uppercase text-slate-800">Зміна пароля адміністратора</h4>
+              <p class="text-xs text-slate-500">Пароль для входу в панель керування</p>
+              <input type="password" id="admSecPass1" placeholder="Новий пароль (мін. 4 знаки)" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+              <input type="password" id="admSecPass2" placeholder="Повторіть новий пароль" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+              <button onclick="commitAdminSecurityPassword()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                Оновити пароль
+              </button>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100 space-y-3">
+              <h4 class="text-xs font-black uppercase text-slate-800">Ролі та права доступу</h4>
+              <p class="text-xs text-slate-500">Поточний користувач має статус:</p>
+              <div class="bg-indigo-50 p-3 rounded-2xl text-xs font-bold text-indigo-950 flex items-center justify-between">
+                <span>👑 Super Admin (Full Control)</span>
+                <span class="text-[10px] bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">Active</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Усі адміністративні зміни відстежуються в журналі аудиту.</p>
+            </div>
+          </div>
+
+          <!-- Таблиця Audit Log -->
+          <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100">
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Повний журнал операцій (Audit Trail)</h4>
+              <button onclick="clearActivityLog()" class="text-[11px] text-rose-500 font-bold hover:underline">Очистити історію</button>
+            </div>
+            <div class="space-y-1.5 max-h-60 overflow-y-auto no-scrollbar" id="admFullAuditLogList"></div>
+          </div>
+        </section>
+
+        <!-- РОЗДІЛ 10: ХМАРА & РЕЗЕРВНІ КОПІЇ (SUPABASE SCHEMA) -->
+        <section id="admin-sec-backup" class="hidden space-y-4">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Хмарна архітектура & Резервне копіювання</h3>
+            <p class="text-xs text-slate-500">Локальне копіювання та підключення до повноцінного хмарного бекенду</p>
+          </div>
+
+          <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100 space-y-3">
+            <h4 class="text-xs font-black uppercase text-slate-800">Швидкий бекап (JSON)</h4>
+            <p class="text-xs text-slate-500">Збережіть усі продукти, профілі, рецепти та щоденники в один файл:</p>
+            <div class="flex gap-2">
+              <button onclick="exportDataJSON()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
+                ⬇️ Завантажити повний бекап JSON
+              </button>
+              <button onclick="document.getElementById('importFileInput').click()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition">
+                ⬆️ Відновити з файлу
+              </button>
+            </div>
+          </div>
+
+          <!-- Інструкція та схема для Supabase -->
+          <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">⚡</span>
+              <div>
+                <h4 class="text-xs font-black uppercase text-indigo-700">Архітектура Supabase (PostgreSQL + Auth)</h4>
+                <p class="text-xs text-slate-500">Схема для переходу від localStorage до централізованої багатокористувацької бази:</p>
+              </div>
+            </div>
+            <pre class="bg-slate-900 text-indigo-200 text-[11px] p-3 rounded-2xl overflow-x-auto font-mono">
+-- 1. Таблиця профілів користувачів
+create table public.profiles (
+  id uuid references auth.users not null primary key,
+  name text,
+  target_kcal int default 2000,
+  carbs int, protein int, fat int,
+  water_target int default 2000,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 2. Таблиця щоденника їжі
+create table public.food_logs (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade,
+  log_date date not null,
+  meal_type text check (meal_type in ('breakfast','lunch','dinner','snack')),
+  food_name text not null,
+  grams numeric not null,
+  kcal numeric not null,
+  protein numeric, fat numeric, carbs numeric
+);
+
+-- Увімкнення безпеки Row Level Security (RLS)
+alter table public.food_logs enable row level security;
+create policy "Користувачі бачать тільки власні записи" 
+  on public.food_logs for all using (auth.uid() = user_id);
+            </pre>
+            <p class="text-[11px] text-slate-500">
+              Ця схема гарантує, що при переході на сервер дані кожного користувача будуть захищені персональною авторизацією, а адмінка керуватиме базою через Service Role.
+            </p>
+          </div>
+        </section>
+
       </div>
     </div>
+  </div>
 
-    <!-- Контейнер карток профілів -->
-    <div id="profileContainer" class="space-y-2.5 mb-5"></div>
 
-    <!-- Резервне копіювання JSON -->
-    <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
-      <h3 class="text-xs font-black uppercase text-slate-800 mb-1">💾 Резервна копія</h3>
-      <p class="text-xs text-slate-500 mb-3">Збережіть усі записи щоденника або перенесіть на інший телефон.</p>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="exportDataJSON()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition">
-          ⬇️ Зберегти JSON
-        </button>
-        <button onclick="document.getElementById('importFileInput').click()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition">
-          ⬆️ Відновити JSON
-        </button>
-        <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
-      </div>
-    </section>
-  </main>
+  <!-- ============================================================== -->
+  <!-- 3. СПІЛЬНІ МОДАЛЬНІ ВІКНА (ДОДАВАННЯ ПРОДУКТІВ, ПОРЦІЙ, ВАГИ)   -->
+  <!-- ============================================================== -->
 
-  <!-- ================= НИЖНЯ НАВІГАЦІЯ ================= -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 py-2 px-3 z-40 max-w-[390px] mx-auto">
-    <div class="flex justify-between items-center text-center">
-      <button onclick="goToTab('home')" id="nav-btn-home" class="touch-target flex flex-col items-center justify-center flex-1 text-rose-500">
-        <span class="text-lg">🏠</span>
-        <span class="text-[10px] font-bold mt-0.5">Головна</span>
-      </button>
-      <button onclick="goToTab('diary')" id="nav-btn-diary" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
-        <span class="text-lg">📖</span>
-        <span class="text-[10px] font-bold mt-0.5">Щоденник</span>
-      </button>
-      <button onclick="goToTab('weight')" id="nav-btn-weight" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
-        <span class="text-lg">⚖️</span>
-        <span class="text-[10px] font-bold mt-0.5">Вага</span>
-      </button>
-      <button onclick="goToTab('plan')" id="nav-btn-plan" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
-        <span class="text-lg">📅</span>
-        <span class="text-[10px] font-bold mt-0.5">План</span>
-      </button>
-      <button onclick="goToTab('more')" id="nav-btn-more" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
-        <span class="text-lg">⚙️</span>
-        <span class="text-[10px] font-bold mt-0.5">Ще</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- ================= ВСІ МОДАЛЬНІ ВІКНА ================= -->
-
-  <!-- 1. Вхід в адмінку (пароль приховано) -->
+  <!-- Вхід в адмінку -->
   <div id="adminPasswordModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
-      <h3 class="text-sm font-black text-slate-900 mb-1">Пароль адміністратора</h3>
-      <p class="text-xs text-slate-500 mb-3">Введіть пароль для доступу до керування</p>
+      <div class="flex justify-between items-center mb-1">
+        <h3 class="text-sm font-black text-slate-900">Admin Control Center</h3>
+        <button onclick="closeAdminPasswordModal()" class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-3">Введіть пароль адміністратора</p>
       <input type="password" id="adminPasswordInputVal" placeholder="••••••••" class="w-full text-sm font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-2 outline-none focus:ring-2 focus:ring-indigo-400">
       <p id="adminLoginError" class="text-[11px] text-rose-500 font-bold mb-3 hidden"></p>
       <div class="flex gap-2">
@@ -507,24 +936,7 @@
     </div>
   </div>
 
-  <!-- 2. Зміна пароля адміна -->
-  <div id="changeAdminPassModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
-      <h3 class="text-sm font-black text-slate-900 mb-1">Зміна пароля адміна</h3>
-      <p class="text-xs text-slate-500 mb-3">Мінімум 4 символи</p>
-      <div class="space-y-2 mb-2">
-        <input type="password" id="newAdminPass1" placeholder="Новий пароль" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
-        <input type="password" id="newAdminPass2" placeholder="Повторіть пароль" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
-      </div>
-      <p id="changePassError" class="text-[11px] text-rose-500 font-bold mb-3 hidden"></p>
-      <div class="flex gap-2">
-        <button onclick="closeChangeAdminPassModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">Скасувати</button>
-        <button onclick="commitChangeAdminPass()" class="touch-target flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md">Зберегти</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. Редактор профілю (Створення та Редагування) -->
+  <!-- Редактор профілю користувача -->
   <div id="profileEditorModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
       <div class="flex justify-between items-center mb-2">
@@ -584,7 +996,7 @@
 
       <div class="mb-4 pt-2 border-t border-slate-100">
         <div class="flex justify-between items-center mb-1">
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Розподіл ккал по прийомах (%)</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase">Розподіл ккал (%)</label>
           <span id="peSplitSum" class="text-[10px] font-black text-slate-600">Разом: 100%</span>
         </div>
         <div class="grid grid-cols-4 gap-1.5">
@@ -614,7 +1026,32 @@
     </div>
   </div>
 
-  <!-- 4. Каталог продуктів -->
+  <!-- Створення продукту в адмінці -->
+  <div id="admProductModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl max-h-[85vh] overflow-y-auto no-scrollbar">
+      <h3 class="text-sm font-black text-slate-900 mb-2" id="admProductModalTitle">Додати продукт</h3>
+      <input type="hidden" id="admProdEditId">
+      <div class="space-y-2 mb-3">
+        <input type="text" id="admProdName" placeholder="Назва (напр. Гречана каша)" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        <input type="text" id="admProdCat" placeholder="Категорія (напр. Крупи)" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" id="admProdKcal" placeholder="Ккал/100г" class="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+          <input type="text" id="admProdEmoji" placeholder="Емодзі (напр. 🥣)" class="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        </div>
+        <div class="grid grid-cols-3 gap-1.5">
+          <input type="number" id="admProdP" placeholder="Білки" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+          <input type="number" id="admProdF" placeholder="Жири" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+          <input type="number" id="admProdC" placeholder="Вугл." class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="document.getElementById('admProductModal').classList.add('hidden')" class="flex-1 bg-slate-100 py-2 rounded-xl text-xs font-bold">Скасувати</button>
+        <button onclick="commitAdmProductSave()" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl text-xs font-bold">Зберегти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Каталог продуктів (Клієнтський) -->
   <div id="catalogModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-md h-[88vh] rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl overflow-hidden">
       <div class="p-4 border-b border-slate-100 flex items-center justify-between">
@@ -624,7 +1061,6 @@
         </div>
         <button onclick="closeCatalogModal()" class="touch-target w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold flex items-center justify-center text-sm">✕</button>
       </div>
-
       <div class="p-3 bg-white border-b border-slate-100">
         <div class="relative mb-2">
           <span class="absolute left-3 top-2.5 text-slate-400 text-sm">🔍</span>
@@ -632,12 +1068,11 @@
         </div>
         <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar" id="catalogCategoryChips"></div>
       </div>
-
       <div class="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar" id="catalogListContainer"></div>
     </div>
   </div>
 
-  <!-- 5. Картка вибору порції -->
+  <!-- Картка вибору порції -->
   <div id="portionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl">
       <div class="flex justify-between items-start mb-3">
@@ -684,7 +1119,7 @@
     </div>
   </div>
 
-  <!-- 6. Запис ваги -->
+  <!-- Модальне вікно ваги -->
   <div id="logWeightModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
       <h3 class="text-sm font-black text-slate-900 mb-1">Записати параметри</h3>
@@ -706,7 +1141,7 @@
     </div>
   </div>
 
-  <!-- 7. Модальне вікно активності -->
+  <!-- Модальне вікно активності -->
   <div id="activityModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
       <h3 class="text-sm font-black text-slate-900 mb-1">Спалені калорії</h3>
@@ -725,7 +1160,7 @@
     </div>
   </div>
 
-  <!-- 8. ШІ-СКАНЕР ТАРІЛКИ (ПОВЕРНУТО) -->
+  <!-- ШІ-Сканер тарілки (Gemini) -->
   <div id="photoModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
       <div class="flex justify-between items-center mb-3">
@@ -766,35 +1201,39 @@
     </div>
   </div>
 
-  <!-- ================= СИСТЕМА ДАНИХ ТА ЛОГІКА (JS) ================= -->
+
+  <!-- ============================================================== -->
+  <!-- 4. JAVASCRIPT ЛОГІКА ТА АРХІТЕКТУРА 2.0                        -->
+  <!-- ============================================================== -->
   <script>
-    const FOOD_DATABASE = [
-      { id: 'f_1', cat: 'Птиця', name: 'Куряче філе запечене', kcal: 165, p: 31, f: 3.6, c: 0, fiber: 0, emoji: '🍗' },
-      { id: 'f_2', cat: 'Птиця', name: 'Куряче філе сире', kcal: 110, p: 23, f: 1.2, c: 0, fiber: 0, emoji: '🍗' },
-      { id: 'f_3', cat: 'М\'ясо', name: 'Яловичина тушкована', kcal: 215, p: 28, f: 11, c: 0, fiber: 0, emoji: '🥩' },
-      { id: 'f_4', cat: 'Риба', name: 'Лосось запечений', kcal: 206, p: 22, f: 12.3, c: 0, fiber: 0, emoji: '🐟' },
-      { id: 'f_5', cat: 'Риба', name: 'Тунець у власному соку', kcal: 116, p: 26, f: 1, c: 0, fiber: 0, emoji: '🐟' },
-      { id: 'f_6', cat: 'Яйця', name: 'Яйце варене', kcal: 143, p: 12.6, f: 9.5, c: 0.7, fiber: 0, emoji: '🥚' },
-      { id: 'f_7', cat: 'Молочні', name: 'Кисломолочний сир 5%', kcal: 121, p: 17, f: 5, c: 2.1, fiber: 0, emoji: '🧀' },
-      { id: 'f_8', cat: 'Молочні', name: 'Грецький йогурт 2%', kcal: 73, p: 10, f: 2, c: 3.8, fiber: 0, emoji: '🍶' },
-      { id: 'f_9', cat: 'Крупи', name: 'Гречка варена', kcal: 110, p: 4.2, f: 1.1, c: 21.3, fiber: 2.7, emoji: '🥣' },
-      { id: 'f_10', cat: 'Крупи', name: 'Гречка суха (крупа)', kcal: 343, p: 13.3, f: 3.4, c: 71.5, fiber: 10, emoji: '🌾' },
-      { id: 'f_11', cat: 'Крупи', name: 'Рис білий варений', kcal: 130, p: 2.7, f: 0.3, c: 28.2, fiber: 0.4, emoji: '🍚' },
-      { id: 'f_12', cat: 'Крупи', name: 'Вівсянка на воді варена', kcal: 71, p: 2.5, f: 1.5, c: 12, fiber: 1.7, emoji: '🥣' },
-      { id: 'f_13', cat: 'Овочі', name: 'Броколі на пару', kcal: 35, p: 2.4, f: 0.4, c: 7.2, fiber: 2.6, emoji: '🥦' },
-      { id: 'f_14', cat: 'Овочі', name: 'Огірок свіжий', kcal: 15, p: 0.7, f: 0.1, c: 3.6, fiber: 0.5, emoji: '🥒' },
-      { id: 'f_15', cat: 'Овочі', name: 'Помідор свіжий', kcal: 18, p: 0.9, f: 0.2, c: 3.9, fiber: 1.2, emoji: '🍅' },
-      { id: 'f_16', cat: 'Фрукти', name: 'Яблуко свіже', kcal: 52, p: 0.3, f: 0.2, c: 13.8, fiber: 2.4, emoji: '🍏' },
-      { id: 'f_17', cat: 'Фрукти', name: 'Банан', kcal: 89, p: 1.1, f: 0.3, c: 22.8, fiber: 2.6, emoji: '🍌' },
-      { id: 'f_18', cat: 'Фрукти', name: 'Авокадо', kcal: 160, p: 2, f: 14.7, c: 8.5, fiber: 6.7, emoji: '🥑' },
-      { id: 'd_1', cat: 'Страви', name: 'Борщ український', kcal: 85, p: 4.5, f: 4.2, c: 7.8, fiber: 1.8, emoji: '🍲' },
-      { id: 'd_2', cat: 'Страви', name: 'Сирники домашні запечені', kcal: 185, p: 14.5, f: 6.2, c: 17.8, fiber: 0.6, emoji: '🥞' },
-      { id: 'd_3', cat: 'Страви', name: 'Вареники з картоплею', kcal: 175, p: 4.2, f: 3.8, c: 31, fiber: 1.6, emoji: '🥟' }
+    // Початкова перевірена база продуктів
+    let FOOD_DATABASE = [
+      { id: 'f_1', cat: 'Птиця', name: 'Куряче філе запечене', kcal: 165, p: 31, f: 3.6, c: 0, fiber: 0, emoji: '🍗', src: 'CNF' },
+      { id: 'f_2', cat: 'Птиця', name: 'Куряче філе сире', kcal: 110, p: 23, f: 1.2, c: 0, fiber: 0, emoji: '🍗', src: 'CNF' },
+      { id: 'f_3', cat: 'М\'ясо', name: 'Яловичина тушкована', kcal: 215, p: 28, f: 11, c: 0, fiber: 0, emoji: '🥩', src: 'CNF' },
+      { id: 'f_4', cat: 'Риба', name: 'Лосось запечений', kcal: 206, p: 22, f: 12.3, c: 0, fiber: 0, emoji: '🐟', src: 'CNF' },
+      { id: 'f_5', cat: 'Риба', name: 'Тунець у власному соку', kcal: 116, p: 26, f: 1, c: 0, fiber: 0, emoji: '🐟', src: 'CNF' },
+      { id: 'f_6', cat: 'Яйця', name: 'Яйце варене', kcal: 143, p: 12.6, f: 9.5, c: 0.7, fiber: 0, emoji: '🥚', src: 'CNF' },
+      { id: 'f_7', cat: 'Молочні', name: 'Кисломолочний сир 5%', kcal: 121, p: 17, f: 5, c: 2.1, fiber: 0, emoji: '🧀', src: 'CNF' },
+      { id: 'f_8', cat: 'Молочні', name: 'Грецький йогурт 2%', kcal: 73, p: 10, f: 2, c: 3.8, fiber: 0, emoji: '🍶', src: 'CNF' },
+      { id: 'f_9', cat: 'Крупи', name: 'Гречка варена', kcal: 110, p: 4.2, f: 1.1, c: 21.3, fiber: 2.7, emoji: '🥣', src: 'CNF' },
+      { id: 'f_10', cat: 'Крупи', name: 'Гречка суха (крупа)', kcal: 343, p: 13.3, f: 3.4, c: 71.5, fiber: 10, emoji: '🌾', src: 'CNF' },
+      { id: 'f_11', cat: 'Крупи', name: 'Рис білий варений', kcal: 130, p: 2.7, f: 0.3, c: 28.2, fiber: 0.4, emoji: '🍚', src: 'CNF' },
+      { id: 'f_12', cat: 'Крупи', name: 'Вівсянка на воді варена', kcal: 71, p: 2.5, f: 1.5, c: 12, fiber: 1.7, emoji: '🥣', src: 'CNF' },
+      { id: 'f_13', cat: 'Овочі', name: 'Броколі на пару', kcal: 35, p: 2.4, f: 0.4, c: 7.2, fiber: 2.6, emoji: '🥦', src: 'CNF' },
+      { id: 'f_14', cat: 'Овочі', name: 'Огірок свіжий', kcal: 15, p: 0.7, f: 0.1, c: 3.6, fiber: 0.5, emoji: '🥒', src: 'CNF' },
+      { id: 'f_15', cat: 'Овочі', name: 'Помідор свіжий', kcal: 18, p: 0.9, f: 0.2, c: 3.9, fiber: 1.2, emoji: '🍅', src: 'CNF' },
+      { id: 'f_16', cat: 'Фрукти', name: 'Яблуко свіже', kcal: 52, p: 0.3, f: 0.2, c: 13.8, fiber: 2.4, emoji: '🍏', src: 'CNF' },
+      { id: 'f_17', cat: 'Фрукти', name: 'Банан', kcal: 89, p: 1.1, f: 0.3, c: 22.8, fiber: 2.6, emoji: '🍌', src: 'CNF' },
+      { id: 'f_18', cat: 'Фрукти', name: 'Авокадо', kcal: 160, p: 2, f: 14.7, c: 8.5, fiber: 6.7, emoji: '🥑', src: 'CNF' },
+      { id: 'd_1', cat: 'Страви', name: 'Борщ український', kcal: 85, p: 4.5, f: 4.2, c: 7.8, fiber: 1.8, emoji: '🍲', src: 'Рецепт' },
+      { id: 'd_2', cat: 'Страви', name: 'Сирники домашні запечені', kcal: 185, p: 14.5, f: 6.2, c: 17.8, fiber: 0.6, emoji: '🥞', src: 'Рецепт' },
+      { id: 'd_3', cat: 'Страви', name: 'Вареники з картоплею', kcal: 175, p: 4.2, f: 3.8, c: 31, fiber: 1.6, emoji: '🥟', src: 'Рецепт' }
     ];
 
-    const TIPS_ARRAY = [
+    let TIPS_ARRAY = [
       "Випийте склянку теплої води за 15 хвилин до їжі — це активує ферменти травлення і захищає від переїдання.",
-      "Для якісного відновлення м'язів намагайтеся споживати не менше 20–30 г повноцінного білка за кожен основний прийом.",
+      "Для якісного відновлення м'язів споживайте не менше 20–30 г повноцінного білка за кожен основний прийом.",
       "Вівсяна каша зранку дає стабільну енергію завдяки бета-глюканам та повільним вуглеводам.",
       "Авокадо, волоські горіхи та оливкова олія постачають незамінні жирні кислоти для балансу гормонів.",
       "Надлишок натрію затримує воду. Додавайте у страви свіжу зелень, часник і лимонний сік замість зайвої солі.",
@@ -821,6 +1260,7 @@
 
     const DEFAULT_MEAL_SPLIT = { breakfast: 0.25, lunch: 0.33, dinner: 0.27, snack: 0.15 };
 
+    // Стан додатку
     let app = {
       lang: 'uk',
       adminPass: 'admin123',
@@ -828,6 +1268,9 @@
       isAdminUnlocked: false,
       activeProfileId: 'u_olena',
       streak: 7,
+      aiPromptConfig: 'Analyze this plate of food as an expert nutritionist. Return valid JSON with name, grams, kcal, p, f, c.',
+      aiScanCount: 0,
+      activityLog: [],
       profiles: {
         'u_olena': { id: 'u_olena', name: 'Олена', emoji: '👩', height: 168, startWeight: 65, targetWeight: 58, target: 1965, carbs: 196, protein: 147, fat: 66, waterTarget: 2000, mealSplit: { breakfast: 0.25, lunch: 0.33, dinner: 0.27, snack: 0.15 } },
         'u_yakiv': { id: 'u_yakiv', name: 'Яків', emoji: '👨', height: 180, startWeight: 84, targetWeight: 78, target: 2350, carbs: 250, protein: 175, fat: 75, waterTarget: 2500, mealSplit: { breakfast: 0.25, lunch: 0.33, dinner: 0.27, snack: 0.15 } }
@@ -839,8 +1282,34 @@
       days: {}
     };
 
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      const icon = document.getElementById('toastIcon');
+      const text = document.getElementById('toastMsg');
+      icon.innerText = type === 'success' ? '✓' : '⚠️';
+      text.innerText = msg;
+      toast.classList.remove('-translate-y-12', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('-translate-y-12', 'opacity-0');
+      }, 2500);
+    }
+
+    function logAudit(action, details) {
+      if (!app.activityLog) app.activityLog = [];
+      app.activityLog.unshift({
+        id: 'act_' + Date.now(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: getLocalDateString(),
+        action,
+        details
+      });
+      if (app.activityLog.length > 50) app.activityLog.pop();
+    }
+
     function init() {
-      const keys = ['cal_calc_pro_v8', 'cal_pro_assistant_v1', 'cal_calc_pro_v7', 'cal_calc_pro_v6'];
+      const keys = ['cal_calc_pro_v8', 'cal_pro_assistant_v1', 'cal_calc_pro_v7'];
       for (const k of keys) {
         const raw = localStorage.getItem(k);
         if (raw) {
@@ -852,13 +1321,9 @@
         }
       }
 
+      // Безпека: адмінка завжди закрита при новому завантаженні сторінки
       app.isAdminUnlocked = false;
       if (!app.adminPass) app.adminPass = 'admin123';
-
-      if (app.geminiApiKey) {
-        const keyInput = document.getElementById('geminiApiKeyInput');
-        if (keyInput) keyInput.value = app.geminiApiKey;
-      }
 
       if (app.profiles) {
         Object.keys(app.profiles).forEach(id => {
@@ -875,6 +1340,10 @@
 
       if (app.activeProfileId) {
         ensureDayStructure(app.activeProfileId, selectedDateKey);
+      }
+
+      if (app.activityLog && app.activityLog.length === 0) {
+        logAudit('Система', 'Ініціалізація додатку Calories PRO 2.0');
       }
 
       renderCalendarRow();
@@ -910,6 +1379,569 @@
       return app.days[app.activeProfileId][selectedDateKey];
     }
 
+    // ==============================================================
+    // ПЕРЕМИКАННЯ МІЖ ДОДАТКОМ ТА ADMIN CONTROL CENTER 2.0
+    // ==============================================================
+    function openAdminPasswordModal() {
+      document.getElementById('adminPasswordInputVal').value = '';
+      const err = document.getElementById('adminLoginError');
+      if (err) err.classList.add('hidden');
+      document.getElementById('adminPasswordModal').classList.remove('hidden');
+    }
+
+    function closeAdminPasswordModal() {
+      document.getElementById('adminPasswordModal').classList.add('hidden');
+    }
+
+    function verifyAdminPassword() {
+      const entered = document.getElementById('adminPasswordInputVal').value;
+      const err = document.getElementById('adminLoginError');
+
+      if (entered === app.adminPass) {
+        app.isAdminUnlocked = true;
+        closeAdminPasswordModal();
+        logAudit('Вхід', 'Успішний вхід в Admin Control Center 2.0');
+        showToast("✓ Вхід в Admin Control Center успішний!");
+        enterAdminDashboard();
+      } else {
+        if (err) {
+          err.innerText = "❌ Невірний пароль адміністратора!";
+          err.classList.remove('hidden');
+        }
+      }
+    }
+
+    function enterAdminDashboard() {
+      document.getElementById('client-app-root').classList.add('hidden');
+      document.getElementById('admin-root').classList.remove('hidden');
+      switchAdminSection('overview');
+      refreshAdminData();
+    }
+
+    function exitAdminToClientApp() {
+      app.isAdminUnlocked = false;
+      document.getElementById('admin-root').classList.add('hidden');
+      document.getElementById('client-app-root').classList.remove('hidden');
+      showToast("Повернення до клієнтського додатку");
+      renderAll();
+    }
+
+    function switchAdminSection(secId) {
+      const sections = ['overview', 'users', 'products', 'categories', 'recipes', 'ai', 'content', 'analytics', 'security', 'backup'];
+      sections.forEach(s => {
+        const el = document.getElementById(`admin-sec-${s}`);
+        const btn = document.getElementById(`asb-${s}`);
+        if (s === secId) {
+          if (el) el.classList.remove('hidden');
+          if (btn) {
+            btn.className = "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-600 text-white transition text-left whitespace-nowrap shadow-sm";
+          }
+        } else {
+          if (el) el.classList.add('hidden');
+          if (btn) {
+            btn.className = "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-left whitespace-nowrap";
+          }
+        }
+      });
+
+      const titleMap = {
+        overview: 'Огляд системи (SaaS Dashboard)',
+        users: 'Керування користувачами та профілями',
+        products: 'Менеджер бази продуктів (CNF/Custom)',
+        categories: 'Керування категоріями їжі',
+        recipes: 'Керування складними стравами та рецептами',
+        ai: 'AI Center (Gemini API & Vision)',
+        content: 'Керування контентом & Поради дня',
+        analytics: 'Глибока аналітика харчування',
+        security: 'Безпека, ролі та журнал аудиту',
+        backup: 'Хмарна архітектура & Резервне копіювання'
+      };
+      document.getElementById('adminTopHeaderTitle').innerText = titleMap[secId] || 'Admin Center';
+    }
+
+    function refreshAdminData() {
+      // 1. Огляд
+      const uCount = Object.keys(app.profiles || {}).length;
+      document.getElementById('admStatUsersCount').innerText = uCount;
+      document.getElementById('admStatProductsCount').innerText = FOOD_DATABASE.length;
+
+      let daysLoggedTotal = 0;
+      Object.keys(app.days || {}).forEach(u => {
+        daysLoggedTotal += Object.keys(app.days[u] || {}).length;
+      });
+      document.getElementById('admStatLogsCount').innerText = daysLoggedTotal;
+      document.getElementById('admStatAiScansCount').innerText = app.aiScanCount || 0;
+
+      if (app.geminiApiKey) {
+        document.getElementById('admStatAiStatusText').innerText = "Gemini підключено";
+        document.getElementById('admStatAiStatusText').className = "text-[10px] font-semibold text-emerald-600";
+      } else {
+        document.getElementById('admStatAiStatusText').innerText = "Ключ не вказано";
+        document.getElementById('admStatAiStatusText').className = "text-[10px] font-semibold text-amber-600";
+      }
+
+      renderAdminRealChart();
+      renderAdminRecentActivity();
+
+      // 2. Інші розділи
+      renderAdmUsersTable();
+      renderAdmProductsTable();
+      renderAdmCategories();
+      renderAdmRecipes();
+      renderAdmTips();
+      renderAdmAuditLog();
+
+      // Налаштування AI
+      document.getElementById('admGeminiKeyInput').value = app.geminiApiKey || '';
+      document.getElementById('admAiSystemPrompt').value = app.aiPromptConfig || '';
+    }
+
+    function renderAdminRealChart() {
+      const container = document.getElementById('admRealChartBars');
+      container.innerHTML = '';
+      const prof = curProfile();
+      const pDays = app.days[app.activeProfileId] || {};
+      const curr = new Date();
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() - i);
+        const dKey = getLocalDateString(d);
+        const dData = pDays[dKey];
+        const eaten = getDayCalories(dData);
+        const target = prof?.target || 2000;
+        const pct = Math.min(100, Math.round((eaten / target) * 100));
+
+        const barCol = document.createElement('div');
+        barCol.className = "flex-1 flex flex-col items-center h-full justify-end";
+        barCol.innerHTML = `
+          <span class="text-[9px] font-black text-slate-700 mb-1">${eaten > 0 ? eaten : ''}</span>
+          <div class="w-full max-w-[28px] bg-slate-100 rounded-t-lg h-32 flex items-end overflow-hidden">
+            <div class="${eaten > target ? 'bg-rose-500' : 'bg-indigo-600'} w-full rounded-t-lg transition-all duration-500" style="height: ${Math.max(5, pct)}%"></div>
+          </div>
+          <span class="text-[10px] text-slate-400 font-bold mt-1.5">${d.toLocaleDateString('uk-UA', { weekday: 'short' })}</span>
+        `;
+        container.appendChild(barCol);
+      }
+    }
+
+    function renderAdminRecentActivity() {
+      const list = document.getElementById('admRecentActivityList');
+      list.innerHTML = '';
+      const logs = app.activityLog || [];
+      if (logs.length === 0) {
+        list.innerHTML = '<p class="text-xs text-slate-400 italic">Подій ще не зафіксовано</p>';
+        return;
+      }
+      logs.slice(0, 5).forEach(l => {
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between text-xs py-1.5 border-b border-slate-50 last:border-0";
+        item.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+            <span class="font-black text-slate-800">${l.action}:</span>
+            <span class="text-slate-500">${l.details}</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">${l.time}</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function renderAdmUsersTable() {
+      const tbody = document.getElementById('admUsersTableBody');
+      tbody.innerHTML = '';
+      const ids = Object.keys(app.profiles || {});
+
+      ids.forEach(id => {
+        const p = app.profiles[id];
+        const isActive = id === app.activeProfileId;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition";
+        tr.innerHTML = `
+          <td class="p-3.5">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">${p.emoji || '🙂'}</span>
+              <div>
+                <span class="font-black text-slate-900 block">${p.name} ${isActive ? '<span class="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-black">Active</span>' : ''}</span>
+                <span class="text-[10px] text-slate-400">ID: ${p.id}</span>
+              </div>
+            </div>
+          </td>
+          <td class="p-3.5 font-black text-slate-800">${p.target} ккал</td>
+          <td class="p-3.5 text-slate-500">Б:${p.protein} · Ж:${p.fat} · В:${p.carbs}</td>
+          <td class="p-3.5 text-slate-500">${p.waterTarget || 2000} мл</td>
+          <td class="p-3.5">${p.pin ? '<span class="text-emerald-600 font-bold">🔒 PIN</span>' : '<span class="text-slate-300">Відкрито</span>'}</td>
+          <td class="p-3.5 text-right space-x-1.5">
+            <button onclick="openProfileEditor('${p.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">
+              Редагувати
+            </button>
+            ${ids.length > 1 ? `
+              <button onclick="adminDeleteProfile('${p.id}')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg text-xs transition">
+                Видалити
+              </button>
+            ` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAdmProductsTable() {
+      const tbody = document.getElementById('admProductsTableBody');
+      tbody.innerHTML = '';
+      const query = (document.getElementById('admProductSearch')?.value || '').toLowerCase();
+      const catFilter = document.getElementById('admProductCatFilter')?.value || 'Усі';
+
+      let items = FOOD_DATABASE;
+      if (catFilter !== 'Усі') items = items.filter(x => x.cat === catFilter);
+      if (query) items = items.filter(x => x.name.toLowerCase().includes(query));
+
+      items.forEach((it, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition";
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-900 flex items-center gap-2">
+            <span>${it.emoji || '🍽️'}</span>
+            <span>${it.name}</span>
+          </td>
+          <td class="p-3 text-slate-500">${it.cat}</td>
+          <td class="p-3 font-black text-rose-600">${it.kcal}</td>
+          <td class="p-3 text-slate-600">${it.p} г</td>
+          <td class="p-3 text-slate-600">${it.f} г</td>
+          <td class="p-3 text-slate-600">${it.c} г</td>
+          <td class="p-3 text-[10px] text-slate-400 font-semibold">${it.src || 'База'}</td>
+          <td class="p-3 text-right space-x-1">
+            <button onclick="openAdmEditProductModal(${idx})" class="text-slate-500 hover:text-slate-800 font-bold px-1.5">✏️</button>
+            <button onclick="admDeleteProduct(${idx})" class="text-rose-500 hover:text-rose-700 font-bold px-1.5">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Оновлення категорій у фільтрі
+      const catSelect = document.getElementById('admProductCatFilter');
+      if (catSelect && catSelect.children.length <= 1) {
+        const cats = [...new Set(FOOD_DATABASE.map(x => x.cat))];
+        cats.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.innerText = c;
+          catSelect.appendChild(opt);
+        });
+      }
+    }
+
+    function openAdmCreateProductModal() {
+      document.getElementById('admProductModalTitle').innerText = 'Додати новий продукт';
+      document.getElementById('admProdEditId').value = '';
+      document.getElementById('admProdName').value = '';
+      document.getElementById('admProdCat').value = 'Звичайне';
+      document.getElementById('admProdKcal').value = '';
+      document.getElementById('admProdEmoji').value = '🍽️';
+      document.getElementById('admProdP').value = '';
+      document.getElementById('admProdF').value = '';
+      document.getElementById('admProdC').value = '';
+      document.getElementById('admProductModal').classList.remove('hidden');
+    }
+
+    function openAdmEditProductModal(idx) {
+      const it = FOOD_DATABASE[idx];
+      document.getElementById('admProductModalTitle').innerText = 'Редагувати продукт';
+      document.getElementById('admProdEditId').value = idx;
+      document.getElementById('admProdName').value = it.name;
+      document.getElementById('admProdCat').value = it.cat;
+      document.getElementById('admProdKcal').value = it.kcal;
+      document.getElementById('admProdEmoji').value = it.emoji;
+      document.getElementById('admProdP').value = it.p;
+      document.getElementById('admProdF').value = it.f;
+      document.getElementById('admProdC').value = it.c;
+      document.getElementById('admProductModal').classList.remove('hidden');
+    }
+
+    function commitAdmProductSave() {
+      const name = document.getElementById('admProdName').value.trim();
+      const kcal = parseInt(document.getElementById('admProdKcal').value) || 0;
+      if (!name || kcal <= 0) {
+        alert("Вкажіть назву та калорійність");
+        return;
+      }
+      const editIdx = document.getElementById('admProdEditId').value;
+      const productObj = {
+        id: editIdx !== '' ? FOOD_DATABASE[editIdx].id : 'f_custom_' + Date.now(),
+        name,
+        cat: document.getElementById('admProdCat').value.trim() || 'Різне',
+        kcal,
+        emoji: document.getElementById('admProdEmoji').value.trim() || '🍽️',
+        p: parseFloat(document.getElementById('admProdP').value) || 0,
+        f: parseFloat(document.getElementById('admProdF').value) || 0,
+        c: parseFloat(document.getElementById('admProdC').value) || 0,
+        fiber: 0,
+        src: 'Адміністратор'
+      };
+
+      if (editIdx !== '') {
+        FOOD_DATABASE[editIdx] = productObj;
+        logAudit('Продукт', `Оновлено продукт "${name}"`);
+      } else {
+        FOOD_DATABASE.unshift(productObj);
+        logAudit('Продукт', `Створено продукт "${name}"`);
+      }
+
+      document.getElementById('admProductModal').classList.add('hidden');
+      renderAdmProductsTable();
+      showToast("✓ Продукт збережено!");
+    }
+
+    function admDeleteProduct(idx) {
+      const name = FOOD_DATABASE[idx]?.name;
+      if (confirm(`Видалити "${name}" із каталогу?`)) {
+        FOOD_DATABASE.splice(idx, 1);
+        logAudit('Продукт', `Видалено продукт "${name}"`);
+        renderAdmProductsTable();
+        showToast("Продукт видалено");
+      }
+    }
+
+    function exportProductsCSV() {
+      let csv = "ID,Name,Category,Calories,Protein,Fat,Carbs\n";
+      FOOD_DATABASE.forEach(p => {
+        csv += `"${p.id}","${p.name}","${p.cat}",${p.kcal},${p.p},${p.f},${p.c}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `calories_products_${getLocalDateString()}.csv`;
+      a.click();
+      logAudit('Експорт', 'Вивантажено базу продуктів у CSV');
+    }
+
+    function importProductsCSV(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const lines = evt.target.result.split('\n');
+        let imported = 0;
+        for (let i = 1; i < lines.length; i++) {
+          const row = lines[i].split(',');
+          if (row.length >= 7) {
+            const name = row[1].replace(/"/g, '').trim();
+            const kcal = parseInt(row[3]);
+            if (name && !isNaN(kcal)) {
+              FOOD_DATABASE.unshift({
+                id: 'f_imp_' + Date.now() + i,
+                name,
+                cat: row[2].replace(/"/g, '').trim(),
+                kcal,
+                p: parseFloat(row[4]) || 0,
+                f: parseFloat(row[5]) || 0,
+                c: parseFloat(row[6]) || 0,
+                emoji: '🍽️',
+                src: 'CSV Import'
+              });
+              imported++;
+            }
+          }
+        }
+        renderAdmProductsTable();
+        logAudit('Імпорт', `Імпортовано ${imported} продуктів із CSV`);
+        showToast(`✓ Успішно імпортовано ${imported} продуктів!`);
+      };
+      reader.readAsText(file);
+    }
+
+    function renderAdmCategories() {
+      const container = document.getElementById('admCategoriesGrid');
+      container.innerHTML = '';
+      const cats = [...new Set(FOOD_DATABASE.map(x => x.cat))];
+
+      cats.forEach(c => {
+        const count = FOOD_DATABASE.filter(x => x.cat === c).length;
+        const card = document.createElement('div');
+        card.className = "bg-white p-3.5 rounded-2xl border border-slate-100 admin-card-shadow flex justify-between items-center";
+        card.innerHTML = `
+          <div>
+            <h5 class="text-xs font-black text-slate-800">${c}</h5>
+            <span class="text-[10px] text-slate-400 font-bold">${count} продуктів</span>
+          </div>
+          <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Активна</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openAdmAddCategoryPrompt() {
+      const name = prompt("Назва нової категорії:");
+      if (name && name.trim()) {
+        FOOD_DATABASE.push({
+          id: 'f_cat_dummy_' + Date.now(),
+          name: `Приклад у ${name}`,
+          cat: name.trim(),
+          kcal: 100, p: 5, f: 2, c: 15, emoji: '📁', src: 'Категорія'
+        });
+        renderAdmCategories();
+        logAudit('Категорія', `Створено категорію "${name}"`);
+        showToast(`✓ Категорію "${name}" додано!`);
+      }
+    }
+
+    function renderAdmRecipes() {
+      const container = document.getElementById('admRecipesGrid');
+      container.innerHTML = '';
+      const dishes = FOOD_DATABASE.filter(x => x.cat === 'Страви');
+
+      dishes.forEach(d => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-2xl border border-slate-100 admin-card-shadow space-y-2";
+        card.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">${d.emoji || '🍲'}</span>
+            <div>
+              <h4 class="text-xs font-black text-slate-900">${d.name}</h4>
+              <span class="text-[10px] text-slate-400 font-semibold">${d.src || 'Рецепт'}</span>
+            </div>
+          </div>
+          <div class="text-xs font-bold text-slate-600 flex justify-between border-t border-slate-50 pt-2">
+            <span>Ккал: <b class="text-rose-600">${d.kcal}</b></span>
+            <span>Б:${d.p} · Ж:${d.f} · В:${d.c}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // AI Center
+    function saveAdmGeminiKey() {
+      const k = document.getElementById('admGeminiKeyInput').value.trim();
+      app.geminiApiKey = k;
+      save();
+      logAudit('Безпека', 'Оновлено ключ Gemini API');
+      showToast("✓ Ключ Gemini API збережено!");
+      refreshAdminData();
+    }
+
+    async function testGeminiConnection() {
+      const statusEl = document.getElementById('admAiTestStatus');
+      statusEl.classList.remove('hidden');
+      if (!app.geminiApiKey) {
+        statusEl.innerText = "❌ Ключ відсутній. Введіть і збережіть ключ!";
+        statusEl.className = "text-xs font-bold text-rose-500";
+        return;
+      }
+      statusEl.innerText = "⏳ Тестування запиту до Gemini 2.5 Flash...";
+      statusEl.className = "text-xs font-bold text-indigo-600";
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${app.geminiApiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] })
+        });
+        if (res.ok) {
+          statusEl.innerText = "✓ Успішне підключення до Gemini API!";
+          statusEl.className = "text-xs font-bold text-emerald-600";
+          logAudit('AI', 'Успішний тест з’єднання з Gemini API');
+        } else {
+          throw new Error("HTTP error " + res.status);
+        }
+      } catch(err) {
+        statusEl.innerText = "❌ Помилка з'єднання: " + err.message;
+        statusEl.className = "text-xs font-bold text-rose-500";
+      }
+    }
+
+    function saveAiPromptConfig() {
+      app.aiPromptConfig = document.getElementById('admAiSystemPrompt').value;
+      save();
+      showToast("✓ Промпт оновлено!");
+      logAudit('AI', 'Оновлено системний промпт сканера');
+    }
+
+    // Контент & Поради
+    function renderAdmTips() {
+      const container = document.getElementById('admTipsListContainer');
+      container.innerHTML = '';
+      TIPS_ARRAY.forEach((t, idx) => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-3 rounded-2xl border border-slate-100 admin-card-shadow flex justify-between items-center text-xs";
+        card.innerHTML = `
+          <div class="flex items-center gap-2 flex-1 pr-3">
+            <span class="text-indigo-600 font-black">#${idx + 1}</span>
+            <span class="font-bold text-slate-700">${t}</span>
+          </div>
+          <button onclick="admDeleteTip(${idx})" class="text-rose-500 hover:text-rose-700 font-bold px-2 py-1">Видалити</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openAddTipModal() {
+      const tip = prompt("Введіть текст нової поради дня:");
+      if (tip && tip.trim()) {
+        TIPS_ARRAY.push(tip.trim());
+        renderAdmTips();
+        logAudit('Контент', 'Додано нову пораду дня');
+        showToast("✓ Пораду додано!");
+      }
+    }
+
+    function admDeleteTip(idx) {
+      if (confirm("Видалити цю пораду?")) {
+        TIPS_ARRAY.splice(idx, 1);
+        renderAdmTips();
+        showToast("Пораду видалено");
+      }
+    }
+
+    // Безпека та Audit Log
+    function commitAdminSecurityPassword() {
+      const p1 = document.getElementById('admSecPass1').value;
+      const p2 = document.getElementById('admSecPass2').value;
+      if (!p1 || p1.length < 4) {
+        alert("Пароль має містити щонайменше 4 символи");
+        return;
+      }
+      if (p1 !== p2) {
+        alert("Паролі не збігаються");
+        return;
+      }
+      app.adminPass = p1;
+      save();
+      document.getElementById('admSecPass1').value = '';
+      document.getElementById('admSecPass2').value = '';
+      logAudit('Безпека', 'Змінено пароль адміністратора');
+      showToast("✓ Пароль адміністратора оновлено!");
+    }
+
+    function renderAdmAuditLog() {
+      const container = document.getElementById('admFullAuditLogList');
+      container.innerHTML = '';
+      const list = app.activityLog || [];
+      list.forEach(l => {
+        const r = document.createElement('div');
+        r.className = "flex items-center justify-between text-xs py-1 border-b border-slate-50 last:border-0";
+        r.innerHTML = `
+          <div><b class="text-slate-800">${l.action}:</b> <span class="text-slate-600">${l.details}</span></div>
+          <span class="text-[10px] text-slate-400 font-mono">${l.date} ${l.time}</span>
+        `;
+        container.appendChild(r);
+      });
+    }
+
+    function clearActivityLog() {
+      if (confirm("Очистити всю історію операцій?")) {
+        app.activityLog = [];
+        save();
+        renderAdmAuditLog();
+        renderAdminRecentActivity();
+        showToast("Історію очищено");
+      }
+    }
+
+
+    // ==============================================================
+    // КЛІЄНТСЬКА ЧАСТИНА (ГОЛОВНИЙ ЕКРАН, ЩОДЕННИК, ПЛАН, ВАГА)
+    // ==============================================================
     function renderAll() {
       const prof = curProfile();
       if (!prof) {
@@ -1062,7 +2094,7 @@
 
       const yDay = app.days[app.activeProfileId]?.[yKey];
       if (!yDay || !yDay.meals[mealType] || yDay.meals[mealType].length === 0) {
-        alert("Вчора не було записів для цього прийому їжі.");
+        showToast("Вчора не було записів для цього прийому", "error");
         return;
       }
 
@@ -1071,7 +2103,7 @@
       curDayData().meals[mealType].push(...cloned);
       save();
       renderAll();
-      alert(`✓ Скопійовано ${cloned.length} продуктів із вчорашнього дня!`);
+      showToast(`✓ Скопійовано ${cloned.length} продуктів із вчора!`);
     }
 
     function editMealItemGramsPrompt(mealType, idx) {
@@ -1089,6 +2121,7 @@
         item.c = Math.round(item.c * factor * 10) / 10;
         save();
         renderAll();
+        showToast("Вагу оновлено");
       }
     }
 
@@ -1103,96 +2136,11 @@
         curDayData().meals = { breakfast: [], lunch: [], dinner: [], snack: [] };
         save();
         renderAll();
+        showToast("День очищено");
       }
     }
 
-    // ================= РОБОТА З АДМІНКОЮ =================
-    function openAdminModal() {
-      if (app.isAdminUnlocked) {
-        app.isAdminUnlocked = false;
-        document.getElementById('adminLockIcon').innerText = '🔒';
-        document.getElementById('adminLockText').innerText = 'Адмінка';
-        const panel = document.getElementById('adminPanel');
-        if (panel) panel.classList.add('hidden');
-        renderProfilesTab();
-      } else {
-        document.getElementById('adminPasswordInputVal').value = '';
-        const err = document.getElementById('adminLoginError');
-        if (err) err.classList.add('hidden');
-        document.getElementById('adminPasswordModal').classList.remove('hidden');
-      }
-    }
-
-    function closeAdminPasswordModal() {
-      document.getElementById('adminPasswordModal').classList.add('hidden');
-    }
-
-    function verifyAdminPassword() {
-      const entered = document.getElementById('adminPasswordInputVal').value;
-      const err = document.getElementById('adminLoginError');
-      if (entered === app.adminPass) {
-        app.isAdminUnlocked = true;
-        document.getElementById('adminLockIcon').innerText = '🔓';
-        document.getElementById('adminLockText').innerText = 'Вийти';
-        const panel = document.getElementById('adminPanel');
-        if (panel) panel.classList.remove('hidden');
-        closeAdminPasswordModal();
-        renderProfilesTab();
-      } else {
-        if (err) {
-          err.innerText = "❌ Невірний пароль!";
-          err.classList.remove('hidden');
-        }
-      }
-    }
-
-    function openChangeAdminPassModal() {
-      document.getElementById('newAdminPass1').value = '';
-      document.getElementById('newAdminPass2').value = '';
-      const err = document.getElementById('changePassError');
-      if (err) err.classList.add('hidden');
-      document.getElementById('changeAdminPassModal').classList.remove('hidden');
-    }
-
-    function closeChangeAdminPassModal() {
-      document.getElementById('changeAdminPassModal').classList.add('hidden');
-    }
-
-    function commitChangeAdminPass() {
-      const p1 = document.getElementById('newAdminPass1').value;
-      const p2 = document.getElementById('newAdminPass2').value;
-      const err = document.getElementById('changePassError');
-
-      if (!p1 || p1.length < 4) {
-        err.innerText = "Пароль має містити щонайменше 4 символи";
-        err.classList.remove('hidden');
-        return;
-      }
-      if (p1 !== p2) {
-        err.innerText = "Паролі не збігаються";
-        err.classList.remove('hidden');
-        return;
-      }
-
-      app.adminPass = p1;
-      save();
-      closeChangeAdminPassModal();
-      alert("✓ Пароль адміністратора успішно оновлено!");
-    }
-
-    function saveApiKey() {
-      const key = document.getElementById('geminiApiKeyInput').value.trim();
-      if (!key) {
-        alert("Введіть коректний API-ключ!");
-        return;
-      }
-      app.geminiApiKey = key;
-      save();
-      document.getElementById('apiKeySaveStatus').classList.remove('hidden');
-      setTimeout(() => document.getElementById('apiKeySaveStatus').classList.add('hidden'), 3000);
-    }
-
-    // ================= РЕДАКТОР ПРОФІЛЮ =================
+    // Редактор профілів (Create/Edit)
     function setPeEmoji(char) {
       document.getElementById('peEmoji').value = char;
     }
@@ -1356,6 +2304,7 @@
         };
         app.activeProfileId = newId;
         ensureDayStructure(newId, selectedDateKey);
+        logAudit('Профіль', `Створено новий профіль "${name}"`);
       } else {
         Object.assign(app.profiles[editingProfileId], {
           name,
@@ -1367,6 +2316,7 @@
           waterTarget,
           mealSplit
         });
+        logAudit('Профіль', `Оновлено параметри профілю "${name}"`);
       }
 
       save();
@@ -1374,6 +2324,7 @@
       renderProfilesTab();
       renderAll();
       renderCalendarRow();
+      showToast("✓ Профіль збережено!");
     }
 
     function renderProfilesTab() {
@@ -1382,13 +2333,6 @@
       container.innerHTML = '';
 
       const ids = Object.keys(app.profiles || {});
-
-      const statsLine = document.getElementById('adminStatsLine');
-      if (statsLine) {
-        const actDaysCount = Object.keys((app.days && app.days[app.activeProfileId]) || {}).length;
-        statsLine.innerText = `Профілів: ${ids.length} · Записаних днів у активного: ${actDaysCount}`;
-      }
-
       if (ids.length === 0) {
         container.innerHTML = `
           <div class="p-6 text-center bg-white rounded-3xl border border-slate-100 card-shadow">
@@ -1406,13 +2350,6 @@
       ids.forEach(id => {
         const p = app.profiles[id];
         const isActive = id === app.activeProfileId;
-        const ms = p.mealSplit || DEFAULT_MEAL_SPLIT;
-
-        const bKcal = Math.round(p.target * ms.breakfast);
-        const lKcal = Math.round(p.target * ms.lunch);
-        const dKcal = Math.round(p.target * ms.dinner);
-        const sKcal = Math.round(p.target * ms.snack);
-
         const card = document.createElement('div');
         card.className = `p-3.5 rounded-2xl border transition flex items-center justify-between cursor-pointer ${isActive ? 'bg-rose-50/70 border-rose-300' : 'bg-white border-slate-100 card-shadow'}`;
         card.onclick = () => switchProfile(id);
@@ -1425,22 +2362,9 @@
                 <h4 class="text-sm font-black text-slate-800 truncate">${p.name}</h4>
                 ${isActive ? '<span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black">Активний</span>' : ''}
               </div>
-              <p class="text-xs text-slate-500 mt-0.5">Ціль: ${p.target} ккал (Б:${p.protein}г, Ж:${p.fat}г, В:${p.carbs}г) · Вода: ${p.waterTarget || 2000} мл</p>
-              <p class="text-[10px] text-slate-400 font-semibold mt-1">С ${bKcal} · О ${lKcal} · В ${dKcal} · П ${sKcal}</p>
+              <p class="text-xs text-slate-500 mt-0.5">Ціль: ${p.target} ккал (Б:${p.protein}г, Ж:${p.fat}г, В:${p.carbs}г)</p>
             </div>
           </div>
-          ${app.isAdminUnlocked ? `
-            <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-              <button onclick="openProfileEditor('${p.id}')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-slate-200 transition">
-                Змінити
-              </button>
-              ${ids.length > 1 ? `
-                <button onclick="adminDeleteProfile('${p.id}')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-rose-100 transition" title="Видалити">
-                  🗑️
-                </button>
-              ` : ''}
-            </div>
-          ` : ''}
         `;
         container.appendChild(card);
       });
@@ -1452,6 +2376,7 @@
       renderCalendarRow();
       renderAll();
       goToTab('home');
+      showToast(`Профіль: ${app.profiles[id]?.name}`);
     }
 
     function adminDeleteProfile(id) {
@@ -1472,14 +2397,17 @@
           app.activeProfileId = Object.keys(app.profiles)[0];
         }
 
+        logAudit('Профіль', `Видалено профіль "${pName}"`);
         save();
         renderProfilesTab();
+        renderAdmUsersTable();
         renderAll();
         renderCalendarRow();
+        showToast("Профіль видалено");
       }
     }
 
-    // ================= ПОРАДИ З КУБИКОМ =================
+    // Поради з кубиком
     function displayCurrentTip() {
       const tipEl = document.getElementById('homeSmartTip');
       if (tipEl) {
@@ -1492,7 +2420,7 @@
       displayCurrentTip();
     }
 
-    // ================= ВАГА, ТАЛІЯ ТА ІМТ =================
+    // Вага, Талія та ІМТ
     function renderWeightSection() {
       const prof = curProfile();
       if (!prof) return;
@@ -1566,12 +2494,13 @@
         save();
         renderAll();
         closeLogWeightModal();
+        showToast("✓ Вагу збережено!");
       } else {
         alert("Введіть коректну вагу");
       }
     }
 
-    // ================= ПЛАН & ПОКУПКИ =================
+    // План & Покупки
     function switchPlanSubTab(tab) {
       if (tab === 'plan') {
         document.getElementById('subTabPlanContent').classList.remove('hidden');
@@ -1705,10 +2634,10 @@
       });
       save();
       renderShoppingChecklist();
-      alert(`✓ Додано ${Object.keys(generated).length} позицій у список покупок!`);
+      showToast(`✓ Додано ${Object.keys(generated).length} позицій у список покупок!`);
     }
 
-    // ================= КАТАЛОГ ТА ВИБІР ПОРЦІЙ =================
+    // Каталог та порції
     function openCatalogModal(mealType) {
       targetCatalogMeal = mealType;
       const names = { breakfast: 'Сніданок', lunch: 'Обід', dinner: 'Вечеря', snack: 'Перекус' };
@@ -1724,7 +2653,7 @@
     function renderCatalogCategories() {
       const container = document.getElementById('catalogCategoryChips');
       container.innerHTML = '';
-      const cats = ['Усі', 'Птиця', 'М\'ясо', 'Риба', 'Яйця', 'Молочні', 'Крупи', 'Овочі', 'Фрукти', 'Страви'];
+      const cats = ['Усі', ...new Set(FOOD_DATABASE.map(x => x.cat))];
       cats.forEach(c => {
         const btn = document.createElement('button');
         const isActive = activeCatalogCat === c;
@@ -1813,9 +2742,10 @@
       closePortionModal();
       closeCatalogModal();
       renderAll();
+      showToast(`✓ Додано: ${activeModalItem.name}`);
     }
 
-    // ================= ШІ-СКАНЕР ТАРІЛКИ (ПОВЕРНУТО) =================
+    // ШІ-Сканер тарілки
     function openPhotoFlow(mealType = 'lunch') {
       targetCatalogMeal = mealType;
       document.getElementById('photoModal').classList.remove('hidden');
@@ -1875,17 +2805,10 @@
         const rawBase64 = base64Uri.split(',')[1];
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${app.geminiApiKey}`;
 
-        const promptText = `
+        const promptText = app.aiPromptConfig || `
           Analyze this plate of food as an expert nutritionist. Estimate portion weight, dish name in Ukrainian, calories, and macronutrients.
-          Return ONLY valid JSON without markdown:
-          {
-            "name": "Назва страви українською",
-            "grams": 250,
-            "kcal": 380,
-            "p": 24,
-            "f": 12,
-            "c": 42
-          }
+          Return ONLY valid JSON:
+          { "name": "Назва страви", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }
         `;
 
         try {
@@ -1902,12 +2825,15 @@
             })
           });
 
-          if (!res.ok) throw new Error("Помилка API");
+          if (!res.ok) throw new Error("Помилка API " + res.status);
           const data = await res.json();
           let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
           rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
           const parsed = JSON.parse(rawText);
+          app.aiScanCount = (app.aiScanCount || 0) + 1;
+          save();
+          logAudit('AI Сканер', `Розпізнано "${parsed.name}" (${parsed.kcal} ккал)`);
           showScanResult(parsed);
           return;
         } catch(err) {
@@ -1922,6 +2848,9 @@
           { name: 'Вівсянка з ягодами та горіхами', grams: 260, kcal: 330, p: 11, f: 9, c: 52 }
         ];
         const chosen = fallbackDishes[Math.floor(Math.random() * fallbackDishes.length)];
+        app.aiScanCount = (app.aiScanCount || 0) + 1;
+        save();
+        logAudit('AI Сканер', `Локально розпізнано "${chosen.name}"`);
         showScanResult(chosen);
       }, 900);
     }
@@ -1953,9 +2882,10 @@
       save();
       renderAll();
       closePhotoModal();
+      showToast(`✓ Додано: ${lastScannedResult.name}`);
     }
 
-    // ================= НАВІГАЦІЯ ТА КАЛЕНДАР =================
+    // Навігація клієнта
     function goToTab(tabName) {
       ['home', 'diary', 'weight', 'plan', 'more'].forEach(t => {
         const page = document.getElementById('tab-' + t);
@@ -2015,6 +2945,7 @@
       curDayData().waterHistory.push({ id: 'w_' + Date.now(), amount: ml });
       save();
       renderAll();
+      showToast(`+${ml} мл води`);
     }
 
     function openActivityModal() { document.getElementById('activityModal').classList.remove('hidden'); }
@@ -2026,6 +2957,7 @@
         save();
         renderAll();
         closeActivityModal();
+        showToast(`✓ Додано ${curDayData().burned} ккал за кроки!`);
       }
     }
     function addQuickBurn(k) {
@@ -2033,20 +2965,24 @@
       save();
       renderAll();
       closeActivityModal();
+      showToast(`+${k} спалених ккал`);
     }
 
     function toggleLanguage() {
       app.lang = (app.lang === 'uk') ? 'en' : 'uk';
       save();
       document.getElementById('langSwitchBtn').innerText = (app.lang === 'uk') ? "🇺🇦 UA" : "🇬🇧 EN";
+      showToast(`Мова: ${app.lang.toUpperCase()}`);
     }
 
     function exportDataJSON() {
       const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app, null, 2));
       const a = document.createElement('a');
       a.href = str;
-      a.download = `calories_pro_backup_${getLocalDateString()}.json`;
+      a.download = `calories_pro_full_backup_${getLocalDateString()}.json`;
       a.click();
+      logAudit('Бекап', 'Експортовано повний JSON бекап');
+      showToast("✓ Резервну копію збережено!");
     }
 
     function importDataJSON(e) {
@@ -2061,9 +2997,10 @@
             save();
             renderCalendarRow();
             renderAll();
-            alert("✓ Дані успішно відновлено!");
+            logAudit('Бекап', 'Відновлено дані з JSON файлу');
+            showToast("✓ Дані успішно відновлено!");
           }
-        } catch(err) { alert("Помилка JSON файлу"); }
+        } catch(err) { alert("Помилка читання JSON файлу"); }
       };
       reader.readAsText(file);
     }
