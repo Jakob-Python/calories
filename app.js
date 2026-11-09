@@ -488,13 +488,13 @@ function renderAll() {
   const remLbl = document.getElementById('dispRemainingLabel');
 
   document.getElementById('dispEaten').innerText = eatenKcal;
-  document.getElementById('dispDailyTarget').innerText = `Ціль: ${prof.target}`;
+  document.getElementById('dispDailyTarget').innerText = `${t('target')}${prof.target}`;
   document.getElementById('dispBurned').innerText = day.burned || 0;
 
   if (diff >= 0) {
     remVal.innerText = diff;
     remVal.className = "text-3xl font-black text-slate-900 tracking-tight";
-    remLbl.innerText = "ккал залишилось";
+    remLbl.innerText = t('remaining');
     remLbl.className = "text-[11px] font-bold text-slate-500 mt-0.5";
     ring.setAttribute('stroke', '#FF4D4D');
     const pct = Math.min(1, eatenKcal / prof.target);
@@ -535,7 +535,6 @@ function renderAll() {
   renderShoppingChecklist();
   renderProfilesTab();
 }
-
 function calculateRealStreak(profId) {
   const pDays = app.days[profId] || {};
   let streak = 0;
