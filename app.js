@@ -121,10 +121,6 @@ let app = {
   streak: 0,
   aiPromptConfig: `You are an elite clinical nutritionist, culinary expert, and visual food-recognition specialist. Analyze the meal, plate, bowl, or beverage in the image with maximum forensic precision.
 
-Identify every distinct food item, estimate portion weight in grams, account for cooking oils and dressings, and return dish name in Ukrainian.
-Return ONLY valid JSON without markdown:
-{ "name": "Назва страви", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }`,
-
 ### 1. VISUAL REFERENCE & 3D VOLUME ESTIMATION:
 - Detect visual scale: standard dinner plate (24-27 cm), side plate (18-20 cm), soup bowl (350-500 ml), fork length (~19 cm), spoon (~15-18 cm), or fingers/hand.
 - Assess portion depth/thickness, stacking, and food density (e.g., fluffy cooked rice vs dense cutlet, liquid broth vs thick stew).
@@ -145,8 +141,8 @@ Return ONLY valid JSON without markdown:
 - "name" MUST be concise, appetizing, and written in natural Ukrainian (e.g., "Гречка з курячою котлетою та салатом", "Борщ український зі сметаною").
 
 ### 5. STRICT OUTPUT FORMAT:
-- Return ONLY pure, raw JSON. 
-- DO NOT wrap in ```json or markdown code blocks.
+- Return ONLY pure, raw JSON.
+- DO NOT wrap in markdown code blocks.
 - DO NOT add conversational text, disclaimers, or preambles.
 - If the image contains NO food or beverages, return exactly:
 {"name": "Не їжа", "grams": 0, "kcal": 0, "p": 0, "f": 0, "c": 0}
@@ -159,7 +155,7 @@ Return ONLY valid JSON without markdown:
   "p": 32.5,
   "f": 18.2,
   "c": 47.0
-},
+}`,
   aiScanCount: 0,
   activityLog: [],
   foods: [],
@@ -412,11 +408,7 @@ async function analyzePhotoWithGemini(base64Uri) {
   }
 
   const rawBase64 = base64Uri.split(',')[1];
-  const promptText = app.aiPromptConfig || `
-    Analyze this plate of food as an expert nutritionist. Estimate portion weight, dish name, calories, and macronutrients.
-    Return ONLY valid JSON without markdown:
-    { "name": "Dish Name", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }
-  `;
+  const promptText = app.aiPromptConfig;
 
   try {
     const data = await requestGeminiAPI({
