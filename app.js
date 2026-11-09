@@ -23,7 +23,7 @@ let app = {
   adminPass: 'admin123',
   geminiApiKey: '',
   geminiTested: false,
-  activeModel: 'gemini-2.5-flash',
+  activeModel: 'gemini-3.8-flash',
   isAdminUnlocked: false,
   activeProfileId: 'u_olena',
   streak: 0,
@@ -95,9 +95,9 @@ function init() {
   if (!app.adminPass) app.adminPass = 'admin123';
 
   // Якщо в localStorage записана стара неробоча версія моделі — скидаємо на актуальну
-  if (!app.activeModel || app.activeModel.includes('1.5') || app.activeModel.includes('2.0')) {
-    app.activeModel = 'gemini-2.5-flash';
-  }
+  if (!app.activeModel || app.activeModel.includes('1.5') || app.activeModel.includes('2.0') || app.activeModel.includes('2.5')) {
+  app.activeModel = 'gemini-3.8-flash';
+}
 
   if (!app.foods || app.foods.length === 0) {
     app.foods = (typeof SEED_FOODS !== 'undefined') ? JSON.parse(JSON.stringify(SEED_FOODS)) : [];
@@ -165,38 +165,20 @@ function curDayData() {
 }
 
 // ================= НАДІЙНИЙ GEMINI API =================
+// ================= НАДІЙНИЙ GEMINI API (FLASH 3.8 / 3.5) =================
 async function requestGeminiAPI(payload) {
   if (!app.geminiApiKey) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  // 1. Спроба автовизначення робочої моделі через ListModels, якщо поточна дає збій
-  if (!app.geminiTested) {
-    try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${app.geminiApiKey}`);
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        const available = listData.models?.find(m => 
-          m.supportedGenerationMethods?.includes('generateContent') && 
-          (m.name.includes('flash') || m.name.includes('3.8') || m.name.includes('2.5'))
-        );
-        if (available) {
-          app.activeModel = available.name.replace(/^models\//, '');
-          save();
-        }
-      }
-    } catch (e) {
-      console.warn("Помилка опитування моделей:", e);
-    }
-  }
-
-  // Пул актуальних версій: від 3.8 / 2.5 до fallback
+  // Пул актуальних моделей: Flash 3.8 та Flash 3.5
   const modelsToTry = [
-    app.activeModel || 'gemini-2.5-flash',
+    app.activeModel || 'gemini-3.8-flash',
     'gemini-3.8-flash',
-    'gemini-2.5-flash',
-    'gemini-2.5-pro'
+    'gemini-3.5-flash',
+    'gemini-3.5-pro'
   ];
+  
   const uniqueModels = [...new Set(modelsToTry)];
   let lastErrMsg = '';
 
