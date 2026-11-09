@@ -94,10 +94,10 @@ function init() {
   app.isAdminUnlocked = false;
   if (!app.adminPass) app.adminPass = 'admin123';
 
-  // Якщо в localStorage записана стара неробоча версія моделі — скидаємо на актуальну
+  // Скидання застарілих моделей з пам'яті на актуальну 3.8
   if (!app.activeModel || app.activeModel.includes('1.5') || app.activeModel.includes('2.0') || app.activeModel.includes('2.5')) {
-  app.activeModel = 'gemini-3.8-flash';
-}
+    app.activeModel = 'gemini-3.8-flash';
+  }
 
   if (!app.foods || app.foods.length === 0) {
     app.foods = (typeof SEED_FOODS !== 'undefined') ? JSON.parse(JSON.stringify(SEED_FOODS)) : [];
@@ -132,6 +132,7 @@ function init() {
   }
 
   renderCalendarRow();
+  applyTranslations();
   renderAll();
   displayCurrentTip();
 }
