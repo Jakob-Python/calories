@@ -1942,7 +1942,19 @@ function addWater(ml) {
   curDayData().waterHistory.push({ id: 'w_' + Date.now(), amount: ml });
   save();
   renderAll();
-  showToast(`+${ml} мл води`);
+  showToast(t('toast_water_add') + ` +${ml}`);
+}
+
+function undoWater() {
+  const day = curDayData();
+  if (!day.waterHistory || day.waterHistory.length === 0) {
+    showToast(t('toast_water_empty'), 'warning');
+    return;
+  }
+  const removed = day.waterHistory.pop();
+  save();
+  renderAll();
+  showToast(t('toast_water_undo') + ` -${removed.amount} мл`);
 }
 
 function openActivityModal() { document.getElementById('activityModal').classList.remove('hidden'); }
@@ -1965,11 +1977,118 @@ function addQuickBurn(k) {
   showToast(`+${k} спалених ккал`);
 }
 
+// Словник перекладів інтерфейсу: UA, EN, FR
+const I18N = {
+  uk: {
+    btn_lang: '🇺🇦 UA',
+    today: 'Сьогодні',
+    eaten: 'Спожито',
+    remaining: 'ккал залишилось',
+    target: 'Ціль: ',
+    burned: 'Спалено',
+    add_activity: '+ Активність',
+    carbs: '🌾 Вугл.',
+    protein: '🥩 Білки',
+    fat: '🥑 Жири',
+    water: 'Вода',
+    nav_home: 'Головна',
+    nav_diary: 'Щоденник',
+    nav_weight: 'Вага',
+    nav_plan: 'План',
+    nav_more: 'Ще',
+    tip_title: 'Порада дня',
+    other_tip: '🎲 Інша порада',
+    toast_water_add: 'Додано води',
+    toast_water_undo: 'Скасовано воду',
+    toast_water_empty: 'Записів води за сьогодні немає'
+  },
+  en: {
+    btn_lang: '🇬🇧 EN',
+    today: 'Today',
+    eaten: 'Eaten',
+    remaining: 'kcal left',
+    target: 'Target: ',
+    burned: 'Burned',
+    add_activity: '+ Activity',
+    carbs: '🌾 Carbs',
+    protein: '🥩 Protein',
+    fat: '🥑 Fats',
+    water: 'Water',
+    nav_home: 'Home',
+    nav_diary: 'Diary',
+    nav_weight: 'Weight',
+    nav_plan: 'Plan',
+    nav_more: 'More',
+    tip_title: 'Daily Tip',
+    other_tip: '🎲 New Tip',
+    toast_water_add: 'Water added',
+    toast_water_undo: 'Water canceled',
+    toast_water_empty: 'No water logs for today'
+  },
+  fr: {
+    btn_lang: '🇫🇷 FR',
+    today: 'Aujourd\'hui',
+    eaten: 'Consommé',
+    remaining: 'kcal restantes',
+    target: 'Cible: ',
+    burned: 'Brûlé',
+    add_activity: '+ Activité',
+    carbs: '🌾 Glucides',
+    protein: '🥩 Protéines',
+    fat: '🥑 Lipides',
+    water: 'Eau',
+    nav_home: 'Accueil',
+    nav_diary: 'Journal',
+    nav_weight: 'Poids',
+    nav_plan: 'Plan',
+    nav_more: 'Plus',
+    tip_title: 'Conseil du jour',
+    other_tip: '🎲 Autre conseil',
+    toast_water_add: 'Eau ajoutée',
+    toast_water_undo: 'Eau annulée',
+    toast_water_empty: 'Aucune consommation d\'eau aujourd\'hui'
+  }
+};
+
+function t(key) {
+  const currentLang = app.lang || 'uk';
+  return (I18N[currentLang] && I18N[currentLang][key]) || I18N['uk'][key] || key;
+}
+
+function applyTranslations() {
+  const lang = app.lang || 'uk';
+  const dict = I18N[lang] || I18N.uk;
+
+  const langBtn = document.getElementById('langSwitchBtn');
+  if (langBtn) langBtn.innerText = dict.btn_lang;
+
+  // Оновлення тексту прийому та залишку калорій
+  const remLbl = document.getElementById('dispRemainingLabel');
+  if (remLbl && !remLbl.innerText.includes('перебір') && !remLbl.innerText.includes('over')) {
+    remLbl.innerText = dict.remaining;
+  }
+
+  // Навігація внизу екрана
+  const navHome = document.querySelector('#nav-btn-home span:last-child');
+  if (navHome) navHome.innerText = dict.nav_home;
+  const navDiary = document.querySelector('#nav-btn-diary span:last-child');
+  if (navDiary) navDiary.innerText = dict.nav_diary;
+  const navWeight = document.querySelector('#nav-btn-weight span:last-child');
+  if (navWeight) navWeight.innerText = dict.nav_weight;
+  const navPlan = document.querySelector('#nav-btn-plan span:last-child');
+  if (navPlan) navPlan.innerText = dict.nav_plan;
+  const navMore = document.querySelector('#nav-btn-more span:last-child');
+  if (navMore) navMore.innerText = dict.nav_more;
+}
+
 function toggleLanguage() {
-  app.lang = (app.lang === 'uk') ? 'en' : 'uk';
+  const order = ['uk', 'en', 'fr'];
+  const curIdx = order.indexOf(app.lang || 'uk');
+  app.lang = order[(curIdx + 1) % order.length];
   save();
-  document.getElementById('langSwitchBtn').innerText = (app.lang === 'uk') ? "🇺🇦 UA" : "🇬🇧 EN";
-  showToast(`Мова: ${app.lang.toUpperCase()}`);
+  applyTranslations();
+  renderAll();
+  showToast(`Мова: ${I18N[app.lang].btn_lang}`);
 }
 
 function exportDataJSON() {
