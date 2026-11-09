@@ -140,13 +140,13 @@
               <span class="text-sm font-black text-slate-900" id="dispWaterAmount">0 / 2000 мл</span>
             </div>
           </div>
-         <div class="flex items-center gap-1.5">
-  <button onclick="undoWater()" class="touch-target bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 text-xs font-black px-2 py-1.5 rounded-xl border border-slate-200 active:scale-95 transition" title="Скасувати останню склянку">
-    ↩️
-  </button>
-  <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
-  <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">+500</button>
-</div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="undoWater()" class="touch-target bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 text-xs font-black px-2 py-1.5 rounded-xl border border-slate-200 active:scale-95 transition" title="Скасувати останню склянку">
+              ↩️
+            </button>
+            <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
+            <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">+500</button>
+          </div>
         </div>
         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
           <div id="waterProgressBar" class="bg-sky-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
@@ -681,12 +681,12 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5" id="admRecipesGrid"></div>
         </section>
 
-       <!-- 6: AI Center -->
-      <section id="admin-sec-ai" class="hidden space-y-4">
-        <div>
-          <h3 class="text-base font-black text-slate-900">AI Center — Gemini 3.8/3.5 Flash Vision & Chat</h3>
-          <p class="text-xs text-slate-500">Діагностика підключення, введення ключа та налаштування промптів</p>
-        </div>
+        <!-- 6: AI Center -->
+        <section id="admin-sec-ai" class="hidden space-y-4">
+          <div>
+            <h3 class="text-base font-black text-slate-900">AI Center — Gemini 3.8/3.5 Flash Vision & Chat</h3>
+            <p class="text-xs text-slate-500">Діагностика підключення, введення ключа та налаштування промптів</p>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-white p-5 rounded-3xl admin-card-shadow border border-slate-100 space-y-3">
               <h4 class="text-xs font-black uppercase text-indigo-700">Конфігурація Gemini API</h4>
@@ -766,7 +766,7 @@
     </div>
   </div>
 
-  <!-- Модальні вікна: чат, вхід в адмінку, редактор профілю, продукт, каталог, порція, вага, активність, фото -->
+  <!-- МОДАЛЬНІ ВІКНА -->
   <div id="aiChatModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-md h-[88vh] sm:h-[82vh] rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl overflow-hidden animate-slide-up">
       <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50">
