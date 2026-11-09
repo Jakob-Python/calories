@@ -160,16 +160,41 @@ function curDayData() {
 }
 
 // ================= НАДІЙНИЙ GEMINI API =================
+// Автоматический опрос доступных моделей и выполнение запроса
 async function requestGeminiAPI(payload) {
   if (!app.geminiApiKey) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  // Обновленный массив актуальных моделей Google Gemini
-  const modelsToTry = [app.activeModel || 'gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+  // 1. Если активная модель еще не определена или сбоит — спрашиваем у Google список доступных моделей
+  if (!app.activeModel || app.activeModel === 'gemini-1.5-flash' || app.activeModel === 'gemini-2.0-flash') {
+    try {
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${app.geminiApiKey}`);
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        // Находим первую доступную модель со словом 'flash' и поддержкой 'generateContent'
+        const availableModel = listData.models?.find(m => 
+          m.supportedGenerationMethods?.includes('generateContent') && 
+          m.name.includes('flash')
+        ) || listData.models?.find(m => m.supportedGenerationMethods?.includes('generateContent'));
+
+        if (availableModel) {
+          // Убираем префикс "models/", если он присутствует
+          app.activeModel = availableModel.name.replace(/^models\//, '');
+          save();
+        }
+      }
+    } catch (e) {
+      console.warn("Не удалось автоматически получить список моделей:", e);
+    }
+  }
+
+  // Резервный список на случай, если ListModels недоступен
+  const currentModel = app.activeModel || 'gemini-2.5-flash';
+  const modelsToTry = [currentModel, 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-flash-latest'];
   let lastErrMsg = '';
 
-  for (const model of modelsToTry) {
+  for (const model of [...new Set(modelsToTry)]) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${app.geminiApiKey}`, {
         method: 'POST',
@@ -192,9 +217,8 @@ async function requestGeminiAPI(payload) {
     }
   }
 
-  throw new Error(lastErrMsg || "Не вдалося отримати відповідь від Gemini API");
+  throw new Error(lastErrMsg || "Не вдалося підключитися до доступних моделей Gemini");
 }
-
 async function testGeminiConnection() {
   const statusEl = document.getElementById('admAiTestStatus');
   statusEl.classList.remove('hidden');
