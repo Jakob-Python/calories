@@ -2858,7 +2858,7 @@ async function analyzePhotoWithGemini(base64Uri) {
     async function analyzePhotoWithGemini(base64Uri) {
       if (app.geminiApiKey) {
         const rawBase64 = base64Uri.split(',')[1];
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${app.geminiApiKey}`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${app.geminiApiKey}`;
 
         const promptText = app.aiPromptConfig || `
           Analyze this plate of food as an expert nutritionist. Estimate portion weight, dish name in Ukrainian, calories, and macronutrients.
