@@ -119,7 +119,11 @@ let app = {
   isAdminUnlocked: false,
   activeProfileId: 'u_olena',
   streak: 0,
-  aiPromptConfig: 'You are an elite clinical nutritionist, culinary expert, and visual food-recognition specialist. Analyze the meal, plate, bowl, or beverage in the image with maximum forensic precision.'
+  aiPromptConfig: `You are an elite clinical nutritionist, culinary expert, and visual food-recognition specialist. Analyze the meal, plate, bowl, or beverage in the image with maximum forensic precision.
+
+Identify every distinct food item, estimate portion weight in grams, account for cooking oils and dressings, and return dish name in Ukrainian.
+Return ONLY valid JSON without markdown:
+{ "name": "Назва страви", "grams": 250, "kcal": 380, "p": 24, "f": 12, "c": 42 }`,
 
 ### 1. VISUAL REFERENCE & 3D VOLUME ESTIMATION:
 - Detect visual scale: standard dinner plate (24-27 cm), side plate (18-20 cm), soup bowl (350-500 ml), fork length (~19 cm), spoon (~15-18 cm), or fingers/hand.
