@@ -2,7 +2,8 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Calories PRO">
@@ -11,6 +12,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif; background-color: #F8F9FD; color: #0F172A; }
+    input, textarea, #aiChatMessagesContainer { -webkit-user-select: text; user-select: text; }
     .pb-nav { padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 84px); }
     .pt-safe { padding-top: max(env(safe-area-inset-top, 16px), 14px); }
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -30,7 +32,7 @@
   </div>
 
   <!-- ПЛАВАЮЧА КНОПКА ШІ-БОТА -->
-  <button onclick="openAiChatModal()" class="fixed bottom-24 right-4 z-40 bg-gradient-to-tr from-indigo-600 via-purple-600 to-rose-500 text-white p-3.5 rounded-full shadow-xl shadow-indigo-500/30 flex items-center gap-2 active:scale-95 transition cursor-pointer border-2 border-white" title="ШІ Нутриціолог">
+  <button onclick="openAiChatModal()" aria-label="ШІ Нутриціолог" class="fixed bottom-24 right-4 z-40 bg-gradient-to-tr from-indigo-600 via-purple-600 to-rose-500 text-white p-3.5 rounded-full shadow-xl shadow-indigo-500/30 flex items-center gap-2 active:scale-95 transition cursor-pointer border-2 border-white" title="ШІ Нутриціолог">
     <span class="text-xl">✨</span>
     <span class="text-xs font-black pr-1 hidden sm:inline">ШІ Бот</span>
   </button>
@@ -49,14 +51,14 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button onclick="toggleLanguage()" class="touch-target px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-black text-slate-700 active:scale-95 transition" id="langSwitchBtn">
+          <button onclick="toggleLanguage()" aria-label="Змінити мову" class="touch-target px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-black text-slate-700 active:scale-95 transition" id="langSwitchBtn">
             🇺🇦 UA
           </button>
           <div class="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-2.5 py-1.5 rounded-full shadow-sm" title="Днів поспіль">
             <span class="text-sm">🔥</span>
             <span class="text-xs font-black text-amber-700" id="realStreakDisplay">0</span>
           </div>
-          <button onclick="goToTab('more')" class="touch-target flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-full shadow-sm active:scale-95 transition">
+          <button onclick="goToTab('more')" aria-label="Профіль" class="touch-target flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-full shadow-sm active:scale-95 transition">
             <span id="headerAvatar" class="text-base">👩</span>
             <span id="headerUserName" class="text-xs font-bold text-slate-700 max-w-[55px] truncate">Користувач</span>
           </button>
@@ -81,7 +83,7 @@
             <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
               <span class="text-3xl font-black text-slate-900 tracking-tight" id="dispRemaining">2000</span>
               <span class="text-[11px] font-bold text-slate-500 mt-0.5" id="dispRemainingLabel">ккал залишилось</span>
-              <span class="text-[10px] font-semibold text-slate-400 mt-0.5" id="dispDailyTarget">Ціль: 2000</span>
+              <span class="text-[10px] font-semibold text-slate-500 mt-0.5" id="dispDailyTarget">Ціль: 2000</span>
             </div>
           </div>
           <div class="w-20 text-center">
@@ -92,7 +94,7 @@
             </button>
           </div>
         </div>
-        <div onclick="openActivityModal()" class="mt-3 pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 cursor-pointer hover:text-slate-600">
+        <div onclick="openActivityModal()" class="mt-3 pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500 cursor-pointer hover:text-slate-700">
           <span>🔄 Apple Health / Google Fit:</span>
           <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Ручний імпорт кроків</span>
         </div>
@@ -141,7 +143,7 @@
             </div>
           </div>
           <div class="flex items-center gap-1.5">
-            <button onclick="undoWater()" class="touch-target bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 text-xs font-black px-2 py-1.5 rounded-xl border border-slate-200 active:scale-95 transition" title="Скасувати останню склянку">
+            <button onclick="undoWater()" aria-label="Скасувати останню склянку води" class="touch-target bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 text-xs font-black px-2 py-1.5 rounded-xl border border-slate-200 active:scale-95 transition" title="Скасувати останню склянку">
               ↩️
             </button>
             <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
@@ -153,7 +155,7 @@
         </div>
       </section>
 
-      <section onclick="openPhotoFlow('lunch')" class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-4 mb-3 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
+      <section onclick="openPhotoFlow('lunch')" class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-4 mb-3 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-95 transition">
         <div class="flex items-center gap-3">
           <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">📸</div>
           <div>
@@ -164,7 +166,7 @@
         <span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-xl font-bold shadow-sm">Спробувати →</span>
       </section>
 
-      <section onclick="openAiChatModal()" class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
+      <section onclick="openAiChatModal()" class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-95 transition">
         <div class="flex items-center gap-3">
           <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">💬</div>
           <div>
@@ -175,12 +177,12 @@
         <span class="text-xs bg-white text-purple-700 px-3 py-1.5 rounded-xl font-bold shadow-sm">Запитати ➔</span>
       </section>
 
-      <div onclick="goToTab('diary')" class="bg-white rounded-3xl p-4 mb-3.5 border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-98 transition">
+      <div onclick="goToTab('diary')" class="bg-white rounded-3xl p-4 mb-3.5 border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-95 transition">
         <div class="flex items-center gap-3">
           <span class="text-2xl">📖</span>
           <div>
             <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Щоденник страв</h3>
-            <p class="text-[11px] text-slate-400">Сніданок, обід, вечеря, перекуси</p>
+            <p class="text-[11px] text-slate-500">Сніданок, обід, вечеря, перекуси</p>
           </div>
         </div>
         <span class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100">Відкрити →</span>
@@ -229,7 +231,7 @@
               <span class="text-2xl">🍳</span>
               <div>
                 <h4 class="text-sm font-black text-slate-800">Сніданок</h4>
-                <span class="text-[11px] font-bold text-slate-400" id="diaryBreakfastStats">0 ккал</span>
+                <span class="text-[11px] font-bold text-slate-500" id="diaryBreakfastStats">0 ккал</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
@@ -247,7 +249,7 @@
               <span class="text-2xl">🍲</span>
               <div>
                 <h4 class="text-sm font-black text-slate-800">Обід</h4>
-                <span class="text-[11px] font-bold text-slate-400" id="diaryLunchStats">0 ккал</span>
+                <span class="text-[11px] font-bold text-slate-500" id="diaryLunchStats">0 ккал</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
@@ -265,7 +267,7 @@
               <span class="text-2xl">🥗</span>
               <div>
                 <h4 class="text-sm font-black text-slate-800">Вечеря</h4>
-                <span class="text-[11px] font-bold text-slate-400" id="diaryDinnerStats">0 ккал</span>
+                <span class="text-[11px] font-bold text-slate-500" id="diaryDinnerStats">0 ккал</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
@@ -283,7 +285,7 @@
               <span class="text-2xl">🍎</span>
               <div>
                 <h4 class="text-sm font-black text-slate-800">Перекус</h4>
-                <span class="text-[11px] font-bold text-slate-400" id="diarySnackStats">0 ккал</span>
+                <span class="text-[11px] font-bold text-slate-500" id="diarySnackStats">0 ккал</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
@@ -311,15 +313,15 @@
       <section class="bg-white p-5 rounded-3xl border border-slate-100 card-shadow mb-3.5">
         <div class="grid grid-cols-3 gap-2 text-center mb-4">
           <div>
-            <span class="text-[10px] font-bold text-slate-400 uppercase block">Старт</span>
+            <span class="text-[10px] font-bold text-slate-500 uppercase block">Старт</span>
             <span class="text-base font-black text-slate-800" id="weightStartVal">65.0 кг</span>
           </div>
           <div>
-            <span class="text-[10px] font-bold text-slate-400 uppercase block">Поточна</span>
-            <span class="text-xl font-black text-rose-600" id="weightCurrentVal">62.5 кг</span>
+            <span class="text-[10px] font-bold text-slate-500 uppercase block">Поточна</span>
+            <span class="text-xl font-black text-rose-600" id="weightCurrentVal">65.0 кг</span>
           </div>
           <div>
-            <span class="text-[10px] font-bold text-slate-400 uppercase block">Ціль</span>
+            <span class="text-[10px] font-bold text-slate-500 uppercase block">Ціль</span>
             <span class="text-base font-black text-slate-800" id="weightGoalVal">58.0 кг</span>
           </div>
         </div>
@@ -337,12 +339,12 @@
 
         <div class="grid grid-cols-2 gap-2 text-center text-xs">
           <div class="bg-slate-50 p-2.5 rounded-xl">
-            <span class="text-[10px] text-slate-400 block font-bold">Зміна за 7 днів</span>
-            <span class="font-black text-slate-800" id="deltaWeekVal">-0.4 кг</span>
+            <span class="text-[10px] text-slate-500 block font-bold">Зміна за 7 днів</span>
+            <span class="font-black text-slate-800" id="deltaWeekVal">—</span>
           </div>
           <div class="bg-slate-50 p-2.5 rounded-xl">
-            <span class="text-[10px] text-slate-400 block font-bold">Зміна за 30 днів</span>
-            <span class="font-black text-slate-800" id="deltaMonthVal">-1.8 кг</span>
+            <span class="text-[10px] text-slate-500 block font-bold">Зміна за 30 днів</span>
+            <span class="font-black text-slate-800" id="deltaMonthVal">—</span>
           </div>
         </div>
       </section>
@@ -350,7 +352,7 @@
       <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
         <h3 class="text-xs font-black uppercase text-slate-800 mb-3">Історія замірів</h3>
         <div class="space-y-2 max-h-56 overflow-y-auto no-scrollbar" id="weightHistoryList">
-          <p class="text-xs text-slate-400 italic text-center py-4">Немає записів ваги</p>
+          <p class="text-xs text-slate-500 italic text-center py-4">Немає записів ваги</p>
         </div>
       </section>
     </main>
@@ -392,7 +394,7 @@
             <button onclick="clearCheckedShopItems()" class="text-[11px] text-rose-500 font-bold hover:underline">Видалити куплене</button>
           </div>
           <div class="space-y-2 max-h-72 overflow-y-auto no-scrollbar" id="shoppingChecklist">
-            <p class="text-xs text-slate-400 italic text-center py-4">Список покупок порожній</p>
+            <p class="text-xs text-slate-500 italic text-center py-4">Список покупок порожній</p>
           </div>
         </div>
       </div>
@@ -414,7 +416,7 @@
       <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-4">
         <div class="flex justify-between items-center mb-2">
           <h3 class="text-xs font-black uppercase text-slate-800">Локальні профілі</h3>
-          <span class="text-[10px] text-slate-400">Тап для вибору</span>
+          <span class="text-[10px] text-slate-500">Тап для вибору</span>
         </div>
         <div id="profileContainer" class="space-y-2"></div>
       </div>
@@ -531,7 +533,7 @@
         <div class="flex items-center gap-3">
           <div class="text-right hidden sm:block">
             <span class="text-xs font-black text-slate-800 block">Super Administrator</span>
-            <span class="text-[10px] text-slate-400">Локальний доступ</span>
+            <span class="text-[10px] text-slate-500">Локальний доступ</span>
           </div>
           <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-black text-xs flex items-center justify-center">SA</div>
           <button onclick="exitAdminToClientApp()" class="sm:hidden text-xs bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded-lg">Вийти</button>
@@ -543,22 +545,22 @@
         <section id="admin-sec-overview" class="space-y-6">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
             <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
-              <span class="text-[11px] font-bold text-slate-400 uppercase block">Профілі</span>
+              <span class="text-[11px] font-bold text-slate-500 uppercase block">Профілі</span>
               <span class="text-2xl font-black text-slate-900 mt-1 block" id="admStatUsersCount">0</span>
               <span class="text-[10px] font-semibold text-emerald-600">Активні</span>
             </div>
             <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
-              <span class="text-[11px] font-bold text-slate-400 uppercase block">База продуктів</span>
+              <span class="text-[11px] font-bold text-slate-500 uppercase block">База продуктів</span>
               <span class="text-2xl font-black text-indigo-600 mt-1 block" id="admStatProductsCount">0</span>
               <span class="text-[10px] font-semibold text-slate-500">У базі</span>
             </div>
             <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
-              <span class="text-[11px] font-bold text-slate-400 uppercase block">Записів у днях</span>
+              <span class="text-[11px] font-bold text-slate-500 uppercase block">Записів у днях</span>
               <span class="text-2xl font-black text-emerald-600 mt-1 block" id="admStatLogsCount">0</span>
               <span class="text-[10px] font-semibold text-slate-500">Дні з логами</span>
             </div>
             <div class="bg-white p-4 rounded-3xl admin-card-shadow border border-slate-100">
-              <span class="text-[11px] font-bold text-slate-400 uppercase block">AI-сканування</span>
+              <span class="text-[11px] font-bold text-slate-500 uppercase block">AI-сканування</span>
               <span class="text-2xl font-black text-rose-600 mt-1 block" id="admStatAiScansCount">0</span>
               <span class="text-[10px] font-semibold text-slate-500" id="admStatAiStatusText">Ключ не вказано</span>
             </div>
@@ -568,7 +570,7 @@
             <div class="flex justify-between items-center mb-3">
               <div>
                 <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Активність за останні 7 днів</h3>
-                <p class="text-xs text-slate-400">Фактичне споживання калорій активного профілю</p>
+                <p class="text-xs text-slate-500">Фактичне споживання калорій активного профілю</p>
               </div>
               <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">Реальні дані</span>
             </div>
@@ -595,7 +597,7 @@
           <div class="bg-white rounded-3xl admin-card-shadow border border-slate-100 overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase font-black text-[10px]">
+                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase font-black text-[10px]">
                   <tr>
                     <th class="p-3.5">Користувач</th>
                     <th class="p-3.5">Ціль ккал</th>
@@ -640,7 +642,7 @@
           <div class="bg-white rounded-3xl admin-card-shadow border border-slate-100 overflow-hidden">
             <div class="overflow-x-auto max-h-[500px]">
               <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase font-black text-[10px] sticky top-0">
+                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase font-black text-[10px] sticky top-0">
                   <tr>
                     <th class="p-3">Назва</th>
                     <th class="p-3">Категорія</th>
@@ -675,7 +677,7 @@
         <!-- 5: Рецепти -->
         <section id="admin-sec-recipes" class="hidden space-y-4">
           <div>
-            <h3 class="text-base font-black text-slate-900">Каталог страв та рецептів</h3>
+            <h3 class="text-base font-black text-slate-900">Каталог страв та супів</h3>
             <p class="text-xs text-slate-500">Управління стравами та поживністю на порцію</p>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5" id="admRecipesGrid"></div>
@@ -684,7 +686,7 @@
         <!-- 6: AI Center -->
         <section id="admin-sec-ai" class="hidden space-y-4">
           <div>
-            <h3 class="text-base font-black text-slate-900">AI Center — Gemini 3.8/3.5 Flash Vision & Chat</h3>
+            <h3 class="text-base font-black text-slate-900">AI Center — Gemini Flash Vision & Chat</h3>
             <p class="text-xs text-slate-500">Діагностика підключення, введення ключа та налаштування промптів</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -768,7 +770,7 @@
 
   <!-- МОДАЛЬНІ ВІКНА -->
   <div id="aiChatModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full max-w-md h-[88vh] sm:h-[82vh] rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl overflow-hidden animate-slide-up">
+    <div class="bg-white w-full max-w-md h-[88vh] sm:h-[82vh] rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl overflow-hidden">
       <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-lg font-black shadow-md">✨</div>
@@ -779,7 +781,7 @@
             </span>
           </div>
         </div>
-        <button onclick="closeAiChatModal()" class="touch-target w-8 h-8 rounded-full bg-white text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm shadow-sm">✕</button>
+        <button onclick="closeAiChatModal()" aria-label="Закрити чат" class="touch-target w-8 h-8 rounded-full bg-white text-slate-500 hover:text-slate-800 font-bold flex items-center justify-center text-sm shadow-sm">✕</button>
       </div>
       <div class="p-2.5 border-b border-slate-100 bg-white flex gap-1.5 overflow-x-auto no-scrollbar text-xs">
         <button onclick="sendQuickPrompt('Що мені корисно з\'їсти на вечерю?')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-xl whitespace-nowrap font-bold transition">🥗 Вечеря</button>
@@ -809,10 +811,10 @@
     <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
       <div class="flex justify-between items-center mb-1">
         <h3 class="text-sm font-black text-slate-900">Admin Control Center</h3>
-        <button onclick="closeAdminPasswordModal()" class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+        <button onclick="closeAdminPasswordModal()" aria-label="Закрити" class="text-slate-500 hover:text-slate-700 font-bold text-sm">✕</button>
       </div>
       <p class="text-xs text-slate-500 mb-3">Введіть пароль адміністратора</p>
-      <input type="password" id="adminPasswordInputVal" placeholder="••••••••" class="w-full text-sm font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-2 outline-none focus:ring-2 focus:ring-indigo-400">
+      <input type="password" id="adminPasswordInputVal" onkeydown="if(event.key==='Enter') verifyAdminPassword()" placeholder="••••••••" class="w-full text-sm font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-2 outline-none focus:ring-2 focus:ring-indigo-400">
       <p id="adminLoginError" class="text-[11px] text-rose-500 font-bold mb-3 hidden"></p>
       <div class="flex gap-2">
         <button onclick="closeAdminPasswordModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">Скасувати</button>
@@ -825,11 +827,11 @@
     <div class="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
       <div class="flex justify-between items-center mb-2">
         <h3 class="text-sm font-black text-slate-900" id="peModalTitle">Профіль</h3>
-        <button onclick="closeProfileEditorModal()" class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+        <button onclick="closeProfileEditorModal()" aria-label="Закрити" class="text-slate-500 hover:text-slate-700 font-bold text-sm">✕</button>
       </div>
       <p id="peError" class="text-xs text-rose-500 font-bold mb-2 hidden bg-rose-50 p-2 rounded-xl border border-rose-100"></p>
       <div class="mb-3">
-        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ім'я та аватар</label>
+        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ім'я та аватар</label>
         <div class="flex gap-2 items-center mb-1.5">
           <input type="text" id="peEmoji" maxlength="2" class="w-12 text-center text-lg bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none font-bold">
           <input type="text" id="peName" placeholder="Ім'я користувача" class="flex-1 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
@@ -847,30 +849,30 @@
       </div>
       <div class="grid grid-cols-3 gap-2 mb-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Зріст (см)</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Зріст (см)</label>
           <input type="number" id="peHeight" class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Старт (кг)</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Старт (кг)</label>
           <input type="number" step="0.5" id="peStartWeight" class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ціль (кг)</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ціль (кг)</label>
           <input type="number" step="0.5" id="peTargetWeight" class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2 mb-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ціль ккал (800-6000)</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ціль ккал (800-6000)</label>
           <input type="number" id="peTarget" class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none" oninput="updatePeMacroCheck()">
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Вода мл (500-6000)</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Вода мл (500-6000)</label>
           <input type="number" step="250" id="peWater" class="w-full text-xs font-black bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
         </div>
       </div>
       <div class="mb-2">
-        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Макронутрієнти (грами)</label>
+        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Макронутрієнти (грами)</label>
         <div class="grid grid-cols-3 gap-2">
           <div>
             <span class="text-[9px] text-rose-500 font-bold block mb-0.5">Білки (г)</span>
@@ -889,30 +891,30 @@
       </div>
       <div class="mb-3 pt-2 border-t border-slate-100">
         <div class="flex justify-between items-center mb-1">
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Розподіл ккал (%)</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase">Розподіл ккал (%)</label>
           <span id="peSplitSum" class="text-[10px] font-black text-slate-600">Разом: 100%</span>
         </div>
         <div class="grid grid-cols-4 gap-1.5">
           <div>
-            <span class="text-[9px] text-slate-400 block text-center">Сніданок</span>
+            <span class="text-[9px] text-slate-500 block text-center">Сніданок</span>
             <input type="number" id="peSplitB" class="w-full text-xs font-bold text-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 outline-none" oninput="updatePeMacroCheck()">
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block text-center">Обід</span>
+            <span class="text-[9px] text-slate-500 block text-center">Обід</span>
             <input type="number" id="peSplitL" class="w-full text-xs font-bold text-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 outline-none" oninput="updatePeMacroCheck()">
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block text-center">Вечеря</span>
+            <span class="text-[9px] text-slate-500 block text-center">Вечеря</span>
             <input type="number" id="peSplitD" class="w-full text-xs font-bold text-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 outline-none" oninput="updatePeMacroCheck()">
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block text-center">Перекус</span>
+            <span class="text-[9px] text-slate-500 block text-center">Перекус</span>
             <input type="number" id="peSplitS" class="w-full text-xs font-bold text-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 outline-none" oninput="updatePeMacroCheck()">
           </div>
         </div>
       </div>
       <div class="mb-4">
-        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Персональний PIN-код (4 цифри, необов'язково)</label>
+        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Персональний PIN-код (4 цифри, необов'язково)</label>
         <input type="password" maxlength="4" id="pePin" placeholder="Порожньо = без пароля" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
       </div>
       <div class="flex gap-2">
@@ -952,9 +954,9 @@
       <div class="p-4 border-b border-slate-100 flex items-center justify-between">
         <div>
           <h3 class="text-base font-black text-slate-900">Каталог продуктів</h3>
-          <span class="text-xs text-slate-400 font-semibold" id="catalogTargetMealText">Сніданок</span>
+          <span class="text-xs text-slate-500 font-semibold" id="catalogTargetMealText">Сніданок</span>
         </div>
-        <button onclick="closeCatalogModal()" class="touch-target w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold flex items-center justify-center text-sm">✕</button>
+        <button onclick="closeCatalogModal()" aria-label="Закрити" class="touch-target w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold flex items-center justify-center text-sm">✕</button>
       </div>
       <div class="p-3 bg-white border-b border-slate-100">
         <div class="relative mb-2">
@@ -973,19 +975,19 @@
         <div>
           <span class="text-3xl" id="portItemEmoji">🍲</span>
           <h3 class="text-sm font-black text-slate-900 mt-1" id="portItemName">Страва</h3>
-          <span class="text-[10px] text-slate-400 font-semibold block" id="portItemSource">База продуктів</span>
+          <span class="text-[10px] text-slate-500 font-semibold block" id="portItemSource">База продуктів</span>
         </div>
       </div>
       <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 text-center mb-3">
-        <span class="text-[10px] text-slate-400 uppercase font-black block mb-1">База на 100 грамів</span>
+        <span class="text-[10px] text-slate-500 uppercase font-black block mb-1">База на 100 грамів</span>
         <div class="grid grid-cols-4 gap-1 text-xs font-black">
-          <div><span class="text-slate-900 block" id="baseKcal100">0</span><span class="text-[9px] text-slate-400">ккал</span></div>
-          <div><span class="text-emerald-600 block" id="baseC100">0г</span><span class="text-[9px] text-slate-400">Вугл</span></div>
-          <div><span class="text-rose-600 block" id="baseP100">0г</span><span class="text-[9px] text-slate-400">Біл</span></div>
-          <div><span class="text-amber-600 block" id="baseF100">0г</span><span class="text-[9px] text-slate-400">Жир</span></div>
+          <div><span class="text-slate-900 block" id="baseKcal100">0</span><span class="text-[9px] text-slate-500">ккал</span></div>
+          <div><span class="text-emerald-600 block" id="baseC100">0г</span><span class="text-[9px] text-slate-500">Вугл</span></div>
+          <div><span class="text-rose-600 block" id="baseP100">0г</span><span class="text-[9px] text-slate-500">Біл</span></div>
+          <div><span class="text-amber-600 block" id="baseF100">0г</span><span class="text-[9px] text-slate-500">Жир</span></div>
         </div>
       </div>
-      <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Вага порції (грами):</label>
+      <label class="text-[10px] font-bold uppercase text-slate-500 block mb-1">Вага порції (грами):</label>
       <div class="flex gap-1.5 mb-2.5">
         <button onclick="setPortionGrams(50)" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700">50г</button>
         <button onclick="setPortionGrams(100)" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white">100г</button>
@@ -1012,14 +1014,14 @@
   <div id="logWeightModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
       <h3 class="text-sm font-black text-slate-900 mb-1">Записати параметри</h3>
-      <p class="text-xs text-slate-400 mb-3">Замір ваги та талії за сьогодні</p>
+      <p class="text-xs text-slate-500 mb-3">Замір ваги та талії за сьогодні</p>
       <div class="space-y-2.5 mb-4">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Вага (кг)*</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Вага (кг)*</label>
           <input type="number" step="0.1" id="inputWeightKg" placeholder="62.5" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Обхват талії (см)</label>
+          <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Обхват талії (см)</label>
           <input type="number" step="0.5" id="inputWaistCm" placeholder="72" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
         </div>
       </div>
@@ -1033,7 +1035,7 @@
   <div id="activityModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
       <h3 class="text-sm font-black text-slate-900 mb-1">Спалені калорії</h3>
-      <p class="text-xs text-slate-400 mb-3">Імпорт кроків або вправа</p>
+      <p class="text-xs text-slate-500 mb-3">Імпорт кроків або вправа</p>
       <div class="space-y-2 mb-4">
         <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
           <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Кроки (фітнес-браслет)</span>
@@ -1044,7 +1046,7 @@
         </div>
         <button onclick="addQuickBurn(200)" class="w-full py-2 bg-orange-50 text-orange-700 font-bold text-xs rounded-xl border border-orange-200">+200 ккал (Вправи)</button>
       </div>
-      <button onclick="closeActivityModal()" class="touch-target w-full text-slate-400 text-xs font-bold">Закрити</button>
+      <button onclick="closeActivityModal()" class="touch-target w-full text-slate-500 text-xs font-bold">Закрити</button>
     </div>
   </div>
 
@@ -1052,7 +1054,7 @@
     <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-sm font-black text-slate-900">ШІ-Сканер тарілки (Gemini)</h3>
-        <button onclick="closePhotoModal()" class="text-slate-400 font-bold text-sm">✕</button>
+        <button onclick="closePhotoModal()" aria-label="Закрити" class="text-slate-500 font-bold text-sm">✕</button>
       </div>
       <canvas id="compressCanvas" class="hidden"></canvas>
       <input type="file" id="cameraInput" accept="image/*" class="hidden" onchange="processPhotoUpload(event)">
@@ -1064,7 +1066,7 @@
       <div id="aiLoadingZone" class="hidden py-6 text-center">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent mb-2"></div>
         <p class="text-xs font-bold text-indigo-900">Аналізуємо страву через Gemini...</p>
-        <p class="text-[10px] text-slate-400">Це займе лише кілька секунд</p>
+        <p class="text-[10px] text-slate-500">Це займе лише кілька секунд</p>
       </div>
       <div id="previewZone" class="hidden mb-3">
         <img id="photoPreviewImg" class="w-full h-40 object-cover rounded-2xl shadow-inner mb-2" alt="Тарілка">
