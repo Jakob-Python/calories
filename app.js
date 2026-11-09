@@ -164,19 +164,18 @@ function curDayData() {
   return app.days[app.activeProfileId][selectedDateKey];
 }
 
-// ================= НАДІЙНИЙ GEMINI API =================
-// ================= НАДІЙНИЙ GEMINI API (FLASH 3.8 / 3.5) =================
+// ================= НАДІЙНИЙ GEMINI API (3.8, 3.5 ТА 3.1) =================
 async function requestGeminiAPI(payload) {
   if (!app.geminiApiKey) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
-  // Пул актуальних моделей: Flash 3.8 та Flash 3.5
+  // Пул актуальних моделей із пріоритетом на 3.8 та 3.5 Flash
   const modelsToTry = [
     app.activeModel || 'gemini-3.8-flash',
     'gemini-3.8-flash',
     'gemini-3.5-flash',
-    'gemini-3.5-pro'
+    'gemini-3.1-pro-preview'
   ];
   
   const uniqueModels = [...new Set(modelsToTry)];
