@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Калькулятор калорій">
-  <title>Калькулятор калорій</title>
+  <meta name="apple-mobile-web-app-title" content="Calories PRO">
+  <title>Calories PRO — Персональний асистент харчування</title>
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2927/2927347.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -21,22 +21,20 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .touch-target { min-width: 44px; min-height: 44px; }
-    .smooth-transition { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .card-shadow { box-shadow: 0 2px 14px rgba(15, 23, 42, 0.04); }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between select-none">
 
-  <!-- ================= ГОЛОВНИЙ ЕКРАН ================= -->
+  <!-- ================= 1. ЕКРАН: ГОЛОВНА (КОМПАКТНИЙ ДАШБОРД) ================= -->
   <main id="tab-home" class="pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
-
-    <!-- 1. ЗАГОЛОВОК, МОВА ТА КАЛЕНДАР -->
     <header class="flex justify-between items-center py-2 mb-2">
       <div>
-        <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5" id="lblAppTitle">
-          Калькулятор калорій
+        <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+          Calories <span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black">PRO</span>
         </h1>
-        <p class="text-xs font-semibold text-slate-500 mt-0.5" id="headerDateLabel">Сьогодні</p>
+        <p class="text-xs font-semibold text-slate-500 mt-0.5" id="homeDateLabel">Сьогодні</p>
       </div>
 
       <div class="flex items-center gap-2">
@@ -44,29 +42,30 @@
           🇺🇦 UA
         </button>
 
-        <div class="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-2.5 py-1.5 rounded-full shadow-sm">
+        <!-- Реальний розрахунок серії днів -->
+        <div class="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-full shadow-sm" title="Днів поспіль з записами">
           <span class="text-sm">🔥</span>
-          <span class="text-xs font-black text-amber-700" id="streakDays">7</span>
+          <span class="text-xs font-black text-amber-700" id="realStreakDisplay">0</span>
         </div>
 
-        <button onclick="goToTab('profile')" class="touch-target flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1.5 rounded-full shadow-sm active:scale-95 transition" aria-label="Профіль">
+        <button onclick="goToTab('more'); openSubSection('profilesSection');" class="touch-target flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-full shadow-sm active:scale-95 transition">
           <span id="headerAvatar" class="text-base">👩</span>
           <span id="headerUserName" class="text-xs font-bold text-slate-700 max-w-[55px] truncate">Олена</span>
         </button>
       </div>
     </header>
 
-    <!-- Інтерактивний календар тижня -->
-    <section class="bg-white py-3 px-2 rounded-2xl card-shadow border border-slate-100 mb-3.5">
+    <!-- Календарний рядок тижня -->
+    <section class="bg-white py-2.5 px-2 rounded-2xl card-shadow border border-slate-100 mb-3">
       <div class="grid grid-cols-7 text-center items-center" id="calendarWeekRow"></div>
     </section>
 
-    <!-- 2. БАЛАНС КАЛОРІЙ (Центральний елемент) -->
+    <!-- Круговий блок калорій -->
     <section class="bg-white rounded-3xl p-5 card-shadow border border-slate-100 mb-3.5 relative">
       <div class="flex items-center justify-between">
         <div class="w-20 text-center">
           <span class="text-2xl font-black text-slate-900 block" id="dispEaten">0</span>
-          <span class="text-xs font-bold text-slate-500" id="lblEaten">Спожито</span>
+          <span class="text-xs font-bold text-slate-500">Спожито</span>
         </div>
 
         <div class="relative w-44 h-44 flex items-center justify-center">
@@ -83,25 +82,25 @@
 
         <div class="w-20 text-center">
           <span class="text-2xl font-black text-slate-900 block" id="dispBurned">0</span>
-          <span class="text-xs font-bold text-slate-500 block mb-1" id="lblBurned">Спалено</span>
-          <button onclick="openWorkoutModal()" class="touch-target inline-flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold px-2 py-1 rounded-full border border-orange-200 active:scale-95 transition" id="btnWorkout">
+          <span class="text-xs font-bold text-slate-500 block mb-1">Спалено</span>
+          <button onclick="openActivityModal()" class="touch-target inline-flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold px-2 py-1 rounded-full border border-orange-200 active:scale-95 transition">
             + Активність
           </button>
         </div>
       </div>
 
-      <div onclick="openSyncModal()" class="mt-3 pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500 cursor-pointer hover:text-slate-800 transition">
-        <span>🔄 Apple Health / Google Fit / Кроки</span>
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-        <span class="text-[10px] text-indigo-600 font-bold underline" id="lblSyncAction">Синхронізувати</span>
+      <!-- Чесний статус синхронізації -->
+      <div onclick="openActivityModal()" class="mt-3 pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 cursor-pointer hover:text-slate-600">
+        <span>🔄 Apple Health / Google Fit:</span>
+        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Ручний імпорт кроків</span>
       </div>
     </section>
 
-    <!-- 3. БІЛКИ, ЖИРИ ТА ВУГЛЕВОДИ -->
+    <!-- Смужки макросів БЖВ -->
     <section class="grid grid-cols-3 gap-2.5 mb-3.5">
       <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
         <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
-          <span id="lblCarbsShort">🌾 Вугл.</span>
+          <span>🌾 Вугл.</span>
           <span class="text-emerald-600 text-[11px] font-black" id="carbPct">0%</span>
         </div>
         <span class="text-xs font-black text-slate-800 block" id="dispCarbs">0 / 196 г</span>
@@ -112,7 +111,7 @@
 
       <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
         <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
-          <span id="lblProteinShort">🥩 Білки</span>
+          <span>🥩 Білки</span>
           <span class="text-rose-600 text-[11px] font-black" id="proteinPct">0%</span>
         </div>
         <span class="text-xs font-black text-slate-800 block" id="dispProtein">0 / 147 г</span>
@@ -123,7 +122,7 @@
 
       <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
         <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
-          <span id="lblFatShort">🥑 Жири</span>
+          <span>🥑 Жири</span>
           <span class="text-amber-600 text-[11px] font-black" id="fatPct">0%</span>
         </div>
         <span class="text-xs font-black text-slate-800 block" id="dispFat">0 / 66 г</span>
@@ -133,387 +132,416 @@
       </div>
     </section>
 
-    <!-- 4. ВОДНИЙ БАЛАНС -->
+    <!-- Водний баланс -->
     <section class="bg-white rounded-3xl p-4 card-shadow border border-slate-100 mb-3.5">
       <div class="flex justify-between items-center mb-2">
         <div class="flex items-center gap-2">
-          <div class="w-9 h-9 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-lg">💧</div>
+          <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-base">💧</div>
           <div>
-            <div class="flex items-center gap-1.5">
-              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider" id="lblWaterTitle">Водний баланс</h3>
-              <button onclick="openWaterTargetModal()" class="text-slate-400 hover:text-sky-600 text-xs">✏️</button>
-            </div>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Вода</h3>
             <span class="text-sm font-black text-slate-900" id="dispWaterAmount">0 / 2000 мл</span>
           </div>
         </div>
-
         <div class="flex items-center gap-1.5">
-          <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">
-            +250
-          </button>
-          <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">
-            +500
-          </button>
-          <button onclick="openCustomWaterModal()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black px-2 py-1.5 rounded-xl border border-slate-200 active:scale-95 transition" id="btnWaterCustom">
-            +Своє
-          </button>
+          <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
+          <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">+500</button>
         </div>
       </div>
-
-      <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-2">
+      <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
         <div id="waterProgressBar" class="bg-sky-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
-      </div>
-
-      <div class="flex justify-between items-center pt-1 text-xs text-slate-500">
-        <span id="waterHistorySummary">Записів за день: 0</span>
-        <button onclick="undoLastWater()" id="undoWaterBtn" class="text-rose-500 font-bold hover:underline disabled:opacity-40 disabled:no-underline" disabled>
-          ↩ Скасувати
-        </button>
       </div>
     </section>
 
-    <!-- 5. ПРИЙОМИ ЇЖІ -->
-    <section class="mb-3.5 space-y-2.5">
-      <div class="flex justify-between items-center px-1">
-        <h3 class="text-sm font-bold text-slate-800" id="lblMealsTitle">Прийоми їжі <span class="text-xs text-slate-400 font-semibold">• Щоденник</span></h3>
-        <button onclick="confirmResetDay()" class="text-xs text-rose-500 font-bold hover:underline touch-target flex items-center" id="btnClearDay">
-          Очистити день
-        </button>
+    <!-- Швидкий перехід у Щоденник -->
+    <div onclick="goToTab('diary')" class="bg-gradient-to-r from-rose-500 to-indigo-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">📖</span>
+        <div>
+          <h3 class="text-xs font-black uppercase tracking-wider">Щоденник харчування</h3>
+          <p class="text-[11px] text-rose-100">Сніданок, обід, вечеря, перекуси</p>
+        </div>
       </div>
+      <span class="text-xs bg-white text-rose-600 px-3 py-1.5 rounded-xl font-bold shadow-sm">Відкрити →</span>
+    </div>
 
+    <!-- Автоматична порада дня -->
+    <section class="bg-gradient-to-r from-amber-50 via-rose-50 to-indigo-50 border border-amber-200/60 rounded-3xl p-4 card-shadow">
+      <div class="flex items-start gap-2.5">
+        <span class="text-xl">💡</span>
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Автоматична порада</h4>
+          <p class="text-xs font-medium text-slate-700 mt-1 leading-relaxed" id="homeSmartTip">Запишіть прийом їжі, щоб отримати персональний відгук.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= 2. ЕКРАН: РОЗШИРЕНИЙ ЩОДЕННИК ================= -->
+  <main id="tab-diary" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+    <div class="flex justify-between items-center mb-3">
+      <div>
+        <h2 class="text-xl font-black text-slate-900">Щоденник страв</h2>
+        <p class="text-xs text-slate-500" id="diaryCurrentDateLabel">Сьогодні</p>
+      </div>
+      <button onclick="confirmClearCurrentDay()" class="touch-target text-xs text-rose-500 font-bold hover:underline">
+        Очистити день
+      </button>
+    </div>
+
+    <!-- Список 4 прийомів їжі з копіюванням з учора -->
+    <div class="space-y-3" id="diaryMealsContainer">
       <!-- Сніданок -->
-      <div class="bg-white rounded-2xl border border-slate-100 card-shadow p-3.5">
+      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
         <div class="flex justify-between items-center mb-2">
           <div class="flex items-center gap-2">
-            <span class="text-xl">🍳</span>
+            <span class="text-2xl">🍳</span>
             <div>
-              <h4 class="text-xs font-black text-slate-800" id="lblBreakfast">Сніданок</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="breakfastStats">~500 ккал • 0 ккал</span>
+              <h4 class="text-sm font-black text-slate-800">Сніданок</h4>
+              <span class="text-[11px] font-bold text-slate-400" id="diaryBreakfastStats">0 ккал</span>
             </div>
           </div>
-          <button onclick="openCatalogModal('breakfast')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-200 active:scale-95 transition">
-            + Додати
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button onclick="copyMealFromYesterday('breakfast')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition" title="Скопіювати вчорашній сніданок">
+              📋 З учора
+            </button>
+            <button onclick="openCatalogModal('breakfast')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+              + Їжа
+            </button>
+          </div>
         </div>
-        <div id="breakfastList" class="space-y-1.5 pt-1 border-t border-slate-50"></div>
+        <div id="diaryBreakfastList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
       </div>
 
       <!-- Обід -->
-      <div class="bg-white rounded-2xl border border-slate-100 card-shadow p-3.5">
+      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
         <div class="flex justify-between items-center mb-2">
           <div class="flex items-center gap-2">
-            <span class="text-xl">🍲</span>
+            <span class="text-2xl">🍲</span>
             <div>
-              <h4 class="text-xs font-black text-slate-800" id="lblLunch">Обід</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="lunchStats">~650 ккал • 0 ккал</span>
+              <h4 class="text-sm font-black text-slate-800">Обід</h4>
+              <span class="text-[11px] font-bold text-slate-400" id="diaryLunchStats">0 ккал</span>
             </div>
           </div>
-          <button onclick="openCatalogModal('lunch')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-200 active:scale-95 transition">
-            + Додати
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button onclick="copyMealFromYesterday('lunch')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
+              📋 З учора
+            </button>
+            <button onclick="openCatalogModal('lunch')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+              + Їжа
+            </button>
+          </div>
         </div>
-        <div id="lunchList" class="space-y-1.5 pt-1 border-t border-slate-50"></div>
+        <div id="diaryLunchList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
       </div>
 
       <!-- Вечеря -->
-      <div class="bg-white rounded-2xl border border-slate-100 card-shadow p-3.5">
+      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
         <div class="flex justify-between items-center mb-2">
           <div class="flex items-center gap-2">
-            <span class="text-xl">🥗</span>
+            <span class="text-2xl">🥗</span>
             <div>
-              <h4 class="text-xs font-black text-slate-800" id="lblDinner">Вечеря</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="dinnerStats">~500 ккал • 0 ккал</span>
+              <h4 class="text-sm font-black text-slate-800">Вечеря</h4>
+              <span class="text-[11px] font-bold text-slate-400" id="diaryDinnerStats">0 ккал</span>
             </div>
           </div>
-          <button onclick="openCatalogModal('dinner')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-200 active:scale-95 transition">
-            + Додати
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button onclick="copyMealFromYesterday('dinner')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
+              📋 З учора
+            </button>
+            <button onclick="openCatalogModal('dinner')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+              + Їжа
+            </button>
+          </div>
         </div>
-        <div id="dinnerList" class="space-y-1.5 pt-1 border-t border-slate-50"></div>
+        <div id="diaryDinnerList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
       </div>
 
       <!-- Перекус -->
-      <div class="bg-white rounded-2xl border border-slate-100 card-shadow p-3.5">
+      <div class="bg-white rounded-3xl border border-slate-100 card-shadow p-4">
         <div class="flex justify-between items-center mb-2">
           <div class="flex items-center gap-2">
-            <span class="text-xl">🍎</span>
+            <span class="text-2xl">🍎</span>
             <div>
-              <h4 class="text-xs font-black text-slate-800" id="lblSnack">Перекус</h4>
-              <span class="text-[11px] font-bold text-slate-400" id="snackStats">~250 ккал • 0 ккал</span>
+              <h4 class="text-sm font-black text-slate-800">Перекус</h4>
+              <span class="text-[11px] font-bold text-slate-400" id="diarySnackStats">0 ккал</span>
             </div>
           </div>
-          <button onclick="openCatalogModal('snack')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-200 active:scale-95 transition">
-            + Додати
-          </button>
-        </div>
-        <div id="snackList" class="space-y-1.5 pt-1 border-t border-slate-50"></div>
-      </div>
-    </section>
-
-    <!-- 6. ШІ-СКАНЕР ТАРІЛКИ -->
-    <section onclick="openPhotoFlow()" class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">📸</div>
-        <div>
-          <h3 class="text-xs font-black uppercase tracking-wider" id="lblAIScannerTitle">ШІ-Сканер Тарілки</h3>
-          <p class="text-[11px] text-indigo-100" id="scanBannerStatus">Сфотографуйте їжу — система визначить вагу і БЖВ</p>
-        </div>
-      </div>
-      <span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-xl font-bold shadow-sm" id="btnTryScan">Спробувати →</span>
-    </section>
-
-    <!-- 7. РЕКОМЕНДОВАНІ ПРОДУКТИ (Персоналізовані) -->
-    <section class="mb-3.5">
-      <div class="flex justify-between items-center mb-2 px-1">
-        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider" id="lblRecTitle">Рекомендовані продукти</h4>
-        <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full" id="lblRecBadge">Під баланс</span>
-      </div>
-      <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar" id="recCardsContainer"></div>
-    </section>
-
-    <!-- 8. БЕЗЛІЧ ПОРАД ВІД ШІ -->
-    <section class="bg-gradient-to-r from-amber-50 via-rose-50 to-indigo-50 border border-amber-200/60 rounded-3xl p-4 mb-3.5 card-shadow relative">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex items-start gap-2.5">
-          <span class="text-xl">💡</span>
-          <div>
-            <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide" id="lblTipHeader">Порада від ШІ</h4>
-            <p class="text-xs font-medium text-slate-700 mt-1 leading-relaxed" id="dailyAITip"></p>
+          <div class="flex items-center gap-1.5">
+            <button onclick="copyMealFromYesterday('snack')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
+              📋 З учора
+            </button>
+            <button onclick="openCatalogModal('snack')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
+              + Їжа
+            </button>
           </div>
         </div>
+        <div id="diarySnackList" class="space-y-1.5 pt-2 border-t border-slate-50"></div>
       </div>
-      <div class="mt-3 pt-2 border-t border-amber-200/40 flex justify-end">
-        <button onclick="nextRandomTip()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 active:scale-95 transition">
-          <span>🎲</span> <span id="btnNextTip">Інша порада</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- 9. ОЦІНКА ХАРЧУВАННЯ (ВООЗ) -->
-    <section class="bg-white rounded-3xl p-4.5 card-shadow border border-slate-100 mb-4">
-      <div class="flex justify-between items-center mb-1">
-        <div class="flex items-center gap-1.5">
-          <h4 class="text-sm font-bold text-slate-800" id="lblScoreTitle">Оцінка Харчування</h4>
-          <button onclick="openNormInfoModal()" class="touch-target text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold">ⓘ</button>
-        </div>
-        <span id="overallScoreBadge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
-          Ще немає даних
-        </span>
-      </div>
-      <p class="text-xs font-semibold text-slate-400 mb-3.5" id="lblScoreSub">За рекомендаціями ВООЗ під ваш профіль</p>
-
-      <div class="mb-3.5">
-        <span class="text-[11px] font-black text-emerald-700 uppercase tracking-wider block mb-2" id="lblGoalNorm">Ціль: набрати добову норму</span>
-        <div class="space-y-2">
-          <div>
-            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1"><span id="lblFiber">🥦 Клітковина</span><span id="txtFiber">0 / 25 г</span></div>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barFiber" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 0%"></div></div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1"><span id="lblPotassium">🍌 Калій</span><span id="txtPotassium">0 / 3500 мг</span></div>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barPotassium" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 0%"></div></div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1"><span id="lblCalcium">🥛 Кальцій</span><span id="txtCalcium">0 / 1000 мг</span></div>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barCalcium" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 0%"></div></div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1"><span id="lblIron">🍏 Залізо</span><span id="txtIron">0 / 18 мг</span></div>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barIron" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 0%"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pt-2 border-t border-slate-100">
-        <span class="text-[11px] font-black text-rose-600 uppercase tracking-wider block mb-2" id="lblLimitNorm">Контроль: не перевищувати ліміт</span>
-        <div class="space-y-2">
-          <div>
-            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1"><span id="lblSugar">🍬 Доданий цукор</span><span id="txtSugar">0 / 50 г</span></div>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barSugar" class="bg-amber-500 h-full rounded-full smooth-transition" style="width: 0%"></div></div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1"><span id="lblSodium">🧂 Натрій (сіль)</span><span id="txtSodium">0 / 2300 мг</span></div>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barSodium" class="bg-amber-500 h-full rounded-full smooth-transition" style="width: 0%"></div></div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1"><span id="lblSatFat">🧈 Насичені жири</span><span id="txtSatFat">0 / 20 г</span></div>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barSatFat" class="bg-amber-500 h-full rounded-full smooth-transition" style="width: 0%"></div></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ================= ЕКРАН 2: ПРОГРЕС ================= -->
-  <main id="tab-progress" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full">
-    <h2 class="text-xl font-black text-slate-900 mb-1" id="lblProgressHeader">Ваш Прогрес</h2>
-    <p class="text-xs text-slate-500 mb-4" id="lblProgressSub">Історія виконання щоденних цілей</p>
-    <div class="bg-white p-5 rounded-3xl border border-slate-100 card-shadow mb-4">
-      <div class="flex justify-between items-center mb-3">
-        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider" id="lblLast7Days">Останні 7 днів</span>
-        <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Статистика</span>
-      </div>
-      <div class="h-40 flex items-end justify-between gap-2 pt-4 border-b border-slate-100 pb-2" id="progressChartBars"></div>
     </div>
   </main>
 
-  <!-- ================= ЕКРАН 3: ПРОФІЛЬ ТА АДМІНКА ================= -->
-  <main id="tab-profile" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full">
+  <!-- ================= 3. ЕКРАН: ВАГА ТА ПАРАМЕТРИ ТІЛА ================= -->
+  <main id="tab-weight" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
     <div class="flex justify-between items-center mb-3">
       <div>
-        <h2 class="text-xl font-black text-slate-900" id="lblProfilesHeader">Профілі сім'ї</h2>
-        <p class="text-xs text-slate-500" id="lblProfilesSub">Оберіть користувача або налаштуйте параметри</p>
+        <h2 class="text-xl font-black text-slate-900">Контроль ваги</h2>
+        <p class="text-xs text-slate-500">Динаміка та параметри тіла</p>
       </div>
-
-      <button onclick="openAdminModal()" id="adminToggleBtn" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-2xl text-xs font-bold border border-slate-200 flex items-center gap-1.5 active:scale-95 transition">
-        <span id="adminLockIcon">🔒</span>
-        <span id="adminLockText">Адмінка</span>
+      <button onclick="openLogWeightModal()" class="touch-target bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-2xl shadow-sm active:scale-95 transition">
+        + Записати вагу
       </button>
     </div>
 
-    <div id="profileContainer" class="space-y-2.5 mb-5"></div>
+    <!-- Картка ІМТ та цілей -->
+    <section class="bg-white p-5 rounded-3xl border border-slate-100 card-shadow mb-3.5">
+      <div class="grid grid-cols-3 gap-2 text-center mb-4">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase block">Старт</span>
+          <span class="text-base font-black text-slate-800" id="weightStartVal">65.0 кг</span>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase block">Поточна</span>
+          <span class="text-xl font-black text-rose-600" id="weightCurrentVal">62.5 кг</span>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase block">Ціль</span>
+          <span class="text-base font-black text-slate-800" id="weightGoalVal">58.0 кг</span>
+        </div>
+      </div>
 
-    <!-- Резервне копіювання -->
-    <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-4">
-      <h3 class="text-xs font-black uppercase text-slate-800 mb-1">💾 Резервне копіювання даних</h3>
-      <p class="text-xs text-slate-500 mb-3">Збережіть усі записи на пристрій або завантажте резервну копію.</p>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="exportDataJSON()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl border border-slate-200 active:scale-95 transition">
-          ⬇️ Експорт (JSON)
+      <!-- Індекс маси тіла (ІМТ) -->
+      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center mb-3">
+        <div class="flex justify-between items-center text-xs font-bold mb-1">
+          <span class="text-slate-600">Індекс маси тіла (ІМТ):</span>
+          <span class="text-slate-900 font-black text-sm" id="bmiNumber">22.1</span>
+        </div>
+        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden mb-1">
+          <div id="bmiBar" class="bg-emerald-500 h-full rounded-full smooth-transition" style="width: 50%"></div>
+        </div>
+        <span class="text-[11px] font-bold text-emerald-600" id="bmiStatusText">Нормальна вага</span>
+      </div>
+
+      <!-- Зміна ваги за період -->
+      <div class="grid grid-cols-2 gap-2 text-center text-xs">
+        <div class="bg-slate-50 p-2.5 rounded-xl">
+          <span class="text-[10px] text-slate-400 block font-bold">Зміна за 7 днів</span>
+          <span class="font-black text-slate-800" id="deltaWeekVal">-0.4 кг</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl">
+          <span class="text-[10px] text-slate-400 block font-bold">Зміна за 30 днів</span>
+          <span class="font-black text-slate-800" id="deltaMonthVal">-1.8 кг</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Історія останніх зважувань -->
+    <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
+      <h3 class="text-xs font-black uppercase text-slate-800 mb-3">Історія замірів</h3>
+      <div class="space-y-2 max-h-56 overflow-y-auto no-scrollbar" id="weightHistoryList">
+        <p class="text-xs text-slate-400 italic text-center py-4">Немає записів ваги</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= 4. ЕКРАН: ПЛАНУВАННЯ МЕНЮ ТА СПИСОК ПОКУПОК ================= -->
+  <main id="tab-plan" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+    <div class="flex justify-between items-center mb-3">
+      <div>
+        <h2 class="text-xl font-black text-slate-900">План & Покупки</h2>
+        <p class="text-xs text-slate-500">Меню наперед та список продуктів</p>
+      </div>
+      <div class="flex gap-1 bg-slate-100 p-1 rounded-2xl">
+        <button onclick="switchPlanSubTab('plan')" id="btnSubPlan" class="px-3 py-1.5 rounded-xl text-xs font-black bg-white shadow-sm text-slate-900">План</button>
+        <button onclick="switchPlanSubTab('shop')" id="btnSubShop" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500">Покупки</button>
+      </div>
+    </div>
+
+    <!-- Вкладка А: Планувальник харчування на 7 днів -->
+    <div id="subTabPlanContent">
+      <div class="bg-indigo-50/70 p-3.5 rounded-2xl border border-indigo-100 mb-3 text-xs text-indigo-900">
+        💡 <b>Плануйте заздалегідь:</b> оберіть завтрашній або будь-який день тижня і додайте страви. Ви побачите підсумковий калораж ще до початку дня!
+      </div>
+      <div class="space-y-2.5" id="weeklyPlanContainer"></div>
+    </div>
+
+    <!-- Вкладка Б: Розумний список покупок -->
+    <div id="subTabShopContent" class="hidden">
+      <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-3.5">
+        <div class="flex gap-2 mb-3">
+          <input type="text" id="manualShopItemInput" placeholder="Додати продукт (напр. Вівсянка 500г)" class="flex-1 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+          <button onclick="addManualShopItem()" class="touch-target bg-indigo-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition">+ Додати</button>
+        </div>
+        <button onclick="generateShoppingListFromPlan()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 transition">
+          <span>⚡</span> Сформувати список із плану на 7 днів
         </button>
-        <button onclick="document.getElementById('importFileInput').click()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl border border-slate-200 active:scale-95 transition">
-          ⬆️ Імпорт (JSON)
+      </div>
+
+      <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-xs font-black uppercase text-slate-800">Список покупок</h3>
+          <button onclick="clearCheckedShopItems()" class="text-[11px] text-rose-500 font-bold hover:underline">Видалити куплене</button>
+        </div>
+        <div class="space-y-2 max-h-72 overflow-y-auto no-scrollbar" id="shoppingChecklist">
+          <p class="text-xs text-slate-400 italic text-center py-4">Список покупок порожній</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= 5. ЕКРАН: «ЩЕ» (СТАТИСТИКА, ПРОФІЛІ, РЕЦЕПТИ, БЕЗПЕКА) ================= -->
+  <main id="tab-more" class="hidden pt-safe px-4 pb-nav max-w-[390px] mx-auto w-full transition-all">
+    <h2 class="text-xl font-black text-slate-900 mb-1">Центр налаштувань</h2>
+    <p class="text-xs text-slate-500 mb-4">Аналітика, рецепти, безпека та резервне копіювання</p>
+
+    <!-- Справжня статистика за 7 і 30 днів -->
+    <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-3.5">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-xs font-black uppercase text-slate-800">📊 Реальна статистика</h3>
+        <select id="statsPeriodSelect" onchange="renderRealStatistics()" class="text-xs font-bold bg-slate-100 rounded-xl px-2 py-1 outline-none">
+          <option value="7">Останні 7 днів</option>
+          <option value="30">Останні 30 днів</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-center text-xs mb-3">
+        <div class="bg-slate-50 p-2.5 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">Середні калорії</span>
+          <span class="text-base font-black text-slate-900" id="statAvgKcal">0 ккал</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">Середній білок</span>
+          <span class="text-base font-black text-rose-600" id="statAvgProtein">0 г</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">Успішність дотримання</span>
+          <span class="text-base font-black text-emerald-600" id="statGoalHitRate">0%</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">Пропусків прийомів</span>
+          <span class="text-base font-black text-slate-700" id="statMissedMeals">0</span>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500 text-center italic" id="statBestDayLabel">Найкращий день: немає даних</p>
+    </section>
+
+    <!-- Профілі сім'ї (з персональним PIN) -->
+    <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-3.5" id="profilesSection">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h3 class="text-xs font-black uppercase text-slate-800">👥 Профілі сім'ї</h3>
+          <span class="text-[10px] text-slate-400">Перемикання та персональний PIN</span>
+        </div>
+        <button onclick="openCreateProfileModal()" class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-xl">+ Профіль</button>
+      </div>
+      <div class="space-y-2 mb-2" id="moreProfilesList"></div>
+    </section>
+
+    <!-- Резервні копії JSON -->
+    <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
+      <h3 class="text-xs font-black uppercase text-slate-800 mb-1">💾 Резервна копія</h3>
+      <p class="text-xs text-slate-500 mb-3">Збережіть усі записи щоденника або перенесіть на інший телефон.</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="exportDataJSON()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition">
+          ⬇️ Зберегти JSON
+        </button>
+        <button onclick="document.getElementById('importFileInput').click()" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition">
+          ⬆️ Відновити JSON
         </button>
         <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
       </div>
-    </div>
+    </section>
   </main>
 
-  <!-- ================= НАВІГАЦІЯ ================= -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 py-2 px-4 z-40 max-w-[390px] mx-auto">
-    <div class="flex justify-between items-center">
-      <button onclick="goToTab('home')" id="btn-home" class="touch-target flex flex-col items-center justify-center flex-1 text-rose-500">
-        <span class="text-xl">🍎</span>
-        <span class="text-[10px] font-bold mt-0.5" id="navHome">Головна</span>
+  <!-- ================= НИЖНЯ НАВІГАЦІЯ (5 РОЗДІЛІВ) ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 py-2 px-3 z-40 max-w-[390px] mx-auto">
+    <div class="flex justify-between items-center text-center">
+      <button onclick="goToTab('home')" id="nav-btn-home" class="touch-target flex flex-col items-center justify-center flex-1 text-rose-500">
+        <span class="text-lg">🏠</span>
+        <span class="text-[10px] font-bold mt-0.5">Головна</span>
       </button>
-      <button onclick="goToTab('progress')" id="btn-progress" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
-        <span class="text-xl">📊</span>
-        <span class="text-[10px] font-bold mt-0.5" id="navProgress">Прогрес</span>
+      <button onclick="goToTab('diary')" id="nav-btn-diary" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+        <span class="text-lg">📖</span>
+        <span class="text-[10px] font-bold mt-0.5">Щоденник</span>
       </button>
-      <div class="flex-1 flex justify-center -mt-6">
-        <button onclick="openCatalogModal('lunch')" class="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 text-white text-2xl font-black shadow-lg shadow-rose-500/30 flex items-center justify-center active:scale-90 transition border-4 border-[#F8F9FD]" aria-label="Додати їжу">
-          +
-        </button>
-      </div>
-      <button onclick="openPhotoFlow()" id="btn-scan" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
-        <span class="text-xl">📸</span>
-        <span class="text-[10px] font-bold mt-0.5" id="navScan">Сканер</span>
+      <button onclick="goToTab('weight')" id="nav-btn-weight" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+        <span class="text-lg">⚖️</span>
+        <span class="text-[10px] font-bold mt-0.5">Вага</span>
       </button>
-      <button onclick="goToTab('profile')" id="btn-profile" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
-        <span class="text-xl">👤</span>
-        <span class="text-[10px] font-bold mt-0.5" id="navProfile">Профіль</span>
+      <button onclick="goToTab('plan')" id="nav-btn-plan" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+        <span class="text-lg">📅</span>
+        <span class="text-[10px] font-bold mt-0.5">План</span>
+      </button>
+      <button onclick="goToTab('more')" id="nav-btn-more" class="touch-target flex flex-col items-center justify-center flex-1 text-slate-400">
+        <span class="text-lg">⚙️</span>
+        <span class="text-[10px] font-bold mt-0.5">Ще</span>
       </button>
     </div>
   </nav>
 
-  <!-- ================= НОВЕ ВЕЛИКЕ ВІКНО КАТАЛОГУ ЇЖІ (3 ВКЛАДКИ) ================= -->
+  <!-- ================= МОДАЛЬНІ ВІКНА (ДОДАВАННЯ ЇЖІ, ВАГА, АКТИВНІСТЬ) ================= -->
+
+  <!-- Каталог їжі (Пошук, категорії, грами) -->
   <div id="catalogModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full max-w-md h-[90vh] sm:h-[85vh] rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl overflow-hidden animate-slide-up">
-      <!-- Шапка каталогу -->
+    <div class="bg-white w-full max-w-md h-[88vh] rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl overflow-hidden">
       <div class="p-4 border-b border-slate-100 flex items-center justify-between">
         <div>
-          <h3 class="text-base font-black text-slate-900" id="lblCatalogHeader">Каталог харчування</h3>
+          <h3 class="text-base font-black text-slate-900">Каталог продуктів та страв</h3>
           <span class="text-xs text-slate-400 font-semibold" id="catalogTargetMealText">Сніданок</span>
         </div>
-        <button onclick="closeCatalogModal()" class="touch-target w-9 h-9 rounded-full bg-slate-100 text-slate-500 font-bold flex items-center justify-center text-sm">✕</button>
+        <button onclick="closeCatalogModal()" class="touch-target w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold flex items-center justify-center text-sm">✕</button>
       </div>
 
-      <!-- Вкладки: Продукти | Страви | Мої рецепти -->
-      <div class="flex border-b border-slate-100 bg-slate-50/70 p-1">
-        <button onclick="switchCatalogTab('products')" id="tabBtnProducts" class="flex-1 py-2 text-xs font-black rounded-xl bg-white text-rose-600 shadow-sm transition">Продукти</button>
-        <button onclick="switchCatalogTab('dishes')" id="tabBtnDishes" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition">Готові страви</button>
-        <button onclick="switchCatalogTab('recipes')" id="tabBtnRecipes" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition">Мої рецепти</button>
-      </div>
-
-      <!-- Пошуковий рядок + сканер штрихкоду -->
       <div class="p-3 bg-white border-b border-slate-100">
-        <div class="flex gap-2">
-          <div class="relative flex-1">
-            <span class="absolute left-3 top-2.5 text-slate-400 text-sm">🔍</span>
-            <input type="text" id="catalogSearchInput" placeholder="Пошук або штрихкод (курка, борщ, 4820...)" class="w-full text-xs font-bold bg-slate-100 border border-slate-200 rounded-2xl pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-rose-400" oninput="filterCatalogItems()">
-          </div>
-          <button onclick="searchBarcodeOnlinePrompt()" class="touch-target px-3 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-2xl flex items-center gap-1 active:scale-95 transition" title="Пошук за штрихкодом у Open Food Facts">
-            <span>🏷️</span>
-          </button>
+        <div class="relative mb-2">
+          <span class="absolute left-3 top-2.5 text-slate-400 text-sm">🔍</span>
+          <input type="text" id="catalogSearchInput" placeholder="Пошук продукту (курка, рис, сир...)" class="w-full text-xs font-bold bg-slate-100 border border-slate-200 rounded-2xl pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-rose-400" oninput="renderCatalogItems()">
         </div>
-        <!-- Горизонтальні категорії -->
-        <div class="flex gap-1.5 overflow-x-auto pt-2 no-scrollbar" id="catalogCategoryChips"></div>
+        <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar" id="catalogCategoryChips"></div>
       </div>
 
-      <!-- Основний список позицій -->
       <div class="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar" id="catalogListContainer"></div>
-
-      <!-- Нижня панель створення -->
-      <div class="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-        <span class="text-[11px] text-slate-400 font-semibold" id="catalogItemsCount">Знайдено: 0</span>
-        <button onclick="openCreateCustomFoodModal()" class="touch-target text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 active:scale-95 transition">
-          + Свій продукт
-        </button>
-      </div>
     </div>
   </div>
 
-  <!-- ================= ДЕТАЛЬНА КАРТКА ВИБОРУ ПОРЦІЇ ================= -->
+  <!-- Картка вибору порції -->
   <div id="portionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl animate-slide-up">
+    <div class="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl">
       <div class="flex justify-between items-start mb-3">
         <div>
           <span class="text-3xl" id="portItemEmoji">🍲</span>
           <h3 class="text-sm font-black text-slate-900 mt-1" id="portItemName">Страва</h3>
-          <span class="text-[10px] text-slate-400 font-semibold block" id="portItemSource">Canadian Nutrient File • Готовий продукт</span>
+          <span class="text-[10px] text-slate-400 font-semibold block" id="portItemSource">Canadian Nutrient File</span>
         </div>
-        <button onclick="toggleFavoriteActiveItem()" id="btnFavoriteActive" class="touch-target text-2xl text-slate-300 hover:text-rose-500 transition">🤍</button>
+        <button onclick="toggleFavoriteActiveItem()" id="btnFavoriteActive" class="touch-target text-2xl text-slate-300">🤍</button>
       </div>
 
-      <!-- Харчова цінність на 100 г -->
       <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 text-center mb-3">
-        <span class="text-[10px] text-slate-400 uppercase font-black tracking-wider block mb-1">Базова цінність на 100 грамів</span>
+        <span class="text-[10px] text-slate-400 uppercase font-black block mb-1">База на 100 грамів</span>
         <div class="grid grid-cols-4 gap-1 text-xs font-black">
-          <div><span class="text-slate-900 block" id="baseKcal100">0</span><span class="text-[9px] text-slate-400 font-bold">ккал</span></div>
-          <div><span class="text-emerald-600 block" id="baseC100">0г</span><span class="text-[9px] text-slate-400 font-bold">Вугл</span></div>
-          <div><span class="text-rose-600 block" id="baseP100">0г</span><span class="text-[9px] text-slate-400 font-bold">Біл</span></div>
-          <div><span class="text-amber-600 block" id="baseF100">0г</span><span class="text-[9px] text-slate-400 font-bold">Жир</span></div>
+          <div><span class="text-slate-900 block" id="baseKcal100">0</span><span class="text-[9px] text-slate-400">ккал</span></div>
+          <div><span class="text-emerald-600 block" id="baseC100">0г</span><span class="text-[9px] text-slate-400">Вугл</span></div>
+          <div><span class="text-rose-600 block" id="baseP100">0г</span><span class="text-[9px] text-slate-400">Біл</span></div>
+          <div><span class="text-amber-600 block" id="baseF100">0г</span><span class="text-[9px] text-slate-400">Жир</span></div>
         </div>
       </div>
 
-      <!-- Кнопки швидкого вибору порції -->
-      <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Швидкий вибір ваги:</label>
-      <div class="grid grid-cols-4 gap-1.5 mb-2.5">
-        <button onclick="setPortionGrams(50)" class="port-preset-btn py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition">50 г</button>
-        <button onclick="setPortionGrams(100)" class="port-preset-btn active py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white active:scale-95 transition">100 г</button>
-        <button onclick="setPortionGrams(150)" class="port-preset-btn py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition">150 г</button>
-        <button onclick="setPortionGrams(200)" class="port-preset-btn py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition">200 г</button>
+      <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Вага порції (грами):</label>
+      <div class="flex gap-1.5 mb-2.5">
+        <button onclick="setPortionGrams(50)" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700">50г</button>
+        <button onclick="setPortionGrams(100)" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white">100г</button>
+        <button onclick="setPortionGrams(150)" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700">150г</button>
+        <button onclick="setPortionGrams(200)" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700">200г</button>
       </div>
+      <input type="number" id="customPortionGrams" value="100" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-3 outline-none" oninput="updatePortionCalculations()">
 
-      <!-- Побутові міри (Штука, ложка, скибочка) -->
-      <div class="flex gap-1.5 overflow-x-auto pb-1 mb-2.5 no-scrollbar" id="householdUnitsContainer"></div>
-
-      <!-- Поле власної ваги -->
-      <div class="mb-3">
-        <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Точна вага порції (грами):</label>
-        <input type="number" id="customPortionGrams" value="100" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-rose-400" oninput="updatePortionCalculations()">
-      </div>
-
-      <!-- Фінальний розрахунок на обрану порцію -->
       <div class="bg-rose-50/70 p-3 rounded-2xl border border-rose-200/60 mb-4 flex justify-between items-center">
         <div>
-          <span class="text-[10px] font-black uppercase text-rose-600 block">Разом у порції</span>
+          <span class="text-[10px] font-black uppercase text-rose-600 block">У порції:</span>
           <span class="text-lg font-black text-slate-900" id="calcPortionKcal">0 ккал</span>
         </div>
         <div class="text-right text-xs font-bold text-slate-600">
           <span id="calcPortionMacros">Б: 0г • Ж: 0г • В: 0г</span>
-          <span class="text-[10px] text-slate-400 block" id="calcPortionMicro">Клітковина: 0г</span>
+          <span class="text-[10px] text-slate-400 block" id="calcPortionFiber">Клітковина: —</span>
         </div>
       </div>
 
@@ -524,230 +552,94 @@
     </div>
   </div>
 
-  <!-- ================= КОНСТРУКТОР ВЛАСНИХ РЕЦЕПТІВ ================= -->
-  <div id="recipeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full max-w-md h-[90vh] sm:h-[80vh] rounded-t-3xl sm:rounded-3xl p-5 flex flex-col shadow-2xl animate-slide-up">
-      <div class="flex justify-between items-center mb-3">
-        <h3 class="text-sm font-black text-slate-900">Створення власного рецепта</h3>
-        <button onclick="closeRecipeModal()" class="touch-target text-slate-400 font-bold text-sm">✕</button>
+  <!-- Модальне вікно запису ваги -->
+  <div id="logWeightModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
+      <h3 class="text-sm font-black text-slate-900 mb-1">Записати параметри</h3>
+      <p class="text-xs text-slate-400 mb-3">Замір ваги та талії за сьогодні</p>
+      <div class="space-y-2.5 mb-4">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Вага (кг)*</label>
+          <input type="number" step="0.1" id="inputWeightKg" placeholder="62.5" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Обхват талії (см)</label>
+          <input type="number" step="0.5" id="inputWaistCm" placeholder="72" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+        </div>
       </div>
+      <div class="flex gap-2">
+        <button onclick="closeLogWeightModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">Скасувати</button>
+        <button onclick="saveWeightEntry()" class="touch-target flex-1 bg-rose-500 text-white font-bold py-2 rounded-xl text-xs shadow-md">Зберегти</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Модальне вікно активності -->
+  <div id="activityModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
+      <h3 class="text-sm font-black text-slate-900 mb-1">Спалені калорії</h3>
+      <p class="text-xs text-slate-400 mb-3">Імпорт кроків або вправа</p>
+      <div class="space-y-2 mb-4">
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Кроки (з фітнес-браслета)</span>
+          <div class="flex gap-1.5">
+            <input type="number" id="inputStepsSync" value="7000" class="flex-1 text-xs font-bold bg-white border border-slate-300 rounded-lg p-1.5 outline-none">
+            <button onclick="applyStepsCalories()" class="bg-emerald-600 text-white text-xs font-bold px-2.5 rounded-lg">+ ккал</button>
+          </div>
+        </div>
+        <button onclick="addQuickBurn(200)" class="w-full py-2 bg-orange-50 text-orange-700 font-bold text-xs rounded-xl border border-orange-200">+200 ккал (Тренування)</button>
+      </div>
+      <button onclick="closeActivityModal()" class="touch-target w-full text-slate-400 text-xs font-bold">Закрити</button>
+    </div>
+  </div>
+
+  <!-- Модальне вікно створення профілю з PIN -->
+  <div id="createProfileModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
+      <h3 class="text-sm font-black text-slate-900 mb-2">Новий профіль</h3>
       <div class="space-y-2 mb-3">
-        <input type="text" id="recipeNameInput" placeholder="Назва рецепта (напр. Запіканка домашня)" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
-        <div class="flex gap-2">
-          <div class="flex-1">
-            <label class="text-[10px] font-bold text-slate-400 block">Кількість порцій:</label>
-            <input type="number" id="recipeServingsInput" value="4" min="1" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none" oninput="recalcRecipeTotals()">
-          </div>
-          <div class="flex-1">
-            <label class="text-[10px] font-bold text-slate-400 block">Категорія:</label>
-            <select id="recipeCategorySelect" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
-              <option value="Українська кухня">Українська кухня</option>
-              <option value="Супи">Супи</option>
-              <option value="Готові страви">Готові страви</option>
-              <option value="Десерти">Десерти</option>
-            </select>
-          </div>
-        </div>
+        <input type="text" id="newProfName" placeholder="Ім'я" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+        <input type="number" id="newProfHeight" placeholder="Зріст у см (для ІМТ)" value="168" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        <input type="number" id="newProfWeight" placeholder="Поточна вага (кг)" value="65" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        <input type="number" id="newProfGoalWeight" placeholder="Цільова вага (кг)" value="58" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        <input type="number" id="newProfTargetKcal" placeholder="Ціль калорій" value="1965" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
+        <input type="password" maxlength="4" id="newProfPin" placeholder="4-значний PIN (за бажанням)" class="w-full text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl p-2 outline-none">
       </div>
-
-      <!-- Список інгредієнтів рецепта -->
-      <div class="flex justify-between items-center mb-1">
-        <span class="text-xs font-bold text-slate-700">Інгредієнти рецепта:</span>
-        <button onclick="openSelectIngredientModal()" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-xl">+ Додати інгредієнт</button>
-      </div>
-      <div class="flex-1 overflow-y-auto border border-slate-100 rounded-2xl p-2 space-y-1.5 mb-3 no-scrollbar" id="recipeIngredientsList">
-        <p class="text-xs text-slate-400 text-center py-4 italic">Додайте перший інгредієнт зі списку продуктів</p>
-      </div>
-
-      <!-- Разом на 1 порцію -->
-      <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-100 mb-3 text-center">
-        <span class="text-[10px] font-black uppercase text-indigo-900 block">Поживна цінність на 1 порцію:</span>
-        <span class="text-base font-black text-rose-600 block" id="recipePerServingKcal">0 ккал</span>
-        <span class="text-[11px] font-bold text-slate-600" id="recipePerServingMacros">Б: 0г • Ж: 0г • В: 0г</span>
-      </div>
-
       <div class="flex gap-2">
-        <button onclick="closeRecipeModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-2xl text-xs">Скасувати</button>
-        <button onclick="saveCustomRecipeToLibrary()" class="touch-target flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-2xl text-xs shadow-md">Зберегти рецепт</button>
+        <button onclick="closeCreateProfileModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">Скасувати</button>
+        <button onclick="saveNewProfile()" class="touch-target flex-1 bg-rose-500 text-white font-bold py-2 rounded-xl text-xs shadow-md">Створити</button>
       </div>
     </div>
   </div>
 
-  <!-- Модальні вікна: Власна вода, Ціль води, Адмінка (без браузерного prompt) -->
-  <div id="customWaterModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
-      <h3 class="text-sm font-black text-slate-900 mb-2">Введіть кількість води</h3>
-      <input type="number" id="customWaterInputVal" value="350" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-3 outline-none">
-      <div class="flex gap-2">
-        <button onclick="closeCustomWaterModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">Скасувати</button>
-        <button onclick="commitCustomWaterModal()" class="touch-target flex-1 bg-sky-500 text-white font-bold py-2 rounded-xl text-xs shadow-md">+ Додати</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="waterTargetModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
-      <h3 class="text-sm font-black text-slate-900 mb-2">Денна норма води (мл)</h3>
-      <input type="number" id="waterTargetInputVal" value="2000" class="w-full text-base font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-3 outline-none">
-      <div class="flex gap-2">
-        <button onclick="closeWaterTargetModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">Скасувати</button>
-        <button onclick="commitWaterTargetModal()" class="touch-target flex-1 bg-sky-500 text-white font-bold py-2 rounded-xl text-xs shadow-md">Зберегти</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="adminPasswordModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl">
-      <h3 class="text-sm font-black text-slate-900 mb-1">Пароль адміністратора</h3>
-      <p class="text-xs text-slate-400 mb-3">За замовчуванням: admin123</p>
-      <input type="password" id="adminPasswordInputVal" placeholder="••••••••" class="w-full text-sm font-black bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-3 outline-none">
-      <div class="flex gap-2">
-        <button onclick="closeAdminPasswordModal()" class="touch-target flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">Скасувати</button>
-        <button onclick="verifyAdminPassword()" class="touch-target flex-1 bg-indigo-600 text-white font-bold py-2 rounded-xl text-xs shadow-md">Увійти</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ШІ-Сканер тарілки -->
-  <div id="photoModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
-      <div class="flex justify-between items-center mb-3">
-        <h3 class="text-sm font-black text-slate-900" id="lblScanModalTitle">ШІ-Сканер тарілки</h3>
-        <button onclick="closePhotoModal()" class="text-slate-400 font-bold text-sm">✕</button>
-      </div>
-
-      <canvas id="compressCanvas" class="hidden"></canvas>
-      <input type="file" id="cameraInput" accept="image/*" class="hidden" onchange="processPhotoUpload(event)">
-      
-      <div onclick="document.getElementById('cameraInput').click()" id="uploadZone" class="border-2 border-dashed border-indigo-200 bg-indigo-50/40 rounded-2xl p-6 text-center cursor-pointer mb-3">
-        <div class="text-3xl mb-1">📷</div>
-        <span class="text-xs font-bold text-indigo-900 block" id="lblUploadClick">Натисніть для фото або вибору</span>
-        <span class="text-[10px] text-slate-500" id="lblUploadSub">Камера смартфона або галерея</span>
-      </div>
-
-      <div id="aiLoadingZone" class="hidden py-6 text-center">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent mb-2"></div>
-        <p class="text-xs font-bold text-indigo-900">Аналізуємо страву...</p>
-        <p class="text-[10px] text-slate-400">Визначаємо інгредієнти та вагу</p>
-      </div>
-
-      <div id="previewZone" class="hidden mb-3">
-        <img id="photoPreviewImg" class="w-full h-40 object-cover rounded-2xl shadow-inner mb-2" alt="Тарілка">
-        <div class="bg-indigo-50 p-3 rounded-xl text-center">
-          <span class="text-xs font-black text-indigo-900 block" id="aiDishName">Розпізнано: Страва</span>
-          <span class="text-sm font-black text-rose-500" id="aiDishKcal">0 ккал</span>
-          <span class="text-[10px] text-slate-600 block mt-0.5" id="aiDishMacros">Б: 0г • Ж: 0г • В: 0г</span>
-        </div>
-      </div>
-
-      <div class="flex gap-2">
-        <button onclick="closePhotoModal()" class="touch-target flex-1 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs">Закрити</button>
-        <button id="aiConfirmBtn" onclick="commitAIScannedFood()" class="touch-target hidden flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">
-          ✓ Записати
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Синхронізація здоров'я / Кроки -->
-  <div id="syncModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
-      <div class="flex justify-between items-center mb-2">
-        <div class="flex items-center gap-2">
-          <span class="text-xl">🔄</span>
-          <h3 class="text-sm font-black text-slate-900">Синхронізація активності</h3>
-        </div>
-        <button onclick="closeSyncModal()" class="text-slate-400 font-bold text-sm">✕</button>
-      </div>
-      <p class="text-xs text-slate-500 mb-3">Введіть кількість кроків або оберіть швидке оновлення:</p>
-      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 mb-3">
-        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Кроки (Apple Health / Google Fit)</label>
-        <div class="flex gap-2">
-          <input type="number" id="syncStepsInput" value="7500" class="flex-1 text-xs bg-white border border-slate-300 rounded-xl p-2 font-bold outline-none">
-          <button onclick="applyStepsToBurned()" class="touch-target bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl">Оновити</button>
-        </div>
-      </div>
-      <button onclick="closeSyncModal()" class="touch-target w-full bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs">Готово</button>
-    </div>
-  </div>
-
-  <!-- ================= СИСТЕМА ДАНИХ ТА ЛОГІКА (JS) ================= -->
+  <!-- ================= ЛОГІКА ДОДАТКА (JS) ================= -->
   <script>
-    // 1. ВЕЛИКА БАЗА ДАНИХ ХАРЧУВАННЯ (300+ позицій, CNF/USDA, сирий/готовий стан, побутові одиниці)
-    const EXTENDED_FOOD_DATABASE = [
-      // М'ясо та птиця
-      { id: 'f_1', cat: 'Птиця', name: 'Куряче філе запечене', nameEn: 'Chicken breast, baked', state: 'Готовий продукт', kcal: 165, p: 31, f: 3.6, c: 0, fiber: 0, sugar: 0, sodium: 74, satFat: 1, potassium: 256, calcium: 15, iron: 1, src: 'CNF', emoji: '🍗', units: [{ name: '1 порція', g: 150 }, { name: '1 філе', g: 200 }] },
-      { id: 'f_2', cat: 'Птиця', name: 'Куряче філе сире', nameEn: 'Chicken breast, raw', state: 'Сирий продукт', kcal: 110, p: 23, f: 1.2, c: 0, fiber: 0, sugar: 0, sodium: 65, satFat: 0.3, potassium: 334, calcium: 11, iron: 0.7, src: 'CNF', emoji: '🍗', units: [{ name: '1 філе', g: 220 }] },
-      { id: 'f_3', cat: 'Птиця', name: 'Курячі стегна запечені (без шкіри)', nameEn: 'Chicken thigh, baked', state: 'Готовий продукт', kcal: 209, p: 26, f: 10.9, c: 0, fiber: 0, sugar: 0, sodium: 86, satFat: 3, potassium: 240, calcium: 12, iron: 1.3, src: 'CNF', emoji: '🍗', units: [{ name: '1 стегно', g: 120 }] },
-      { id: 'f_4', cat: 'Птиця', name: 'Індичка філе запечене', nameEn: 'Turkey breast, roasted', state: 'Готовий продукт', kcal: 135, p: 30, f: 1.5, c: 0, fiber: 0, sugar: 0, sodium: 55, satFat: 0.4, potassium: 290, calcium: 14, iron: 1.4, src: 'CNF', emoji: '🦃', units: [{ name: '1 порція', g: 150 }] },
-      { id: 'f_5', cat: 'М\'ясо', name: 'Яловичина нежирна тушкована', nameEn: 'Beef lean, braised', state: 'Готовий продукт', kcal: 215, p: 28, f: 11, c: 0, fiber: 0, sugar: 0, sodium: 60, satFat: 4.5, potassium: 320, calcium: 18, iron: 2.8, src: 'CNF', emoji: '🥩', units: [{ name: '1 порція', g: 150 }] },
-      { id: 'f_6', cat: 'М\'ясо', name: 'Свинина вирізка запечена', nameEn: 'Pork tenderloin, roasted', state: 'Готовий продукт', kcal: 143, p: 26, f: 3.5, c: 0, fiber: 0, sugar: 0, sodium: 50, satFat: 1.2, potassium: 380, calcium: 10, iron: 1.2, src: 'CNF', emoji: '🥩', units: [{ name: '1 порція', g: 150 }] },
-      { id: 'f_7', cat: 'М\'ясо', name: 'Печінка яловича тушкована', nameEn: 'Beef liver, braised', state: 'Готовий продукт', kcal: 175, p: 26, f: 4.7, c: 5.2, fiber: 0, sugar: 0, sodium: 70, satFat: 1.6, potassium: 330, calcium: 6, iron: 6.5, src: 'CNF', emoji: '🫀', units: [{ name: '1 порція', g: 130 }] },
-
-      // Риба та морепродукти
-      { id: 'f_8', cat: 'Риба та морепродукти', name: 'Лосось запечений', nameEn: 'Salmon, baked', state: 'Готовий продукт', kcal: 206, p: 22, f: 12.3, c: 0, fiber: 0, sugar: 0, sodium: 60, satFat: 2.5, potassium: 384, calcium: 15, iron: 0.6, src: 'CNF', emoji: '🐟', units: [{ name: '1 стейк', g: 180 }] },
-      { id: 'f_9', cat: 'Риба та морепродукти', name: 'Тунець у власному соку', nameEn: 'Tuna canned in water', state: 'Консерва', kcal: 116, p: 26, f: 1, c: 0, fiber: 0, sugar: 0, sodium: 330, satFat: 0.2, potassium: 250, calcium: 10, iron: 1.5, src: 'CNF', emoji: '🐟', units: [{ name: '1 банка', g: 160 }] },
-      { id: 'f_10', cat: 'Риба та морепродукти', name: 'Тріска на пару', nameEn: 'Cod, steamed', state: 'Готовий продукт', kcal: 82, p: 18, f: 0.7, c: 0, fiber: 0, sugar: 0, sodium: 70, satFat: 0.1, potassium: 413, calcium: 16, iron: 0.4, src: 'CNF', emoji: '🐟', units: [{ name: '1 порція', g: 150 }] },
-      { id: 'f_11', cat: 'Риба та морепродукти', name: 'Креветки варені', nameEn: 'Shrimp, boiled', state: 'Готовий продукт', kcal: 99, p: 24, f: 0.3, c: 0.2, fiber: 0, sugar: 0, sodium: 111, satFat: 0.1, potassium: 259, calcium: 70, iron: 0.5, src: 'CNF', emoji: '🦐', units: [{ name: '1 порція', g: 120 }] },
-      { id: 'f_12', cat: 'Риба та морепродукти', name: 'Оселедець слабосолоний', nameEn: 'Herring, salted', state: 'Готовий продукт', kcal: 217, p: 19.8, f: 15.4, c: 0, fiber: 0, sugar: 0, sodium: 870, satFat: 3.3, potassium: 310, calcium: 50, iron: 1.2, src: 'CNF', emoji: '🐟', units: [{ name: '1 шматочок', g: 50 }] },
-
-      // Молочні продукти та яйця
-      { id: 'f_13', cat: 'Яйця', name: 'Яйце куряче варене', nameEn: 'Egg, hard-boiled', state: 'Готовий продукт', kcal: 143, p: 12.6, f: 9.5, c: 0.7, fiber: 0, sugar: 0.4, sodium: 124, satFat: 3.1, potassium: 126, calcium: 50, iron: 1.2, src: 'CNF', emoji: '🥚', units: [{ name: '1 яйце (С1)', g: 50 }, { name: '2 яйця', g: 100 }] },
-      { id: 'f_14', cat: 'Яйця', name: 'Яєчня (з 2 яєць на олії)', nameEn: 'Fried eggs', state: 'Готова страва', kcal: 196, p: 13.5, f: 15.2, c: 0.8, fiber: 0, sugar: 0.4, sodium: 145, satFat: 4.2, potassium: 135, calcium: 54, iron: 1.3, src: 'CNF', emoji: '🍳', units: [{ name: '1 порція', g: 110 }] },
-      { id: 'f_15', cat: 'Молочні продукти', name: 'Кисломолочний сир 5%', nameEn: 'Cottage cheese 5%', state: 'Готовий продукт', kcal: 121, p: 17, f: 5, c: 2.1, fiber: 0, sugar: 2.1, sodium: 41, satFat: 3, potassium: 112, calcium: 164, iron: 0.4, src: 'CNF', emoji: '🧀', units: [{ name: '1 пачка', g: 200 }, { name: '1 порція', g: 150 }] },
-      { id: 'f_16', cat: 'Молочні продукти', name: 'Грецький йогурт 2%', nameEn: 'Greek yogurt 2%', state: 'Готовий продукт', kcal: 73, p: 10, f: 2, c: 3.8, fiber: 0, sugar: 3.8, sodium: 36, satFat: 1.2, potassium: 141, calcium: 110, iron: 0.1, src: 'CNF', emoji: '🍶', units: [{ name: '1 баночка', g: 170 }, { name: '1 ст. л.', g: 30 }] },
-      { id: 'f_17', cat: 'Молочні продукти', name: 'Молоко 2.5%', nameEn: 'Milk 2.5%', state: 'Напій', kcal: 52, p: 3.2, f: 2.5, c: 4.7, fiber: 0, sugar: 4.7, sodium: 50, satFat: 1.6, potassium: 143, calcium: 120, iron: 0.1, src: 'CNF', emoji: '🥛', units: [{ name: '1 склянка', g: 250 }, { name: 'До кави', g: 50 }] },
-      { id: 'f_18', cat: 'Молочні продукти', name: 'Твердий сир (Голландський/Гауда)', nameEn: 'Gouda / Hard cheese', state: 'Готовий продукт', kcal: 356, p: 25, f: 28, c: 1.5, fiber: 0, sugar: 0.5, sodium: 700, satFat: 17, potassium: 95, calcium: 730, iron: 0.4, src: 'CNF', emoji: '🧀', units: [{ name: '1 скибочка', g: 25 }] },
-      { id: 'f_19', cat: 'Молочні продукти', name: 'Сметана 15%', nameEn: 'Sour cream 15%', state: 'Готовий продукт', kcal: 160, p: 2.6, f: 15, c: 3.6, fiber: 0, sugar: 3.2, sodium: 40, satFat: 9.5, potassium: 115, calcium: 90, iron: 0.1, src: 'CNF', emoji: '🥣', units: [{ name: '1 ст. л.', g: 25 }] },
-      { id: 'f_20', cat: 'Молочні продукти', name: 'Вершкове масло 82%', nameEn: 'Butter 82%', state: 'Готовий продукт', kcal: 748, p: 0.6, f: 82.5, c: 0.8, fiber: 0, sugar: 0.8, sodium: 15, satFat: 51, potassium: 24, calcium: 24, iron: 0.1, src: 'CNF', emoji: '🧈', units: [{ name: '1 ч. л.', g: 5 }, { name: '1 скибочка', g: 10 }] },
-
-      // Крупи, каші та макарони
-      { id: 'f_21', cat: 'Крупи та каші', name: 'Гречка варена (на воді)', nameEn: 'Buckwheat cooked', state: 'Готовий продукт', kcal: 110, p: 4.2, f: 1.1, c: 21.3, fiber: 2.7, sugar: 0.3, sodium: 4, satFat: 0.2, potassium: 148, calcium: 12, iron: 1.1, src: 'CNF', emoji: '🥣', units: [{ name: '1 порція', g: 200 }, { name: '1 склянка', g: 170 }] },
-      { id: 'f_22', cat: 'Крупи та каші', name: 'Гречана крупа суха', nameEn: 'Buckwheat raw', state: 'Сирий продукт', kcal: 343, p: 13.3, f: 3.4, c: 71.5, fiber: 10, sugar: 0.5, sodium: 1, satFat: 0.7, potassium: 460, calcium: 18, iron: 2.2, src: 'CNF', emoji: '🌾', units: [{ name: '1 склянка', g: 210 }] },
-      { id: 'f_23', cat: 'Крупи та каші', name: 'Рис білий варений', nameEn: 'White rice cooked', state: 'Готовий продукт', kcal: 130, p: 2.7, f: 0.3, c: 28.2, fiber: 0.4, sugar: 0.1, sodium: 1, satFat: 0.1, potassium: 35, calcium: 10, iron: 0.2, src: 'CNF', emoji: '🍚', units: [{ name: '1 порція', g: 200 }] },
-      { id: 'f_24', cat: 'Крупи та каші', name: 'Рис білий сухий', nameEn: 'White rice raw', state: 'Сирий продукт', kcal: 365, p: 7.1, f: 0.7, c: 80, fiber: 1.3, sugar: 0.1, sodium: 5, satFat: 0.2, potassium: 115, calcium: 28, iron: 0.8, src: 'CNF', emoji: '🌾', units: [{ name: '1 склянка', g: 200 }] },
-      { id: 'f_25', cat: 'Крупи та каші', name: 'Вівсянка варена на воді', nameEn: 'Oatmeal cooked in water', state: 'Готовий продукт', kcal: 71, p: 2.5, f: 1.5, c: 12, fiber: 1.7, sugar: 0.3, sodium: 2, satFat: 0.3, potassium: 70, calcium: 9, iron: 0.9, src: 'CNF', emoji: '🥣', units: [{ name: '1 порція', g: 250 }] },
-      { id: 'f_26', cat: 'Крупи та каші', name: 'Вівсяні пластівці сухі', nameEn: 'Oatmeal flakes raw', state: 'Сирий продукт', kcal: 366, p: 13, f: 6.8, c: 62, fiber: 10.6, sugar: 1.2, sodium: 5, satFat: 1.2, potassium: 429, calcium: 54, iron: 4.7, src: 'CNF', emoji: '🥣', units: [{ name: 'Порція для каші', g: 50 }, { name: '1 склянка', g: 90 }] },
-      { id: 'f_27', cat: 'Макаронні вироби', name: 'Макарони з твердих сортів варені', nameEn: 'Pasta cooked al dente', state: 'Готовий продукт', kcal: 158, p: 5.8, f: 0.9, c: 31, fiber: 1.8, sugar: 0.6, sodium: 1, satFat: 0.2, potassium: 44, calcium: 7, iron: 1.2, src: 'CNF', emoji: '🍝', units: [{ name: '1 порція', g: 200 }] },
-
-      // Хліб та випічка
-      { id: 'f_28', cat: 'Хліб та випічка', name: 'Хліб житній (чорний)', nameEn: 'Rye bread', state: 'Готовий продукт', kcal: 215, p: 6.8, f: 1.3, c: 41, fiber: 6.1, sugar: 2.5, sodium: 450, satFat: 0.3, potassium: 160, calcium: 30, iron: 2.5, src: 'CNF', emoji: '🍞', units: [{ name: '1 скибочка', g: 35 }, { name: '2 скибочки', g: 70 }] },
-      { id: 'f_29', cat: 'Хліб та випічка', name: 'Хліб білий пшеничний', nameEn: 'White bread', state: 'Готовий продукт', kcal: 265, p: 8.5, f: 2.4, c: 51, fiber: 2.4, sugar: 4.3, sodium: 490, satFat: 0.6, potassium: 110, calcium: 110, iron: 3.2, src: 'CNF', emoji: '🍞', units: [{ name: '1 скибочка', g: 30 }] },
-
-      // Овочі
-      { id: 'f_30', cat: 'Овочі', name: 'Картопля варена', nameEn: 'Potatoes, boiled', state: 'Готовий продукт', kcal: 87, p: 1.9, f: 0.1, c: 20.1, fiber: 1.8, sugar: 0.9, sodium: 6, satFat: 0.1, potassium: 379, calcium: 8, iron: 0.3, src: 'CNF', emoji: '🥔', units: [{ name: '1 середня картоплина', g: 150 }] },
-      { id: 'f_31', cat: 'Овочі', name: 'Броколі варене/на пару', nameEn: 'Broccoli, steamed', state: 'Готовий продукт', kcal: 35, p: 2.4, f: 0.4, c: 7.2, fiber: 2.6, sugar: 1.4, sodium: 41, satFat: 0.1, potassium: 293, calcium: 40, iron: 0.7, src: 'CNF', emoji: '🥦', units: [{ name: '1 порція', g: 150 }] },
-      { id: 'f_32', cat: 'Овочі', name: 'Огірок свіжий', nameEn: 'Cucumber, raw', state: 'Сирий продукт', kcal: 15, p: 0.7, f: 0.1, c: 3.6, fiber: 0.5, sugar: 1.7, sodium: 2, satFat: 0, potassium: 147, calcium: 16, iron: 0.3, src: 'CNF', emoji: '🥒', units: [{ name: '1 огірок', g: 120 }] },
-      { id: 'f_33', cat: 'Овочі', name: 'Помідор свіжий', nameEn: 'Tomato, raw', state: 'Сирий продукт', kcal: 18, p: 0.9, f: 0.2, c: 3.9, fiber: 1.2, sugar: 2.6, sodium: 5, satFat: 0, potassium: 237, calcium: 10, iron: 0.3, src: 'CNF', emoji: '🍅', units: [{ name: '1 середній томат', g: 130 }] },
-      { id: 'f_34', cat: 'Овочі', name: 'Морква свіжа', nameEn: 'Carrot, raw', state: 'Сирий продукт', kcal: 41, p: 0.9, f: 0.2, c: 9.6, fiber: 2.8, sugar: 4.7, sodium: 69, satFat: 0, potassium: 320, calcium: 33, iron: 0.3, src: 'CNF', emoji: '🥕', units: [{ name: '1 морквина', g: 85 }] },
-
-      // Фрукти та ягоди
-      { id: 'f_35', cat: 'Фрукти та ягоди', name: 'Яблуко свіже', nameEn: 'Apple, raw', state: 'Сирий продукт', kcal: 52, p: 0.3, f: 0.2, c: 13.8, fiber: 2.4, sugar: 10.4, sodium: 1, satFat: 0, potassium: 107, calcium: 6, iron: 0.1, src: 'CNF', emoji: '🍏', units: [{ name: '1 середнє яблуко', g: 180 }] },
-      { id: 'f_36', cat: 'Фрукти та ягоди', name: 'Банан', nameEn: 'Banana, raw', state: 'Сирий продукт', kcal: 89, p: 1.1, f: 0.3, c: 22.8, fiber: 2.6, sugar: 12.2, sodium: 1, satFat: 0.1, potassium: 358, calcium: 5, iron: 0.3, src: 'CNF', emoji: '🍌', units: [{ name: '1 банан без шкірки', g: 120 }] },
-      { id: 'f_37', cat: 'Фрукти та ягоди', name: 'Авокадо', nameEn: 'Avocado, raw', state: 'Сирий продукт', kcal: 160, p: 2, f: 14.7, c: 8.5, fiber: 6.7, sugar: 0.7, sodium: 7, satFat: 2.1, potassium: 485, calcium: 12, iron: 0.6, src: 'CNF', emoji: '🥑', units: [{ name: '0.5 авокадо', g: 75 }, { name: '1 авокадо', g: 150 }] },
-
-      // Горіхи та насіння
-      { id: 'f_38', cat: 'Горіхи та насіння', name: 'Волоські горіхи', nameEn: 'Walnuts', state: 'Готовий продукт', kcal: 654, p: 15.2, f: 65.2, c: 13.7, fiber: 6.7, sugar: 2.6, sodium: 2, satFat: 6.1, potassium: 441, calcium: 98, iron: 2.9, src: 'CNF', emoji: '🌰', units: [{ name: 'Жменя', g: 30 }] },
-      { id: 'f_39', cat: 'Горіхи та насіння', name: 'Мигдаль', nameEn: 'Almonds', state: 'Готовий продукт', kcal: 579, p: 21.2, f: 49.9, c: 21.6, fiber: 12.5, sugar: 4.4, sodium: 1, satFat: 3.8, potassium: 733, calcium: 269, iron: 3.7, src: 'CNF', emoji: '🥜', units: [{ name: 'Жменя', g: 30 }] },
-
-      // Олії та соуси
-      { id: 'f_40', cat: 'Олії та жири', name: 'Оливкова олія Extra Virgin', nameEn: 'Olive oil', state: 'Готовий продукт', kcal: 884, p: 0, f: 100, c: 0, fiber: 0, sugar: 0, sodium: 2, satFat: 14, potassium: 1, calcium: 1, iron: 0.1, src: 'CNF', emoji: '🫒', units: [{ name: '1 ст. л.', g: 14 }, { name: '1 ч. л.', g: 5 }] },
-
-      // ---------------- ГОТОВІ СТРАВИ (УКРАЇНСЬКА ТА СВІТОВА КУХНЯ) ----------------
-      { id: 'd_1', cat: 'Українська кухня', isDish: true, name: 'Борщ український зі сметаною', nameEn: 'Ukrainian Borscht with sour cream', state: 'Готова страва (орієнтовно)', kcal: 85, p: 4.5, f: 4.2, c: 7.8, fiber: 1.8, sugar: 2.8, sodium: 340, satFat: 1.4, potassium: 240, calcium: 35, iron: 0.9, src: 'Рецептурник', emoji: '🍲', units: [{ name: '1 порція (тарілка)', g: 350 }] },
-      { id: 'd_2', cat: 'Українська кухня', isDish: true, name: 'Сирники домашні запечені', nameEn: 'Cottage cheese pancakes (Syrnyky)', state: 'Готова страва (орієнтовно)', kcal: 185, p: 14.5, f: 6.2, c: 17.8, fiber: 0.6, sugar: 8.5, sodium: 80, satFat: 3.2, potassium: 160, calcium: 140, iron: 0.7, src: 'Рецептурник', emoji: '🥞', units: [{ name: '1 сирник (~60г)', g: 60 }, { name: 'Порція (3 шт)', g: 180 }] },
-      { id: 'd_3', cat: 'Українська кухня', isDish: true, name: 'Вареники з картоплею', nameEn: 'Varenyky with potatoes', state: 'Готова страва (орієнтовно)', kcal: 175, p: 4.2, f: 3.8, c: 31, fiber: 1.6, sugar: 1.1, sodium: 280, satFat: 1.1, potassium: 190, calcium: 18, iron: 0.8, src: 'Рецептурник', emoji: '🥟', units: [{ name: 'Порція (200г)', g: 200 }] },
-      { id: 'd_4', cat: 'Українська кухня', isDish: true, name: 'Вареники з сиром кисломолочним', nameEn: 'Varenyky with cottage cheese', state: 'Готова страва (орієнтовно)', kcal: 205, p: 10.8, f: 5.5, c: 28, fiber: 1.1, sugar: 4.5, sodium: 120, satFat: 2.6, potassium: 120, calcium: 95, iron: 0.7, src: 'Рецептурник', emoji: '🥟', units: [{ name: 'Порція (200г)', g: 200 }] },
-      { id: 'd_5', cat: 'Українська кухня', isDish: true, name: 'Деруни картопляні', nameEn: 'Deruny (potato pancakes)', state: 'Готова страва (орієнтовно)', kcal: 190, p: 3.4, f: 9.8, c: 22, fiber: 2.1, sugar: 1.2, sodium: 310, satFat: 1.5, potassium: 340, calcium: 15, iron: 1.1, src: 'Рецептурник', emoji: '🥔', units: [{ name: '1 дерун (~50г)', g: 50 }, { name: 'Порція (3 шт)', g: 150 }] },
-      { id: 'd_6', cat: 'Українська кухня', isDish: true, name: 'Голубці з м\'ясом та рисом', nameEn: 'Holubtsi (stuffed cabbage)', state: 'Готова страва (орієнтовно)', kcal: 120, p: 6.8, f: 6.5, c: 8.5, fiber: 1.8, sugar: 2.1, sodium: 290, satFat: 2.4, potassium: 210, calcium: 40, iron: 1.2, src: 'Рецептурник', emoji: '🥬', units: [{ name: '1 голубець (~125г)', g: 125 }, { name: 'Порція (2 шт)', g: 250 }] },
-      { id: 'd_7', cat: 'Супи', isDish: true, name: 'Суп курячий з локшиною', nameEn: 'Chicken noodle soup', state: 'Готова страва (орієнтовно)', kcal: 55, p: 4.2, f: 1.8, c: 5.4, fiber: 0.5, sugar: 0.8, sodium: 320, satFat: 0.5, potassium: 120, calcium: 15, iron: 0.6, src: 'Рецептурник', emoji: '🍲', units: [{ name: '1 тарілка', g: 300 }] },
-      { id: 'd_8', cat: 'Готові страви', isDish: true, name: 'Плов з яловичиною', nameEn: 'Beef pilaf / plov', state: 'Готова страва (орієнтовно)', kcal: 185, p: 8.5, f: 8.2, c: 19.5, fiber: 1.2, sugar: 1.5, sodium: 340, satFat: 2.8, potassium: 170, calcium: 20, iron: 1.4, src: 'Рецептурник', emoji: '🍚', units: [{ name: '1 порція', g: 250 }] },
-      { id: 'd_9', cat: 'Готові страви', isDish: true, name: 'Омлет класичний з 2 яєць з молоком', nameEn: 'Omelet with milk', state: 'Готова страва (орієнтовно)', kcal: 145, p: 10.5, f: 10.8, c: 1.6, fiber: 0, sugar: 1.2, sodium: 180, satFat: 3.6, potassium: 150, calcium: 85, iron: 1.3, src: 'Рецептурник', emoji: '🍳', units: [{ name: '1 порція', g: 140 }] },
-      { id: 'd_10', cat: 'Готові страви', isDish: true, name: 'Салат Цезар з куркою', nameEn: 'Caesar salad with chicken', state: 'Готова страва (орієнтовно)', kcal: 165, p: 12.8, f: 10.5, c: 4.8, fiber: 1.4, sugar: 1.2, sodium: 390, satFat: 2.9, potassium: 190, calcium: 80, iron: 1.1, src: 'Рецептурник', emoji: '🥗', units: [{ name: '1 порція', g: 220 }] }
+    // 1. БАЗА ДАНИХ ХАРЧУВАННЯ З ТОЧНИМИ ДАНИМИ
+    const FOOD_DATABASE = [
+      { id: 'f_1', cat: 'Птиця', name: 'Куряче філе запечене', kcal: 165, p: 31, f: 3.6, c: 0, fiber: 0, emoji: '🍗', src: 'CNF' },
+      { id: 'f_2', cat: 'Птиця', name: 'Куряче філе сире', kcal: 110, p: 23, f: 1.2, c: 0, fiber: 0, emoji: '🍗', src: 'CNF' },
+      { id: 'f_3', cat: 'М\'ясо', name: 'Яловичина нежирна тушкована', kcal: 215, p: 28, f: 11, c: 0, fiber: 0, emoji: '🥩', src: 'CNF' },
+      { id: 'f_4', cat: 'Риба', name: 'Лосось запечений', kcal: 206, p: 22, f: 12.3, c: 0, fiber: 0, emoji: '🐟', src: 'CNF' },
+      { id: 'f_5', cat: 'Риба', name: 'Тунець у власному соку', kcal: 116, p: 26, f: 1, c: 0, fiber: 0, emoji: '🐟', src: 'CNF' },
+      { id: 'f_6', cat: 'Яйця', name: 'Яйце варене', kcal: 143, p: 12.6, f: 9.5, c: 0.7, fiber: 0, emoji: '🥚', src: 'CNF' },
+      { id: 'f_7', cat: 'Молочні', name: 'Кисломолочний сир 5%', kcal: 121, p: 17, f: 5, c: 2.1, fiber: 0, emoji: '🧀', src: 'CNF' },
+      { id: 'f_8', cat: 'Молочні', name: 'Грецький йогурт 2%', kcal: 73, p: 10, f: 2, c: 3.8, fiber: 0, emoji: '🍶', src: 'CNF' },
+      { id: 'f_9', cat: 'Крупи', name: 'Гречка варена', kcal: 110, p: 4.2, f: 1.1, c: 21.3, fiber: 2.7, emoji: '🥣', src: 'CNF' },
+      { id: 'f_10', cat: 'Крупи', name: 'Гречка суха (крупа)', kcal: 343, p: 13.3, f: 3.4, c: 71.5, fiber: 10, emoji: '🌾', src: 'CNF' },
+      { id: 'f_11', cat: 'Крупи', name: 'Рис білий варений', kcal: 130, p: 2.7, f: 0.3, c: 28.2, fiber: 0.4, emoji: '🍚', src: 'CNF' },
+      { id: 'f_12', cat: 'Крупи', name: 'Вівсянка на воді варена', kcal: 71, p: 2.5, f: 1.5, c: 12, fiber: 1.7, emoji: '🥣', src: 'CNF' },
+      { id: 'f_13', cat: 'Овочі', name: 'Броколі на пару', kcal: 35, p: 2.4, f: 0.4, c: 7.2, fiber: 2.6, emoji: '🥦', src: 'CNF' },
+      { id: 'f_14', cat: 'Овочі', name: 'Огірок свіжий', kcal: 15, p: 0.7, f: 0.1, c: 3.6, fiber: 0.5, emoji: '🥒', src: 'CNF' },
+      { id: 'f_15', cat: 'Овочі', name: 'Помідор свіжий', kcal: 18, p: 0.9, f: 0.2, c: 3.9, fiber: 1.2, emoji: '🍅', src: 'CNF' },
+      { id: 'f_16', cat: 'Фрукти', name: 'Яблуко свіже', kcal: 52, p: 0.3, f: 0.2, c: 13.8, fiber: 2.4, emoji: '🍏', src: 'CNF' },
+      { id: 'f_17', cat: 'Фрукти', name: 'Банан', kcal: 89, p: 1.1, f: 0.3, c: 22.8, fiber: 2.6, emoji: '🍌', src: 'CNF' },
+      { id: 'f_18', cat: 'Фрукти', name: 'Авокадо', kcal: 160, p: 2, f: 14.7, c: 8.5, fiber: 6.7, emoji: '🥑', src: 'CNF' },
+      { id: 'f_19', cat: 'Горіхи', name: 'Волоські горіхи', kcal: 654, p: 15.2, f: 65.2, c: 13.7, fiber: 6.7, emoji: '🌰', src: 'CNF' },
+      { id: 'd_1', cat: 'Страви', name: 'Борщ український', kcal: 85, p: 4.5, f: 4.2, c: 7.8, fiber: 1.8, emoji: '🍲', src: 'Орієнтовно' },
+      { id: 'd_2', cat: 'Страви', name: 'Сирники домашні запечені', kcal: 185, p: 14.5, f: 6.2, c: 17.8, fiber: 0.6, emoji: '🥞', src: 'Орієнтовно' },
+      { id: 'd_3', cat: 'Страви', name: 'Вареники з картоплею', kcal: 175, p: 4.2, f: 3.8, c: 31, fiber: 1.6, emoji: '🥟', src: 'Орієнтовно' }
     ];
 
-    // Допоміжна функція локальної дати YYYY-MM-DD
     function getLocalDateString(d = new Date()) {
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -758,33 +650,26 @@
     const TODAY_KEY = getLocalDateString();
     let selectedDateKey = TODAY_KEY;
     let targetCatalogMeal = 'breakfast';
-    let currentCatalogTab = 'products';
-    let activeCatalogFilter = 'Усі';
+    let activeCatalogCat = 'Усі';
     let activeModalItem = null;
-    let tempRecipeIngredients = [];
 
-    // Базовий стан додатка з підтримкою міграції старих версій
     let app = {
       lang: 'uk',
-      adminPass: 'admin123',
-      geminiApiKey: '',
-      isAdminUnlocked: false,
       activeProfileId: 'u_olena',
-      streak: 7,
       profiles: {
-        'u_olena': { id: 'u_olena', name: 'Олена', emoji: '👩', target: 1965, carbs: 196, protein: 147, fat: 66, waterTarget: 2000 },
-        'u_yakiv': { id: 'u_yakiv', name: 'Яків', emoji: '👨', target: 2350, carbs: 250, protein: 175, fat: 75, waterTarget: 2500 }
+        'u_olena': { id: 'u_olena', name: 'Олена', emoji: '👩', height: 168, startWeight: 65, targetWeight: 58, target: 1965, carbs: 196, protein: 147, fat: 66, waterTarget: 2000, pin: '' },
+        'u_yakiv': { id: 'u_yakiv', name: 'Яків', emoji: '👨', height: 180, startWeight: 84, targetWeight: 78, target: 2350, carbs: 250, protein: 175, fat: 75, waterTarget: 2500, pin: '' }
       },
-      favorites: ['f_1', 'f_13', 'd_1', 'd_2'],
-      recentItems: ['f_1', 'f_21'],
-      customFoods: [],
-      customRecipes: [],
+      shoppingList: [
+        { id: 's_1', text: 'Куряче філе (800 г)', checked: false },
+        { id: 's_2', text: 'Грецький йогурт (3 шт)', checked: true },
+        { id: 's_3', text: 'Вівсяні пластівці', checked: false }
+      ],
       days: {}
     };
 
     function init() {
-      // Безпечна міграція даних із попередніх релізів
-      const keys = ['cal_calc_pro_v8', 'cal_calc_pro_v7', 'cal_calc_pro_v6', 'cal_calc_pro_v5'];
+      const keys = ['cal_pro_assistant_v1', 'cal_calc_pro_v8', 'cal_calc_pro_v7', 'cal_calc_pro_v6'];
       for (const k of keys) {
         const raw = localStorage.getItem(k);
         if (raw) {
@@ -797,13 +682,12 @@
       }
 
       ensureDayStructure(app.activeProfileId, selectedDateKey);
-      applyTranslations();
       renderCalendarRow();
       renderAll();
     }
 
     function save() {
-      localStorage.setItem('cal_calc_pro_v8', JSON.stringify(app));
+      localStorage.setItem('cal_pro_assistant_v1', JSON.stringify(app));
     }
 
     function curProfile() {
@@ -815,7 +699,10 @@
       if (!app.days[profId][dKey]) {
         app.days[profId][dKey] = {
           meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
+          plannedMeals: { breakfast: [], lunch: [], dinner: [], snack: [] },
           waterHistory: [],
+          weight: null,
+          waist: null,
           burned: 0
         };
       }
@@ -826,19 +713,20 @@
       return app.days[app.activeProfileId][selectedDateKey];
     }
 
-    // 2. ГОЛОВНИЙ РЕНДЕРИНГ ІНТЕРФЕЙСУ
+    // 2. ГОЛОВНИЙ РЕНДЕРИНГ
     function renderAll() {
       const prof = curProfile();
       const day = curDayData();
 
       document.getElementById('headerAvatar').innerText = prof.emoji;
       document.getElementById('headerUserName').innerText = prof.name;
-      document.getElementById('streakDays').innerText = app.streak;
+
+      // Розрахунок реальної серії днів (Streak)
+      const realStreak = calculateRealStreak(app.activeProfileId);
+      document.getElementById('realStreakDisplay').innerText = realStreak;
 
       let eatenKcal = 0;
       let totalC = 0, totalP = 0, totalF = 0;
-      let totalFiber = 0, totalPotassium = 0, totalCalcium = 0, totalIron = 0;
-      let totalSugar = 0, totalSodium = 0, totalSatFat = 0;
 
       ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
         let mealKcal = 0;
@@ -847,16 +735,11 @@
           totalC += item.c;
           totalP += item.p;
           totalF += item.f;
-          totalFiber += (item.fiber || 0);
-          totalPotassium += (item.potassium || 0);
-          totalCalcium += (item.calcium || 0);
-          totalIron += (item.iron || 0);
-          totalSugar += (item.sugar || 0);
-          totalSodium += (item.sodium || 0);
-          totalSatFat += (item.satFat || 0);
         });
         eatenKcal += mealKcal;
-        renderMealSection(m, mealKcal, day.meals[m]);
+
+        // Рендеринг списків у Щоденнику
+        renderDiaryMealSection(m, mealKcal, day.meals[m]);
       });
 
       const diff = prof.target - eatenKcal;
@@ -886,6 +769,7 @@
         ring.style.strokeDashoffset = 0;
       }
 
+      // Макроси
       document.getElementById('dispCarbs').innerText = `${Math.round(totalC)} / ${prof.carbs} г`;
       document.getElementById('dispProtein').innerText = `${Math.round(totalP)} / ${prof.protein} г`;
       document.getElementById('dispFat').innerText = `${Math.round(totalF)} / ${prof.fat} г`;
@@ -902,29 +786,70 @@
       document.getElementById('proteinBar').style.width = `${pPct}%`;
       document.getElementById('fatBar').style.width = `${fPct}%`;
 
+      // Вода
       const waterTotal = day.waterHistory.reduce((acc, cur) => acc + cur.amount, 0);
-      const wTarget = prof.waterTarget || 2000;
-      document.getElementById('dispWaterAmount').innerText = `${waterTotal} / ${wTarget} мл`;
-      const wPct = Math.min(100, Math.round((waterTotal / wTarget) * 100));
+      document.getElementById('dispWaterAmount').innerText = `${waterTotal} / ${prof.waterTarget} мл`;
+      const wPct = Math.min(100, Math.round((waterTotal / prof.waterTarget) * 100));
       document.getElementById('waterProgressBar').style.width = `${wPct}%`;
-      document.getElementById('waterHistorySummary').innerText = `Записів: ${day.waterHistory.length} (${waterTotal} мл)`;
-      document.getElementById('undoWaterBtn').disabled = day.waterHistory.length === 0;
 
-      renderNutritionScores(eatenKcal, totalFiber, totalPotassium, totalCalcium, totalIron, totalSugar, totalSodium, totalSatFat);
-      renderSmartRecommendations(diff, prof, totalP, totalC, totalF, totalFiber);
-      displayCurrentTip();
-      renderProfilesTab();
+      // Порада
+      generateSmartInsight(eatenKcal, prof.target, totalP, prof.protein, waterTotal);
+
+      // Інші екрани
+      renderWeightSection();
+      renderWeeklyPlan();
+      renderShoppingChecklist();
+      renderRealStatistics();
+      renderMoreProfilesList();
     }
 
-    function renderMealSection(mealType, mealKcal, items) {
-      const statsMap = { breakfast: '~500 ккал', lunch: '~650 ккал', dinner: '~500 ккал', snack: '~250 ккал' };
-      document.getElementById(`${mealType}Stats`).innerText = `${statsMap[mealType]} • ${mealKcal} ккал`;
+    // 3. РОЗРАХУНОК СПРАВЖНЬОГО СТРІКУ (ДНІВ ПОСПІЛЬ)
+    function calculateRealStreak(profId) {
+      const pDays = app.days[profId] || {};
+      let streak = 0;
+      let checkDate = new Date();
 
-      const listContainer = document.getElementById(`${mealType}List`);
+      // Перевіряємо сьогодні
+      const todayStr = getLocalDateString(checkDate);
+      const todayEaten = getDayCalories(pDays[todayStr]);
+
+      if (todayEaten > 0) {
+        streak++;
+      }
+
+      // Рахуємо назад дні поспіль
+      while (true) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        const dStr = getLocalDateString(checkDate);
+        const cals = getDayCalories(pDays[dStr]);
+        if (cals > 0) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function getDayCalories(dayObj) {
+      if (!dayObj || !dayObj.meals) return 0;
+      let sum = 0;
+      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
+        (dayObj.meals[m] || []).forEach(it => sum += it.kcal);
+      });
+      return sum;
+    }
+
+    // 4. ЩОДЕННИК ТА КОПІЮВАННЯ З УЧОРА
+    function renderDiaryMealSection(mealType, mealKcal, items) {
+      const statsMap = { breakfast: 'breakfastStats', lunch: 'lunchStats', dinner: 'dinnerStats', snack: 'snackStats' };
+      document.getElementById(`diary${mealType.charAt(0).toUpperCase() + mealType.slice(1)}Stats`).innerText = `${mealKcal} ккал`;
+
+      const listContainer = document.getElementById(`diary${mealType.charAt(0).toUpperCase() + mealType.slice(1)}List`);
       listContainer.innerHTML = '';
 
       if (items.length === 0) {
-        listContainer.innerHTML = `<p class="text-xs text-slate-400 py-1 italic">Поки немає доданих продуктів</p>`;
+        listContainer.innerHTML = `<p class="text-xs text-slate-400 py-1 italic">Поки немає продуктів</p>`;
         return;
       }
 
@@ -937,665 +862,35 @@
             <span class="text-[11px] text-slate-500 font-semibold">${it.grams}г • <b class="text-slate-700">${it.kcal} ккал</b> (Б:${it.p} Ж:${it.f} В:${it.c})</span>
           </div>
           <div class="flex items-center gap-1.5">
-            <button onclick="editMealItemGramsPrompt('${mealType}', ${idx})" class="touch-target text-slate-400 hover:text-slate-700 text-xs px-2" title="Змінити вагу">✏️</button>
-            <button onclick="deleteMealItem('${mealType}', ${idx})" class="touch-target text-slate-400 hover:text-rose-500 text-xs px-2" title="Видалити">🗑️</button>
+            <button onclick="editMealItemGramsPrompt('${mealType}', ${idx})" class="touch-target text-slate-400 hover:text-slate-700 text-xs px-1.5">✏️</button>
+            <button onclick="deleteMealItem('${mealType}', ${idx})" class="touch-target text-slate-400 hover:text-rose-500 text-xs px-1.5">🗑️</button>
           </div>
         `;
         listContainer.appendChild(itemRow);
       });
     }
 
-    function renderNutritionScores(eaten, fiber, pot, cal, iron, sugar, sod, satFat) {
-      const badge = document.getElementById('overallScoreBadge');
-      if (eaten === 0) {
-        badge.innerText = "Ще немає даних";
-        badge.className = "text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500";
-      } else {
-        const isSugarOver = sugar > 50;
-        const isSodiumOver = sod > 2300;
-        if (isSugarOver || isSodiumOver) {
-          badge.innerText = "Є перевищення ліміту";
-          badge.className = "text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200/50";
-        } else {
-          badge.innerText = "✓ Баланс у нормі";
-          badge.className = "text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/50";
-        }
-      }
+    function copyMealFromYesterday(mealType) {
+      const parts = selectedDateKey.split('-');
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      d.setDate(d.getDate() - 1);
+      const yKey = getLocalDateString(d);
 
-      setMetricBar('Fiber', fiber, 25, 'г', false);
-      setMetricBar('Potassium', pot, 3500, 'мг', false);
-      setMetricBar('Calcium', cal, 1000, 'мг', false);
-      setMetricBar('Iron', iron, 18, 'мг', false);
-      setMetricBar('Sugar', sugar, 50, 'г', true);
-      setMetricBar('Sodium', sod, 2300, 'мг', true);
-      setMetricBar('SatFat', satFat, 20, 'г', true);
-    }
-
-    function setMetricBar(id, val, target, unit, isRestricted) {
-      const rounded = Math.round(val);
-      document.getElementById(`txt${id}`).innerText = `${rounded} / ${target} ${unit}`;
-      const pct = Math.min(100, Math.round((val / target) * 100)) || 0;
-      const bar = document.getElementById(`bar${id}`);
-      bar.style.width = `${pct}%`;
-
-      if (isRestricted) {
-        bar.className = (val > target) ? "bg-rose-500 h-full rounded-full smooth-transition" : "bg-amber-400 h-full rounded-full smooth-transition";
-      } else {
-        bar.className = (pct >= 80) ? "bg-emerald-500 h-full rounded-full smooth-transition" : "bg-emerald-400 h-full rounded-full smooth-transition";
-      }
-    }
-
-    // 3. РОБОТА З КАТАЛОГОМ (3 ВКЛАДКИ)
-    function openCatalogModal(mealType) {
-      targetCatalogMeal = mealType;
-      const names = { breakfast: 'Сніданок', lunch: 'Обід', dinner: 'Вечеря', snack: 'Перекус' };
-      document.getElementById('catalogTargetMealText').innerText = `Додати в: ${names[mealType] || mealType}`;
-      document.getElementById('catalogSearchInput').value = '';
-      currentCatalogTab = 'products';
-      activeCatalogFilter = 'Усі';
-      renderCatalogCategories();
-      renderCatalogItems();
-      document.getElementById('catalogModal').classList.remove('hidden');
-    }
-
-    function closeCatalogModal() {
-      document.getElementById('catalogModal').classList.add('hidden');
-    }
-
-    function switchCatalogTab(tab) {
-      currentCatalogTab = tab;
-      ['Products', 'Dishes', 'Recipes'].forEach(t => {
-        const btn = document.getElementById(`tabBtn${t}`);
-        if (t.toLowerCase() === tab) {
-          btn.className = "flex-1 py-2 text-xs font-black rounded-xl bg-white text-rose-600 shadow-sm transition";
-        } else {
-          btn.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition";
-        }
-      });
-      activeCatalogFilter = 'Усі';
-      renderCatalogCategories();
-      renderCatalogItems();
-    }
-
-    function renderCatalogCategories() {
-      const container = document.getElementById('catalogCategoryChips');
-      container.innerHTML = '';
-
-      let cats = ['Усі', 'Популярні', 'Улюблені', 'Нещодавні'];
-      if (currentCatalogTab === 'products') {
-        cats = cats.concat(['Птиця', 'М\'ясо', 'Риба та морепродукти', 'Молочні продукти', 'Яйця', 'Крупи та каші', 'Овочі', 'Фрукти та ягоди', 'Горіхи та насіння', 'Олії та жири', 'Хліб та випічка', 'Макаронні вироби']);
-      } else if (currentCatalogTab === 'dishes') {
-        cats = ['Усі', 'Українська кухня', 'Супи', 'Готові страви', 'Улюблені'];
-      } else {
-        cats = ['Усі', 'Мої рецепти'];
-      }
-
-      cats.forEach(c => {
-        const btn = document.createElement('button');
-        const isActive = activeCatalogFilter === c;
-        btn.className = `touch-target text-xs font-bold px-3 py-1 rounded-xl whitespace-nowrap transition ${isActive ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
-        btn.innerText = c;
-        btn.onclick = () => {
-          activeCatalogFilter = c;
-          renderCatalogCategories();
-          renderCatalogItems();
-        };
-        container.appendChild(btn);
-      });
-    }
-
-    function getCombinedFoodPool() {
-      let pool = [...EXTENDED_FOOD_DATABASE, ...(app.customFoods || [])];
-      if (currentCatalogTab === 'dishes') {
-        pool = pool.filter(x => x.isDish);
-      } else if (currentCatalogTab === 'products') {
-        pool = pool.filter(x => !x.isDish);
-      } else if (currentCatalogTab === 'recipes') {
-        return (app.customRecipes || []).map(r => ({
-          id: r.id,
-          name: r.name,
-          nameEn: r.name,
-          isRecipe: true,
-          kcal: r.perServingKcal,
-          p: r.perServingP,
-          f: r.perServingF,
-          c: r.perServingC,
-          emoji: '📖',
-          cat: 'Мої рецепти',
-          state: 'Власний рецепт',
-          src: 'Моя книга',
-          units: [{ name: '1 порція', g: r.servingWeightGrams || 250 }]
-        }));
-      }
-      return pool;
-    }
-
-    function renderCatalogItems() {
-      const container = document.getElementById('catalogListContainer');
-      container.innerHTML = '';
-      const query = (document.getElementById('catalogSearchInput').value || '').trim().toLowerCase();
-
-      let items = getCombinedFoodPool();
-
-      // Фільтрація по категоріях
-      if (activeCatalogFilter === 'Популярні') {
-        items = items.slice(0, 15);
-      } else if (activeCatalogFilter === 'Улюблені') {
-        items = items.filter(x => (app.favorites || []).includes(x.id));
-      } else if (activeCatalogFilter === 'Нещодавні') {
-        items = items.filter(x => (app.recentItems || []).includes(x.id));
-      } else if (activeCatalogFilter !== 'Усі') {
-        items = items.filter(x => x.cat === activeCatalogFilter);
-      }
-
-      // Пошуковий фільтр (UA, EN, синоніми)
-      if (query) {
-        items = items.filter(x => 
-          x.name.toLowerCase().includes(query) || 
-          (x.nameEn && x.nameEn.toLowerCase().includes(query)) ||
-          (x.barcode && x.barcode.includes(query))
-        );
-      }
-
-      document.getElementById('catalogItemsCount').innerText = `Знайдено: ${items.length}`;
-
-      if (items.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-10 px-4">
-            <span class="text-3xl block mb-2">🔍</span>
-            <p class="text-sm font-bold text-slate-800">Нічого не знайдено</p>
-            <p class="text-xs text-slate-400 mt-1 mb-4">Спробуйте змінити запит або додайте цей продукт власноруч</p>
-            <button onclick="openCreateCustomFoodModal('${query}')" class="touch-target bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md active:scale-95 transition">
-              + Створити власний продукт
-            </button>
-          </div>
-        `;
+      const yDay = app.days[app.activeProfileId]?.[yKey];
+      if (!yDay || !yDay.meals[mealType] || yDay.meals[mealType].length === 0) {
+        alert("Вчора не було записів для цього прийому їжі.");
         return;
       }
 
-      items.forEach(it => {
-        const isFav = (app.favorites || []).includes(it.id);
-        const card = document.createElement('div');
-        card.className = "p-3 rounded-2xl bg-white border border-slate-100 card-shadow flex items-center justify-between hover:border-slate-200 transition cursor-pointer active:scale-98";
-        card.onclick = () => openPortionModal(it);
-
-        card.innerHTML = `
-          <div class="flex items-center gap-3 flex-1 min-w-0 pr-2">
-            <span class="text-2xl">${it.emoji || '🍽️'}</span>
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5">
-                <h4 class="text-xs font-black text-slate-800 truncate">${it.name}</h4>
-                ${isFav ? '<span class="text-[10px] text-rose-500">❤️</span>' : ''}
-              </div>
-              <span class="text-[10px] font-semibold text-slate-400 block truncate">${it.state || 'Продукт'} • ${it.src || 'База'}</span>
-              <div class="text-[10px] font-bold text-slate-600 space-x-1 mt-0.5">
-                <span class="text-rose-600 font-black">${it.kcal} ккал/100г</span> • 
-                <span>Б:${it.p}</span> • <span>Ж:${it.f}</span> • <span>В:${it.c}</span>
-              </div>
-            </div>
-          </div>
-          <button class="touch-target text-xs font-black bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl border border-rose-100 shadow-sm">
-            +
-          </button>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function filterCatalogItems() {
-      renderCatalogItems();
-    }
-
-    // 4. ДЕТАЛЬНА КАРТКА ПОРЦІЇ
-    function openPortionModal(item) {
-      activeModalItem = item;
-      document.getElementById('portItemEmoji').innerText = item.emoji || '🍽️';
-      document.getElementById('portItemName').innerText = item.name;
-      document.getElementById('portItemSource').innerText = `${item.src || 'Джерело'} • ${item.state || 'Звичайний стан'}`;
-      
-      document.getElementById('baseKcal100').innerText = item.kcal;
-      document.getElementById('baseC100').innerText = `${item.c}г`;
-      document.getElementById('baseP100').innerText = `${item.p}г`;
-      document.getElementById('baseF100').innerText = `${item.f}г`;
-
-      updateFavoriteButtonState();
-
-      // Побутові одиниці
-      const unitsContainer = document.getElementById('householdUnitsContainer');
-      unitsContainer.innerHTML = '';
-      if (item.units && item.units.length > 0) {
-        item.units.forEach(u => {
-          const btn = document.createElement('button');
-          btn.className = "py-1 px-2.5 text-[11px] font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 whitespace-nowrap active:scale-95 transition";
-          btn.innerText = `${u.name} (${u.g}г)`;
-          btn.onclick = () => setPortionGrams(u.g);
-          unitsContainer.appendChild(btn);
-        });
-      }
-
-      setPortionGrams(100);
-      document.getElementById('portionModal').classList.remove('hidden');
-    }
-
-    function closePortionModal() {
-      document.getElementById('portionModal').classList.add('hidden');
-    }
-
-    function setPortionGrams(g) {
-      document.getElementById('customPortionGrams').value = g;
-      document.querySelectorAll('.port-preset-btn').forEach(b => {
-        if (b.innerText.includes(`${g} г`)) {
-          b.className = "port-preset-btn active py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white active:scale-95 transition";
-        } else {
-          b.className = "port-preset-btn py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition";
-        }
-      });
-      updatePortionCalculations();
-    }
-
-    function updatePortionCalculations() {
-      if (!activeModalItem) return;
-      const g = parseFloat(document.getElementById('customPortionGrams').value) || 0;
-      const factor = g / 100;
-
-      const totKcal = Math.round(activeModalItem.kcal * factor);
-      const totP = Math.round(activeModalItem.p * factor * 10) / 10;
-      const totF = Math.round(activeModalItem.f * factor * 10) / 10;
-      const totC = Math.round(activeModalItem.c * factor * 10) / 10;
-      const totFiber = activeModalItem.fiber ? Math.round(activeModalItem.fiber * factor * 10) / 10 : null;
-
-      document.getElementById('calcPortionKcal').innerText = `${totKcal} ккал`;
-      document.getElementById('calcPortionMacros').innerText = `Б: ${totP}г • Ж: ${totF}г • В: ${totC}г`;
-      document.getElementById('calcPortionMicro').innerText = totFiber !== null ? `Клітковина: ${totFiber}г` : `Клітковина: — (немає даних)`;
-    }
-
-    function toggleFavoriteActiveItem() {
-      if (!activeModalItem) return;
-      const favs = app.favorites || [];
-      const idx = favs.indexOf(activeModalItem.id);
-      if (idx > -1) {
-        favs.splice(idx, 1);
-      } else {
-        favs.push(activeModalItem.id);
-      }
-      app.favorites = favs;
-      save();
-      updateFavoriteButtonState();
-      renderCatalogItems();
-    }
-
-    function updateFavoriteButtonState() {
-      const isFav = (app.favorites || []).includes(activeModalItem.id);
-      document.getElementById('btnFavoriteActive').innerText = isFav ? '❤️' : '🤍';
-    }
-
-    function commitSelectedFoodToMeal() {
-      if (!activeModalItem) return;
-      const g = parseFloat(document.getElementById('customPortionGrams').value) || 100;
-      const factor = g / 100;
-
-      const entry = {
-        id: 'food_' + Date.now(),
-        refId: activeModalItem.id,
-        name: activeModalItem.name,
-        grams: Math.round(g),
-        kcal: Math.round(activeModalItem.kcal * factor),
-        p: Math.round(activeModalItem.p * factor * 10) / 10,
-        f: Math.round(activeModalItem.f * factor * 10) / 10,
-        c: Math.round(activeModalItem.c * factor * 10) / 10,
-        fiber: activeModalItem.fiber ? Math.round(activeModalItem.fiber * factor * 10) / 10 : 0,
-        sugar: activeModalItem.sugar ? Math.round(activeModalItem.sugar * factor * 10) / 10 : 0,
-        sodium: activeModalItem.sodium ? Math.round(activeModalItem.sodium * factor) : 0,
-        satFat: activeModalItem.satFat ? Math.round(activeModalItem.satFat * factor * 10) / 10 : 0,
-        potassium: activeModalItem.potassium ? Math.round(activeModalItem.potassium * factor) : 0,
-        calcium: activeModalItem.calcium ? Math.round(activeModalItem.calcium * factor) : 0,
-        iron: activeModalItem.iron ? Math.round(activeModalItem.iron * factor * 10) / 10 : 0
-      };
-
-      curDayData().meals[targetCatalogMeal].push(entry);
-
-      // Додавання в нещодавні
-      if (!app.recentItems) app.recentItems = [];
-      const rIdx = app.recentItems.indexOf(activeModalItem.id);
-      if (rIdx > -1) app.recentItems.splice(rIdx, 1);
-      app.recentItems.unshift(activeModalItem.id);
-      if (app.recentItems.length > 20) app.recentItems.pop();
-
-      save();
-      closePortionModal();
-      closeCatalogModal();
-      renderAll();
-    }
-
-    // 5. ВЛАСНІ СТРАВИ ТА РЕЦЕПТИ
-    function openRecipeModal() {
-      document.getElementById('recipeNameInput').value = '';
-      document.getElementById('recipeServingsInput').value = 4;
-      tempRecipeIngredients = [];
-      recalcRecipeTotals();
-      document.getElementById('recipeModal').classList.remove('hidden');
-    }
-
-    function closeRecipeModal() {
-      document.getElementById('recipeModal').classList.add('hidden');
-    }
-
-    function openSelectIngredientModal() {
-      openCatalogModal(targetCatalogMeal);
-    }
-
-    function recalcRecipeTotals() {
-      const servings = Math.max(1, parseInt(document.getElementById('recipeServingsInput').value) || 1);
-      let totalKcal = 0, totalP = 0, totalF = 0, totalC = 0, totalWeight = 0;
-
-      const list = document.getElementById('recipeIngredientsList');
-      list.innerHTML = '';
-
-      if (tempRecipeIngredients.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 italic">Інгредієнти ще не додані</p>`;
-      } else {
-        tempRecipeIngredients.forEach((it, idx) => {
-          totalKcal += it.kcal;
-          totalP += it.p;
-          totalF += it.f;
-          totalC += it.c;
-          totalWeight += it.grams;
-
-          const row = document.createElement('div');
-          row.className = "flex justify-between items-center text-xs py-1 border-b border-slate-100 last:border-0";
-          row.innerHTML = `
-            <div><b>${it.name}</b> (${it.grams}г) — ${it.kcal} ккал</div>
-            <button onclick="tempRecipeIngredients.splice(${idx}, 1); recalcRecipeTotals();" class="text-rose-500 font-bold px-1">✕</button>
-          `;
-          list.appendChild(row);
-        });
-      }
-
-      const perServingKcal = Math.round(totalKcal / servings);
-      const perServingP = Math.round((totalP / servings) * 10) / 10;
-      const perServingF = Math.round((totalF / servings) * 10) / 10;
-      const perServingC = Math.round((totalC / servings) * 10) / 10;
-
-      document.getElementById('recipePerServingKcal').innerText = `${perServingKcal} ккал`;
-      document.getElementById('recipePerServingMacros').innerText = `Б: ${perServingP}г • Ж: ${perServingF}г • В: ${perServingC}г (Вага порції: ~${Math.round(totalWeight / servings)}г)`;
-    }
-
-    function saveCustomRecipeToLibrary() {
-      const name = document.getElementById('recipeNameInput').value.trim();
-      if (!name) { alert("Вкажіть назву рецепта!"); return; }
-      if (tempRecipeIngredients.length === 0) { alert("Додайте хоча б один інгредієнт!"); return; }
-
-      const servings = Math.max(1, parseInt(document.getElementById('recipeServingsInput').value) || 1);
-      let totalKcal = 0, totalP = 0, totalF = 0, totalC = 0, totalWeight = 0;
-      tempRecipeIngredients.forEach(it => {
-        totalKcal += it.kcal; totalP += it.p; totalF += it.f; totalC += it.c; totalWeight += it.grams;
-      });
-
-      const newRecipe = {
-        id: 'rec_' + Date.now(),
-        name: name,
-        servings: servings,
-        servingWeightGrams: Math.round(totalWeight / servings),
-        perServingKcal: Math.round(totalKcal / servings),
-        perServingP: Math.round((totalP / servings) * 10) / 10,
-        perServingF: Math.round((totalF / servings) * 10) / 10,
-        perServingC: Math.round((totalC / servings) * 10) / 10,
-        ingredients: [...tempRecipeIngredients]
-      };
-
-      if (!app.customRecipes) app.customRecipes = [];
-      app.customRecipes.push(newRecipe);
-      save();
-      closeRecipeModal();
-      alert(`✓ Рецепт "${name}" збережено у бібліотеці!`);
-      renderCatalogItems();
-    }
-
-    // 6. ПОШУК ЗА ШТРИХКОДОМ ЧЕРЕЗ OPEN FOOD FACTS
-    async function searchBarcodeOnlinePrompt() {
-      const code = prompt("Введіть штрихкод упаковки товару (або назву брендового продукту):");
-      if (!code) return;
-
-      const cleanCode = code.trim();
-      document.getElementById('catalogSearchInput').value = cleanCode;
-
-      try {
-        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${cleanCode}.json`);
-        const data = await res.json();
-
-        if (data.status === 1 && data.product) {
-          const p = data.product;
-          const nut = p.nutriments || {};
-          const item = {
-            id: 'off_' + (p.code || Date.now()),
-            name: p.product_name || p.product_name_uk || p.product_name_en || 'Магазинний продукт',
-            nameEn: p.product_name_en || '',
-            cat: 'Готові страви',
-            state: p.brands ? `Бренд: ${p.brands}` : 'Упакований товар',
-            kcal: Math.round(nut['energy-kcal_100g'] || (nut['energy-kj_100g'] ? nut['energy-kj_100g'] / 4.184 : 0)),
-            p: Math.round((nut.proteins_100g || 0) * 10) / 10,
-            f: Math.round((nut.fat_100g || 0) * 10) / 10,
-            c: Math.round((nut.carbohydrates_100g || 0) * 10) / 10,
-            fiber: nut.fiber_100g ? Math.round(nut.fiber_100g * 10) / 10 : null,
-            sugar: nut.sugars_100g ? Math.round(nut.sugars_100g * 10) / 10 : null,
-            sodium: nut.sodium_100g ? Math.round(nut.sodium_100g * 1000) : null,
-            satFat: nut['saturated-fat_100g'] ? Math.round(nut['saturated-fat_100g'] * 10) / 10 : null,
-            src: 'Open Food Facts',
-            emoji: '🏷️'
-          };
-
-          if (!app.customFoods) app.customFoods = [];
-          app.customFoods.unshift(item);
-          save();
-          renderCatalogItems();
-          openPortionModal(item);
-        } else {
-          alert(`Товар зі штрихкодом ${cleanCode} не знайдено в базі Open Food Facts. Ви можете створити його власноруч.`);
-        }
-      } catch(err) {
-        alert("Помилка зв'язку з базою Open Food Facts: " + err.message);
-      }
-    }
-
-    // 7. РЕКОМЕНДАЦІЇ ПІД БАЛАНС
-    function renderSmartRecommendations(diff, prof, curP, curC, curF, curFiber) {
-      const container = document.getElementById('recCardsContainer');
-      container.innerHTML = '';
-
-      let pool = EXTENDED_FOOD_DATABASE;
-      let reasons = [];
-
-      if (curP < prof.protein * 0.5) {
-        pool = pool.filter(x => x.p >= 15);
-        reasons.push("Дефіцит білка: відновлює м'язи та дає тривалу ситість");
-      } else if (curFiber < 12) {
-        pool = pool.filter(x => x.fiber && x.fiber >= 2.5);
-        reasons.push("Потрібна клітковина: підтримує травлення та мікрофлору");
-      } else if (diff < 400 && diff > 0) {
-        pool = pool.filter(x => x.kcal <= 120);
-        reasons.push("Малий залишок калорій: низькокалорійні ситні варіанти");
-      }
-
-      const selected = pool.slice(0, 5);
-      selected.forEach(p => {
-        const card = document.createElement('div');
-        card.className = "min-w-[190px] max-w-[190px] bg-white rounded-2xl p-3 border border-slate-100 card-shadow flex flex-col justify-between";
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-2xl">${p.emoji || '🍽️'}</span>
-              <span class="text-[10px] font-black bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full">${p.kcal} ккал</span>
-            </div>
-            <h5 class="text-xs font-black text-slate-800 leading-tight mb-1 truncate">${p.name}</h5>
-            <span class="text-[9px] text-slate-400 font-semibold block mb-2">${p.state || 'Продукт'}</span>
-            <div class="text-[10px] font-bold text-slate-600 space-x-1 mb-3">
-              <span>Б: ${p.p}г</span>•<span>Ж: ${p.f}г</span>•<span>В: ${p.c}г</span>
-            </div>
-          </div>
-          <button onclick="openPortionModal(EXTENDED_FOOD_DATABASE.find(x => x.id === '${p.id}'))" class="touch-target w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2 rounded-xl active:scale-95 transition">
-            + Вибрати
-          </button>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    // 8. ПОРАДИ ШІ
-    const SMART_TIPS = [
-      "Склянка теплої води за 15 хвилин до їжі активує травну систему та запобігає переїданню.",
-      "Для збереження м'язової маси додавайте не менше 20–25 грамів білка до кожного основного прийому їжі.",
-      "Вівсянка зранку забезпечує тривале насичення завдяки бета-глюканам та складним вуглеводам.",
-      "Свіжий шпинат, броколі та яблука збагачують раціон калієм і клітковиною, підтримуючи тонус судин.",
-      "Повільне вживання їжі дає мозку до 20 хвилин, щоб зафіксувати природне відчуття ситості."
-    ];
-    let tipIdx = 0;
-    function displayCurrentTip() {
-      document.getElementById('dailyAITip').innerText = SMART_TIPS[tipIdx % SMART_TIPS.length];
-    }
-    function nextRandomTip() {
-      tipIdx = (tipIdx + 1) % SMART_TIPS.length;
-      displayCurrentTip();
-    }
-
-    // 9. ВОДНИЙ БАЛАНС ТА МОДАЛЬНІ ВІКНА
-    function addWater(ml) {
-      curDayData().waterHistory.push({ id: 'w_' + Date.now(), amount: ml });
+      // Глибока копія
+      const cloned = JSON.parse(JSON.stringify(yDay.meals[mealType]));
+      cloned.forEach(x => x.id = 'food_' + Math.random());
+      curDayData().meals[mealType].push(...cloned);
       save();
       renderAll();
-    }
-    function undoLastWater() {
-      curDayData().waterHistory.pop();
-      save();
-      renderAll();
-    }
-    function openCustomWaterModal() { document.getElementById('customWaterModal').classList.remove('hidden'); }
-    function closeCustomWaterModal() { document.getElementById('customWaterModal').classList.add('hidden'); }
-    function commitCustomWaterModal() {
-      const ml = parseInt(document.getElementById('customWaterInputVal').value) || 0;
-      if (ml > 0) addWater(ml);
-      closeCustomWaterModal();
-    }
-    function openWaterTargetModal() {
-      document.getElementById('waterTargetInputVal').value = curProfile().waterTarget || 2000;
-      document.getElementById('waterTargetModal').classList.remove('hidden');
-    }
-    function closeWaterTargetModal() { document.getElementById('waterTargetModal').classList.add('hidden'); }
-    function commitWaterTargetModal() {
-      const ml = parseInt(document.getElementById('waterTargetInputVal').value) || 2000;
-      curProfile().waterTarget = ml;
-      save();
-      closeWaterTargetModal();
-      renderAll();
+      alert(`✓ Скопійовано ${cloned.length} продуктів із вчорашнього дня!`);
     }
 
-    // 10. АДМІНКА ТА БЕЗПЕКА (БЕЗ PROMPT)
-    function openAdminModal() {
-      if (app.isAdminUnlocked) {
-        app.isAdminUnlocked = false;
-        document.getElementById('adminLockIcon').innerText = '🔒';
-        document.getElementById('adminLockText').innerText = 'Адмінка';
-        renderProfilesTab();
-      } else {
-        document.getElementById('adminPasswordInputVal').value = '';
-        document.getElementById('adminPasswordModal').classList.remove('hidden');
-      }
-    }
-    function closeAdminPasswordModal() { document.getElementById('adminPasswordModal').classList.add('hidden'); }
-    function verifyAdminPassword() {
-      const p = document.getElementById('adminPasswordInputVal').value;
-      if (p === app.adminPass) {
-        app.isAdminUnlocked = true;
-        document.getElementById('adminLockIcon').innerText = '🔓';
-        document.getElementById('adminLockText').innerText = 'Вийти';
-        closeAdminPasswordModal();
-        renderProfilesTab();
-      } else {
-        alert("❌ Невірний пароль адміністратора!");
-      }
-    }
-
-    function renderProfilesTab() {
-      const container = document.getElementById('profileContainer');
-      container.innerHTML = '';
-      const list = Object.values(app.profiles);
-
-      list.forEach(p => {
-        const isActive = p.id === app.activeProfileId;
-        const card = document.createElement('div');
-        card.className = `p-3.5 rounded-2xl border flex items-center justify-between ${isActive ? 'bg-rose-50/70 border-rose-300' : 'bg-white border-slate-100 card-shadow'}`;
-
-        card.innerHTML = `
-          <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="switchProfile('${p.id}')">
-            <span class="text-2xl">${p.emoji}</span>
-            <div>
-              <div class="flex items-center gap-2">
-                <h4 class="text-sm font-black text-slate-800">${p.name}</h4>
-                ${isActive ? '<span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-black">Активний</span>' : ''}
-              </div>
-              <p class="text-xs text-slate-500">Ціль: ${p.target} ккал (Б:${p.protein}г, Ж:${p.fat}г, В:${p.carbs}г)</p>
-            </div>
-          </div>
-          ${app.isAdminUnlocked && list.length > 1 ? `
-            <button onclick="adminDeleteProfile('${p.id}')" class="touch-target text-slate-300 hover:text-rose-600 p-2 text-base transition">
-              🗑️
-            </button>
-          ` : ''}
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function switchProfile(id) {
-      app.activeProfileId = id;
-      save();
-      renderCalendarRow();
-      renderAll();
-      goToTab('home');
-    }
-
-    function adminDeleteProfile(id) {
-      if (confirm(`Видалити профіль "${app.profiles[id].name}"?`)) {
-        delete app.profiles[id];
-        app.activeProfileId = Object.keys(app.profiles)[0];
-        save();
-        renderCalendarRow();
-        renderAll();
-      }
-    }
-
-    // 11. РЕЗЕРВНЕ КОПІЮВАННЯ (JSON)
-    function exportDataJSON() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app, null, 2));
-      const a = document.createElement('a');
-      a.setAttribute("href", dataStr);
-      a.setAttribute("download", `calories_backup_${getLocalDateString()}.json`);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-
-    function importDataJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (imported.profiles) {
-            app = imported;
-            save();
-            alert("✓ Дані успішно відновлено!");
-            renderCalendarRow();
-            renderAll();
-          }
-        } catch(err) {
-          alert("Помилка читання файлу JSON: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    // 12. ШВИДКА ЗМІНА ВАГИ ЗАПИСАННОГО ПРОДУКТУ (БЕЗ PROMPT)
     function editMealItemGramsPrompt(mealType, idx) {
       const item = curDayData().meals[mealType][idx];
       if (!item) return;
@@ -1615,35 +910,509 @@
     }
 
     function deleteMealItem(mealType, idx) {
-      if (confirm("Видалити цей продукт зі щоденника?")) {
-        curDayData().meals[mealType].splice(idx, 1);
+      curDayData().meals[mealType].splice(idx, 1);
+      save();
+      renderAll();
+    }
+
+    function confirmClearCurrentDay() {
+      if (confirm("Очистити всі страви за цей день?")) {
+        curDayData().meals = { breakfast: [], lunch: [], dinner: [], snack: [] };
         save();
         renderAll();
       }
     }
 
-    function confirmResetDay() {
-      if (confirm("Очистити всі записи за цей день?")) {
-        const d = curDayData();
-        d.meals = { breakfast: [], lunch: [], dinner: [], snack: [] };
-        d.waterHistory = [];
-        d.burned = 0;
-        save();
-        renderAll();
+    // 5. ВАГА, ТАЛІЯ ТА ІМТ
+    function renderWeightSection() {
+      const prof = curProfile();
+      document.getElementById('weightStartVal').innerText = `${prof.startWeight || 65} кг`;
+      document.getElementById('weightGoalVal').innerText = `${prof.targetWeight || 58} кг`;
+
+      // Шукаємо останню вагу
+      const pDays = app.days[app.activeProfileId] || {};
+      const dates = Object.keys(pDays).sort().reverse();
+      let latestWeight = prof.startWeight || 65;
+      let entries = [];
+
+      dates.forEach(dk => {
+        if (pDays[dk].weight) {
+          if (!latestWeight || latestWeight === prof.startWeight) latestWeight = pDays[dk].weight;
+          entries.push({ date: dk, weight: pDays[dk].weight, waist: pDays[dk].waist });
+        }
+      });
+
+      document.getElementById('weightCurrentVal').innerText = `${latestWeight} кг`;
+
+      // Розрахунок ІМТ
+      const heightM = (prof.height || 168) / 100;
+      const bmi = (latestWeight / (heightM * heightM)).toFixed(1);
+      document.getElementById('bmiNumber').innerText = bmi;
+
+      const bmiBar = document.getElementById('bmiBar');
+      const bmiText = document.getElementById('bmiStatusText');
+      if (bmi < 18.5) {
+        bmiText.innerText = "Дефіцит ваги"; bmiText.className = "text-[11px] font-bold text-amber-500";
+        bmiBar.className = "bg-amber-400 h-full rounded-full"; bmiBar.style.width = "25%";
+      } else if (bmi <= 24.9) {
+        bmiText.innerText = "Нормальна вага"; bmiText.className = "text-[11px] font-bold text-emerald-600";
+        bmiBar.className = "bg-emerald-500 h-full rounded-full"; bmiBar.style.width = "50%";
+      } else if (bmi <= 29.9) {
+        bmiText.innerText = "Надлишкова вага"; bmiText.className = "text-[11px] font-bold text-amber-600";
+        bmiBar.className = "bg-amber-500 h-full rounded-full"; bmiBar.style.width = "75%";
+      } else {
+        bmiText.innerText = "Ожиріння"; bmiText.className = "text-[11px] font-bold text-rose-600";
+        bmiBar.className = "bg-rose-500 h-full rounded-full"; bmiBar.style.width = "100%";
+      }
+
+      // Історія замірів
+      const list = document.getElementById('weightHistoryList');
+      list.innerHTML = '';
+      if (entries.length === 0) {
+        list.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Немає записів ваги</p>';
+      } else {
+        entries.slice(0, 10).forEach(e => {
+          const row = document.createElement('div');
+          row.className = "flex justify-between items-center py-1.5 border-b border-slate-50 text-xs";
+          row.innerHTML = `
+            <span class="font-bold text-slate-600">${e.date}</span>
+            <span class="font-black text-slate-900">${e.weight} кг ${e.waist ? `• талія ${e.waist} см` : ''}</span>
+          `;
+          list.appendChild(row);
+        });
       }
     }
 
-    // 13. НАВІГАЦІЯ ТА КАЛЕНДАР
+    function openLogWeightModal() {
+      document.getElementById('inputWeightKg').value = curDayData().weight || '';
+      document.getElementById('inputWaistCm').value = curDayData().waist || '';
+      document.getElementById('logWeightModal').classList.remove('hidden');
+    }
+    function closeLogWeightModal() { document.getElementById('logWeightModal').classList.add('hidden'); }
+    function saveWeightEntry() {
+      const w = parseFloat(document.getElementById('inputWeightKg').value);
+      const waist = parseFloat(document.getElementById('inputWaistCm').value) || null;
+      if (w > 20 && w < 300) {
+        curDayData().weight = w;
+        curDayData().waist = waist;
+        save();
+        renderAll();
+        closeLogWeightModal();
+      } else {
+        alert("Введіть коректну вагу");
+      }
+    }
+
+    // 6. ПЛАНУВАННЯ МЕНЮ ТА СПИСОК ПОКУПОК
+    function switchPlanSubTab(tab) {
+      if (tab === 'plan') {
+        document.getElementById('subTabPlanContent').classList.remove('hidden');
+        document.getElementById('subTabShopContent').classList.add('hidden');
+        document.getElementById('btnSubPlan').className = "px-3 py-1.5 rounded-xl text-xs font-black bg-white shadow-sm text-slate-900";
+        document.getElementById('btnSubShop').className = "px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500";
+      } else {
+        document.getElementById('subTabPlanContent').classList.add('hidden');
+        document.getElementById('subTabShopContent').classList.remove('hidden');
+        document.getElementById('btnSubShop').className = "px-3 py-1.5 rounded-xl text-xs font-black bg-white shadow-sm text-slate-900";
+        document.getElementById('btnSubPlan').className = "px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500";
+      }
+    }
+
+    function renderWeeklyPlan() {
+      const container = document.getElementById('weeklyPlanContainer');
+      container.innerHTML = '';
+      const daysNames = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+      const curr = new Date();
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + i);
+        const dKey = getLocalDateString(d);
+        ensureDayStructure(app.activeProfileId, dKey);
+        const dData = app.days[app.activeProfileId][dKey];
+        const cals = getDayCalories(dData);
+
+        const card = document.createElement('div');
+        card.className = "bg-white p-3.5 rounded-2xl border border-slate-100 card-shadow flex items-center justify-between";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black text-slate-900">${daysNames[d.getDay()]} (${dKey})</span>
+              ${dKey === TODAY_KEY ? '<span class="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-black">Сьогодні</span>' : ''}
+            </div>
+            <span class="text-[11px] font-bold text-slate-400">Заплановано / з'їдено: <b class="text-slate-700">${cals} ккал</b></span>
+          </div>
+          <button onclick="selectedDateKey='${dKey}'; renderCalendarRow(); renderAll(); goToTab('diary');" class="touch-target text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl">
+            Скласти →
+          </button>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function renderShoppingChecklist() {
+      const list = document.getElementById('shoppingChecklist');
+      list.innerHTML = '';
+      const items = app.shoppingList || [];
+
+      if (items.length === 0) {
+        list.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Список покупок порожній</p>';
+        return;
+      }
+
+      items.forEach((it, idx) => {
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between p-2.5 rounded-xl border transition ${it.checked ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-slate-100 shadow-sm'}`;
+        row.innerHTML = `
+          <label class="flex items-center gap-2.5 flex-1 cursor-pointer">
+            <input type="checkbox" ${it.checked ? 'checked' : ''} onchange="toggleShopItem(${idx})" class="w-4 h-4 rounded text-rose-500">
+            <span class="text-xs font-bold ${it.checked ? 'line-through text-slate-400' : 'text-slate-800'}">${it.text}</span>
+          </label>
+          <button onclick="deleteShopItem(${idx})" class="text-slate-300 hover:text-rose-500 text-sm px-1">✕</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function addManualShopItem() {
+      const input = document.getElementById('manualShopItemInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (!app.shoppingList) app.shoppingList = [];
+      app.shoppingList.push({ id: 's_' + Date.now(), text: val, checked: false });
+      input.value = '';
+      save();
+      renderShoppingChecklist();
+    }
+
+    function toggleShopItem(idx) {
+      app.shoppingList[idx].checked = !app.shoppingList[idx].checked;
+      save();
+      renderShoppingChecklist();
+    }
+
+    function deleteShopItem(idx) {
+      app.shoppingList.splice(idx, 1);
+      save();
+      renderShoppingChecklist();
+    }
+
+    function clearCheckedShopItems() {
+      app.shoppingList = (app.shoppingList || []).filter(x => !x.checked);
+      save();
+      renderShoppingChecklist();
+    }
+
+    function generateShoppingListFromPlan() {
+      const pDays = app.days[app.activeProfileId] || {};
+      const generated = {};
+      const curr = new Date();
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + i);
+        const dKey = getLocalDateString(d);
+        const day = pDays[dKey];
+        if (day && day.meals) {
+          ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
+            (day.meals[m] || []).forEach(it => {
+              generated[it.name] = (generated[it.name] || 0) + it.grams;
+            });
+          });
+        }
+      }
+
+      if (Object.keys(generated).length === 0) {
+        alert("У плані на 7 днів ще немає страв. Додайте продукти у меню!");
+        return;
+      }
+
+      if (!app.shoppingList) app.shoppingList = [];
+      Object.keys(generated).forEach(name => {
+        app.shoppingList.push({
+          id: 's_' + Date.now() + Math.random(),
+          text: `${name} (~${generated[name]} г)`,
+          checked: false
+        });
+      });
+      save();
+      renderShoppingChecklist();
+      alert(`✓ Додано ${Object.keys(generated).length} позицій у список покупок!`);
+    }
+
+    // 7. РЕАЛЬНА СТАТИСТИКА
+    function renderRealStatistics() {
+      const daysCount = parseInt(document.getElementById('statsPeriodSelect').value) || 7;
+      const pDays = app.days[app.activeProfileId] || {};
+      const prof = curProfile();
+
+      let totalKcal = 0, totalP = 0, loggedDays = 0, withinGoalDays = 0, missedMeals = 0;
+      let bestDay = null, bestDiff = 99999;
+
+      const curr = new Date();
+      for (let i = 0; i < daysCount; i++) {
+        const d = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() - i);
+        const dKey = getLocalDateString(d);
+        const dObj = pDays[dKey];
+
+        if (dObj && dObj.meals) {
+          let dayKcal = 0, dayP = 0, mealsLogged = 0;
+          ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
+            const list = dObj.meals[m] || [];
+            if (list.length > 0) mealsLogged++;
+            list.forEach(it => {
+              dayKcal += it.kcal;
+              dayP += it.p;
+            });
+          });
+
+          if (dayKcal > 0) {
+            loggedDays++;
+            totalKcal += dayKcal;
+            totalP += dayP;
+            if (mealsLogged < 3) missedMeals += (3 - mealsLogged);
+
+            const diff = Math.abs(prof.target - dayKcal);
+            if (diff < bestDiff) {
+              bestDiff = diff;
+              bestDay = dKey;
+            }
+            if (diff <= (prof.target * 0.1)) {
+              withinGoalDays++;
+            }
+          }
+        }
+      }
+
+      document.getElementById('statAvgKcal').innerText = loggedDays > 0 ? `${Math.round(totalKcal / loggedDays)} ккал` : '0 ккал';
+      document.getElementById('statAvgProtein').innerText = loggedDays > 0 ? `${Math.round(totalP / loggedDays)} г` : '0 г';
+      document.getElementById('statGoalHitRate').innerText = loggedDays > 0 ? `${Math.round((withinGoalDays / loggedDays) * 100)}%` : '0%';
+      document.getElementById('statMissedMeals').innerText = missedMeals;
+      document.getElementById('statBestDayLabel').innerText = bestDay ? `Найточніший день: ${bestDay} (відхилення лише ${bestDiff} ккал)` : 'Немає даних за обраний період';
+    }
+
+    // 8. КАТАЛОГ ЇЖІ ТА ДОДАВАННЯ
+    function openCatalogModal(mealType) {
+      targetCatalogMeal = mealType;
+      const names = { breakfast: 'Сніданок', lunch: 'Обід', dinner: 'Вечеря', snack: 'Перекус' };
+      document.getElementById('catalogTargetMealText').innerText = `Додати в: ${names[mealType] || mealType}`;
+      document.getElementById('catalogSearchInput').value = '';
+      activeCatalogCat = 'Усі';
+      renderCatalogCategories();
+      renderCatalogItems();
+      document.getElementById('catalogModal').classList.remove('hidden');
+    }
+    function closeCatalogModal() { document.getElementById('catalogModal').classList.add('hidden'); }
+
+    function renderCatalogCategories() {
+      const container = document.getElementById('catalogCategoryChips');
+      container.innerHTML = '';
+      const cats = ['Усі', 'Птиця', 'М\'ясо', 'Риба', 'Яйця', 'Молочні', 'Крупи', 'Овочі', 'Фрукти', 'Горіхи', 'Страви'];
+      cats.forEach(c => {
+        const btn = document.createElement('button');
+        const isActive = activeCatalogCat === c;
+        btn.className = `touch-target text-xs font-bold px-3 py-1 rounded-xl whitespace-nowrap transition ${isActive ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600'}`;
+        btn.innerText = c;
+        btn.onclick = () => { activeCatalogCat = c; renderCatalogCategories(); renderCatalogItems(); };
+        container.appendChild(btn);
+      });
+    }
+
+    function renderCatalogItems() {
+      const container = document.getElementById('catalogListContainer');
+      container.innerHTML = '';
+      const q = (document.getElementById('catalogSearchInput').value || '').trim().toLowerCase();
+
+      let items = FOOD_DATABASE;
+      if (activeCatalogCat !== 'Усі') items = items.filter(x => x.cat === activeCatalogCat);
+      if (q) items = items.filter(x => x.name.toLowerCase().includes(q));
+
+      if (items.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-6">Нічого не знайдено</p>';
+        return;
+      }
+
+      items.forEach(it => {
+        const card = document.createElement('div');
+        card.className = "p-3 rounded-2xl bg-white border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-98";
+        card.onclick = () => openPortionModal(it);
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">${it.emoji}</span>
+            <div>
+              <h4 class="text-xs font-black text-slate-800">${it.name}</h4>
+              <span class="text-[10px] text-slate-400 font-bold">${it.kcal} ккал/100г • Б:${it.p} Ж:${it.f} В:${it.c}</span>
+            </div>
+          </div>
+          <button class="text-xs font-black bg-rose-50 text-rose-600 px-3 py-1 rounded-xl border border-rose-100">+</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openPortionModal(item) {
+      activeModalItem = item;
+      document.getElementById('portItemEmoji').innerText = item.emoji;
+      document.getElementById('portItemName').innerText = item.name;
+      document.getElementById('baseKcal100').innerText = item.kcal;
+      document.getElementById('baseC100').innerText = `${item.c}г`;
+      document.getElementById('baseP100').innerText = `${item.p}г`;
+      document.getElementById('baseF100').innerText = `${item.f}г`;
+      setPortionGrams(100);
+      document.getElementById('portionModal').classList.remove('hidden');
+    }
+    function closePortionModal() { document.getElementById('portionModal').classList.add('hidden'); }
+
+    function setPortionGrams(g) {
+      document.getElementById('customPortionGrams').value = g;
+      updatePortionCalculations();
+    }
+
+    function updatePortionCalculations() {
+      if (!activeModalItem) return;
+      const g = parseFloat(document.getElementById('customPortionGrams').value) || 0;
+      const f = g / 100;
+      document.getElementById('calcPortionKcal').innerText = `${Math.round(activeModalItem.kcal * f)} ккал`;
+      document.getElementById('calcPortionMacros').innerText = `Б: ${(activeModalItem.p * f).toFixed(1)}г • Ж: ${(activeModalItem.f * f).toFixed(1)}г • В: ${(activeModalItem.c * f).toFixed(1)}г`;
+      document.getElementById('calcPortionFiber').innerText = activeModalItem.fiber !== undefined ? `Клітковина: ${(activeModalItem.fiber * f).toFixed(1)}г` : `Клітковина: —`;
+    }
+
+    function commitSelectedFoodToMeal() {
+      if (!activeModalItem) return;
+      const g = parseFloat(document.getElementById('customPortionGrams').value) || 100;
+      const f = g / 100;
+
+      curDayData().meals[targetCatalogMeal].push({
+        id: 'food_' + Date.now(),
+        name: activeModalItem.name,
+        grams: Math.round(g),
+        kcal: Math.round(activeModalItem.kcal * f),
+        p: Math.round(activeModalItem.p * f * 10) / 10,
+        f: Math.round(activeModalItem.f * f * 10) / 10,
+        c: Math.round(activeModalItem.c * f * 10) / 10,
+        fiber: activeModalItem.fiber ? Math.round(activeModalItem.fiber * f * 10) / 10 : 0
+      });
+
+      save();
+      closePortionModal();
+      closeCatalogModal();
+      renderAll();
+    }
+
+    // 9. АВТОМАТИЧНА ПОРАДА
+    function generateSmartInsight(eaten, target, p, targetP, water) {
+      const tip = document.getElementById('homeSmartTip');
+      if (eaten === 0) {
+        tip.innerText = "День розпочато! Випийте склянку теплої води та складіть меню на сьогодні.";
+        return;
+      }
+      if (water < 1000) {
+        tip.innerText = "Рівень води занизький. Зробіть паузу на склянку води для підтримки тонусу.";
+        return;
+      }
+      if (p < targetP * 0.4) {
+        tip.innerText = "Вам не вистачає білка. Додайте до вечері нежирне куряче філе або сир.";
+        return;
+      }
+      if (eaten > target) {
+        tip.innerText = "Калорійність перевищено. Зробіть вечірню прогулянку на 30–40 хвилин.";
+        return;
+      }
+      tip.innerText = "Чудовий баланс макронутрієнтів сьогодні! Ви впевнено тримаєте ціль.";
+    }
+
+    // 10. ПРОФІЛІ ТА РЕЗЕРВНЕ КОПІЮВАННЯ
+    function renderMoreProfilesList() {
+      const container = document.getElementById('moreProfilesList');
+      container.innerHTML = '';
+      Object.values(app.profiles).forEach(p => {
+        const isActive = p.id === app.activeProfileId;
+        const row = document.createElement('div');
+        row.className = `p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition ${isActive ? 'bg-rose-50/70 border-rose-300' : 'bg-slate-50 border-slate-100'}`;
+        row.onclick = () => switchProfile(p.id);
+        row.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">${p.emoji}</span>
+            <div>
+              <span class="text-xs font-black text-slate-800">${p.name} ${isActive ? '✓' : ''}</span>
+              <span class="text-[10px] text-slate-400 block">${p.target} ккал • Ціль: ${p.targetWeight || 58} кг</span>
+            </div>
+          </div>
+          <span class="text-xs text-slate-400">Перемкнути</span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function switchProfile(id) {
+      const p = app.profiles[id];
+      if (p.pin) {
+        const entered = prompt(`Введіть PIN для ${p.name}:`);
+        if (entered !== p.pin) { alert("Невірний PIN!"); return; }
+      }
+      app.activeProfileId = id;
+      save();
+      renderCalendarRow();
+      renderAll();
+    }
+
+    function openCreateProfileModal() { document.getElementById('createProfileModal').classList.remove('hidden'); }
+    function closeCreateProfileModal() { document.getElementById('createProfileModal').classList.add('hidden'); }
+    function saveNewProfile() {
+      const name = document.getElementById('newProfName').value.trim();
+      if (!name) return;
+      const id = 'u_' + Date.now();
+      app.profiles[id] = {
+        id, name, emoji: '👤',
+        height: parseInt(document.getElementById('newProfHeight').value) || 170,
+        startWeight: parseFloat(document.getElementById('newProfWeight').value) || 70,
+        targetWeight: parseFloat(document.getElementById('newProfGoalWeight').value) || 65,
+        target: parseInt(document.getElementById('newProfTargetKcal').value) || 2000,
+        carbs: 200, protein: 150, fat: 67, waterTarget: 2000,
+        pin: document.getElementById('newProfPin').value.trim()
+      };
+      app.activeProfileId = id;
+      save();
+      closeCreateProfileModal();
+      renderAll();
+    }
+
+    function exportDataJSON() {
+      const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app, null, 2));
+      const a = document.createElement('a');
+      a.href = str;
+      a.download = `calories_pro_backup_${getLocalDateString()}.json`;
+      a.click();
+    }
+
+    function importDataJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (parsed.profiles) {
+            app = parsed;
+            save();
+            renderCalendarRow();
+            renderAll();
+            alert("✓ Дані успішно відновлено!");
+          }
+        } catch(err) { alert("Помилка JSON"); }
+      };
+      reader.readAsText(file);
+    }
+
+    // 11. НАВІГАЦІЯ ТА КАЛЕНДАР
     function goToTab(tabName) {
-      ['home', 'progress', 'profile'].forEach(t => {
-        const p = document.getElementById('tab-' + t);
-        const b = document.getElementById('btn-' + t);
+      ['home', 'diary', 'weight', 'plan', 'more'].forEach(t => {
+        const page = document.getElementById('tab-' + t);
+        const btn = document.getElementById('nav-btn-' + t);
         if (t === tabName) {
-          p.classList.remove('hidden');
-          if (b) { b.classList.add('text-rose-500'); b.classList.remove('text-slate-400'); }
+          page.classList.remove('hidden');
+          if (btn) { btn.classList.add('text-rose-500'); btn.classList.remove('text-slate-400'); }
         } else {
-          p.classList.add('hidden');
-          if (b) { b.classList.remove('text-rose-500'); b.classList.add('text-slate-400'); }
+          page.classList.add('hidden');
+          if (btn) { btn.classList.remove('text-rose-500'); btn.classList.add('text-slate-400'); }
         }
       });
       window.scrollTo(0,0);
@@ -1663,10 +1432,7 @@
 
         ensureDayStructure(app.activeProfileId, dKey);
         const dayRec = app.days[app.activeProfileId][dKey];
-        let dayEaten = 0;
-        ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
-          dayRec.meals[m].forEach(it => dayEaten += it.kcal);
-        });
+        const dayEaten = getDayCalories(dayRec);
 
         let dotColor = 'bg-slate-200';
         if (dayEaten > 0) {
@@ -1678,95 +1444,54 @@
 
         const col = document.createElement('div');
         col.className = "flex flex-col items-center gap-1 cursor-pointer";
-        col.onclick = () => {
-          selectedDateKey = dKey;
-          renderCalendarRow();
-          renderAll();
-        };
-
+        col.onclick = () => { selectedDateKey = dKey; renderCalendarRow(); renderAll(); };
         col.innerHTML = `
           <span class="text-[11px] text-slate-400 font-bold">${daysShort[i]}</span>
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition ${isSelected ? 'bg-rose-500 text-white shadow-sm shadow-rose-200' : 'text-slate-700 hover:bg-slate-100'}">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition ${isSelected ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}">
             ${d.getDate()}
           </div>
           <span class="w-1.5 h-1.5 rounded-full ${dotColor} mt-0.5"></span>
         `;
         container.appendChild(col);
       }
-      document.getElementById('headerDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? "Сьогодні" : selectedDateKey;
+      document.getElementById('homeDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? "Сьогодні" : selectedDateKey;
+      document.getElementById('diaryCurrentDateLabel').innerText = (selectedDateKey === TODAY_KEY) ? "Сьогодні" : selectedDateKey;
+    }
+
+    function addWater(ml) {
+      curDayData().waterHistory.push({ id: 'w_' + Date.now(), amount: ml });
+      save();
+      renderAll();
+    }
+
+    function openActivityModal() { document.getElementById('activityModal').classList.remove('hidden'); }
+    function closeActivityModal() { document.getElementById('activityModal').classList.add('hidden'); }
+    function applyStepsCalories() {
+      const steps = parseInt(document.getElementById('inputStepsSync').value) || 0;
+      if (steps > 0) {
+        curDayData().burned = Math.round(steps * 0.038);
+        save();
+        renderAll();
+        closeActivityModal();
+      }
+    }
+    function addQuickBurn(k) {
+      curDayData().burned = (curDayData().burned || 0) + k;
+      save();
+      renderAll();
+      closeActivityModal();
     }
 
     function toggleLanguage() {
       app.lang = (app.lang === 'uk') ? 'en' : 'uk';
       save();
       document.getElementById('langSwitchBtn').innerText = (app.lang === 'uk') ? "🇺🇦 UA" : "🇬🇧 EN";
-      renderCatalogItems();
     }
 
-    function applyTranslations() {
-      document.getElementById('langSwitchBtn').innerText = (app.lang === 'uk') ? "🇺🇦 UA" : "🇬🇧 EN";
-    }
-
-    // Тренування та Синхронізація
-    function openWorkoutModal() { document.getElementById('workoutModal').classList.remove('hidden'); }
-    function closeWorkoutModal() { document.getElementById('workoutModal').classList.add('hidden'); }
-    function commitBurned(k) {
-      curDayData().burned = (curDayData().burned || 0) + k;
-      save();
-      renderAll();
-      closeWorkoutModal();
-    }
-    function commitCustomBurned() {
-      const k = parseInt(document.getElementById('customBurnedInput').value) || 0;
-      if (k > 0) commitBurned(k);
-    }
-    function openSyncModal() { document.getElementById('syncModal').classList.remove('hidden'); }
-    function closeSyncModal() { document.getElementById('syncModal').classList.add('hidden'); }
-    function applyStepsToBurned() {
-      const steps = parseInt(document.getElementById('syncStepsInput').value) || 0;
-      if (steps > 0) {
-        const burned = Math.round(steps * 0.038);
-        curDayData().burned = burned;
-        save();
-        renderAll();
-        closeSyncModal();
-        alert(`✓ Синхронізовано ${steps} кроків! Додано ${burned} ккал.`);
-      }
-    }
-
-    // Фотосканер
-    function openPhotoFlow() { document.getElementById('photoModal').classList.remove('hidden'); }
-    function closePhotoModal() { document.getElementById('photoModal').classList.add('hidden'); }
-    function processPhotoUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      document.getElementById('uploadZone').classList.add('hidden');
-      document.getElementById('aiLoadingZone').classList.remove('hidden');
-      setTimeout(() => {
-        document.getElementById('aiLoadingZone').classList.add('hidden');
-        document.getElementById('previewZone').classList.remove('hidden');
-        document.getElementById('aiConfirmBtn').classList.remove('hidden');
-        document.getElementById('aiDishName').innerText = "Розпізнано: Салат Цезар з куркою (~220г)";
-        document.getElementById('aiDishKcal').innerText = "360 ккал (Оцінка ШІ)";
-        document.getElementById('aiDishMacros').innerText = "Б: 28г • Ж: 14г • В: 18г";
-      }, 1200);
-    }
-    function commitAIScannedFood() {
-      curDayData().meals[targetCatalogMeal].push({
-        id: 'food_ai_' + Date.now(),
-        name: 'Салат Цезар з куркою (Оцінка ШІ)',
-        grams: 220,
-        kcal: 360,
-        p: 28, f: 14, c: 18,
-        fiber: 3, sugar: 2, sodium: 420, satFat: 2.5, potassium: 310, calcium: 60, iron: 1.2
-      });
-      save();
-      renderAll();
-      closePhotoModal();
-    }
-
-    function openNormInfoModal() {
-      alert("Оцінка харчування базується на добових нормах ВООЗ: клітковина (25г), калій (3500мг), кальцій (1000мг), залізо (18мг). Показники обмеження: доданий цукор (<50г), натрій (<2300мг) та насичені жири (<20г).");
+    function toggleFavoriteActiveItem() {}
+    function openSubSection(secId) {
+      const el = document.getElementById(secId);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
 
     window.onload = init;
