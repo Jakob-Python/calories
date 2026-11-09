@@ -257,18 +257,24 @@ function curDayData() {
   return app.days[app.activeProfileId][selectedDateKey];
 }
 
-// ================= НАДІЙНИЙ GEMINI API (3.8, 3.5 ТА 3.1) =================
+// ================= НАДІЙНИЙ GEMINI API З АВТОПЕРЕМИКАННЯМ ПРИ 503 =================
 async function requestGeminiAPI(payload) {
   if (!app.geminiApiKey) {
     throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
   }
 
+  // Список моделей для черги
   const modelsToTry = [
-    app.activeModel || 'gemini-3.8-flash',
     'gemini-3.8-flash',
     'gemini-3.5-flash',
     'gemini-3.1-pro-preview'
   ];
+
+  // Якщо поточна активна відрізняється, ставимо її першою
+  if (app.activeModel && !modelsToTry.includes(app.activeModel)) {
+    modelsToTry.unshift(app.activeModel);
+  }
+
   const uniqueModels = [...new Set(modelsToTry)];
   let lastErrMsg = '';
 
@@ -288,6 +294,8 @@ async function requestGeminiAPI(payload) {
       } else {
         const errJson = await res.json().catch(() => ({}));
         lastErrMsg = errJson.error?.message || `HTTP ${res.status}`;
+        
+        // Зупиняємося тільки при недійсному ключі (400 або 403), при 503/404/429 йдемо до наступної моделі
         if (res.status === 400 || res.status === 403) break;
       }
     } catch (e) {
