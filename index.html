@@ -140,10 +140,13 @@
               <span class="text-sm font-black text-slate-900" id="dispWaterAmount">0 / 2000 мл</span>
             </div>
           </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
-            <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">+500</button>
-          </div>
+         <div class="flex items-center gap-1.5">
+  <button onclick="undoWater()" class="touch-target bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 text-xs font-black px-2 py-1.5 rounded-xl border border-slate-200 active:scale-95 transition" title="Скасувати останню склянку">
+    ↩️
+  </button>
+  <button onclick="addWater(250)" class="touch-target bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-1.5 rounded-xl border border-sky-200 active:scale-95 transition">+250</button>
+  <button onclick="addWater(500)" class="touch-target bg-sky-500 hover:bg-sky-600 text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition">+500</button>
+</div>
         </div>
         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
           <div id="waterProgressBar" class="bg-sky-500 h-full rounded-full smooth-transition" style="width: 0%"></div>
