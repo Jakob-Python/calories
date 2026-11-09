@@ -10,12 +10,7 @@
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2927/2927347.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-      background-color: #F8F9FD;
-      color: #0F172A;
-    }
+    body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif; background-color: #F8F9FD; color: #0F172A; }
     .pb-nav { padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 84px); }
     .pt-safe { padding-top: max(env(safe-area-inset-top, 16px), 14px); }
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -68,12 +63,10 @@
         </div>
       </header>
 
-      <!-- Календарний рядок -->
       <section class="bg-white py-2.5 px-2 rounded-2xl card-shadow border border-slate-100 mb-3">
         <div class="grid grid-cols-7 text-center items-center" id="calendarWeekRow"></div>
       </section>
 
-      <!-- Круговий блок калорій -->
       <section class="bg-white rounded-3xl p-5 card-shadow border border-slate-100 mb-3.5 relative">
         <div class="flex items-center justify-between">
           <div class="w-20 text-center">
@@ -105,7 +98,6 @@
         </div>
       </section>
 
-      <!-- Макроси БЖВ -->
       <section class="grid grid-cols-3 gap-2.5 mb-3.5">
         <div class="bg-white p-3 rounded-2xl border border-slate-100 card-shadow text-center">
           <div class="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
@@ -139,7 +131,6 @@
         </div>
       </section>
 
-      <!-- Вода -->
       <section class="bg-white rounded-3xl p-4 card-shadow border border-slate-100 mb-3.5">
         <div class="flex justify-between items-center mb-2">
           <div class="flex items-center gap-2">
@@ -159,19 +150,17 @@
         </div>
       </section>
 
-      <!-- Сканер тарілки -->
       <section onclick="openPhotoFlow('lunch')" class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-4 mb-3 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
         <div class="flex items-center gap-3">
           <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">📸</div>
           <div>
             <h3 class="text-xs font-black uppercase tracking-wider">ШІ-Сканер Тарілки (Gemini)</h3>
-            <p class="text-[11px] text-indigo-100">Сфотографуйте їжу — калорії порахуються через ШІ</p>
+            <p class="text-[11px] text-indigo-100" id="scanBannerStatus">Сфотографуйте їжу — калорії порахуються через ШІ</p>
           </div>
         </div>
         <span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-xl font-bold shadow-sm">Спробувати →</span>
       </section>
 
-      <!-- Чат-бот банер -->
       <section onclick="openAiChatModal()" class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-4 mb-3.5 text-white flex items-center justify-between card-shadow cursor-pointer active:scale-98 transition">
         <div class="flex items-center gap-3">
           <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">💬</div>
@@ -183,7 +172,6 @@
         <span class="text-xs bg-white text-purple-700 px-3 py-1.5 rounded-xl font-bold shadow-sm">Запитати ➔</span>
       </section>
 
-      <!-- Щоденник перехід -->
       <div onclick="goToTab('diary')" class="bg-white rounded-3xl p-4 mb-3.5 border border-slate-100 card-shadow flex items-center justify-between cursor-pointer active:scale-98 transition">
         <div class="flex items-center gap-3">
           <span class="text-2xl">📖</span>
@@ -195,7 +183,6 @@
         <span class="text-xs bg-rose-50 text-rose-600 px-3 py-1.5 rounded-xl font-bold border border-rose-100">Відкрити →</span>
       </div>
 
-      <!-- Поради з кубиком -->
       <section class="bg-gradient-to-r from-amber-50 via-rose-50 to-indigo-50 border border-amber-200/60 rounded-3xl p-4 card-shadow relative">
         <div class="flex items-start justify-between gap-2">
           <div class="flex items-start gap-2.5">
@@ -243,7 +230,7 @@
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <button onclick="copyMealFromYesterday('breakfast')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition">
+              <button onclick="copyMealFromYesterday('breakfast')" class="touch-target bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition" title="Скопіювати з учора">
                 📋 З учора
               </button>
               <button onclick="openCatalogModal('breakfast')" class="touch-target bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black px-3 py-1.5 rounded-xl border border-rose-200 transition">
@@ -438,7 +425,6 @@
         </button>
       </div>
 
-      <!-- Список локальних профілів клієнта -->
       <div class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow mb-4">
         <div class="flex justify-between items-center mb-2">
           <h3 class="text-xs font-black uppercase text-slate-800">Локальні профілі</h3>
@@ -447,7 +433,6 @@
         <div id="profileContainer" class="space-y-2"></div>
       </div>
 
-      <!-- Резервне копіювання JSON клієнта -->
       <section class="bg-white p-4 rounded-3xl border border-slate-100 card-shadow">
         <h3 class="text-xs font-black uppercase text-slate-800 mb-1">💾 Резервна копія</h3>
         <p class="text-xs text-slate-500 mb-3">Збережіть усі записи щоденника або перенесіть на інший телефон.</p>
@@ -797,7 +782,7 @@
   </div>
 
 
-  <!-- ================= 3. МОДАЛЬНІ ВІКНА ================= -->
+  <!-- ================= 3. ВСІ МОДАЛЬНІ ВІКНА ================= -->
 
   <!-- Чат ШІ-Нутриціолога -->
   <div id="aiChatModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -1345,7 +1330,7 @@
       return app.days[app.activeProfileId][selectedDateKey];
     }
 
-    // НАДІЙНИЙ ВИКЛИК GEMINI API З ФОЛБЕКОМ МОДЕЛЕЙ
+    // НАДІЙНИЙ ВИКЛИК GEMINI API З ФОЛБЕКОМ
     async function requestGeminiAPI(payload) {
       if (!app.geminiApiKey) {
         throw new Error("Ключ Gemini API відсутній. Введіть його в Admin Center 2.0 -> AI Center");
